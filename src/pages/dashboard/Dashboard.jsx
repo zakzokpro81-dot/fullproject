@@ -1,7 +1,6 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
-import { DataGrid } from "@mui/x-data-grid";
-import { useMovieData } from "@mui/x-data-grid-generator";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
 
 const rows = [
   {
@@ -140,11 +139,13 @@ export function Dashboard() {
   return (
     <Box sx={{ height: 400, width: "98%" }}>
       <DataGrid
+        checkboxSelection
         {...data}
         initialState={{
           filter: {
             filterModel: {
               items: [],
+              quickFilterValues: ["iphone"],
             },
           },
         }}
@@ -153,6 +154,9 @@ export function Dashboard() {
         // @ts-ignore
         columns={columns}
         showToolbar
+        slots={{
+          toolbar: GridToolbar,
+        }}
       />
     </Box>
   );
