@@ -11,12 +11,14 @@ import {
 import { Router } from "@mui/icons-material";
 import App from "./App";
 import { Team } from "./pages/team/Team";
+import { Input } from "./pages/input/Input";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<App />}>
       <Route index element={<Dashboard />} />
       <Route path="/team" element={<Team />} />
+      <Route path="/input" element={<Input />} />
     </Route>
   )
 );

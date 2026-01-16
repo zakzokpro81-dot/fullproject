@@ -18,7 +18,7 @@ import {
   PeopleOutline,
   ReceiptOutlined,
 } from "@mui/icons-material";
-import { Avatar, Typography } from "@mui/material";
+import { Avatar, Tooltip, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { grey } from "@mui/material/colors";
 
@@ -81,7 +81,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 const basicJubs = [
   { text: "Depo", icon: <HomeOutlined />, path: "/" },
   { text: "müştri", icon: <PeopleOutline />, path: "/team" },
-  { text: "sipariş", icon: <ContactsOutlined />, path: "/1" },
+  { text: "sipariş", icon: <ContactsOutlined />, path: "/input" },
   { text: "fatura", icon: <ReceiptOutlined />, path: "/12" },
 ];
 
@@ -143,6 +143,8 @@ export function SideBar({ open, handleDrawerClose }) {
       <List>
         {basicJubs.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
+            <Tooltip title={open ? null: item.text } placement="left"  >
+
             <ListItemButton
               onClick={() => {
                 navigate(item.path);
@@ -160,11 +162,11 @@ export function SideBar({ open, handleDrawerClose }) {
                 },
                 open
                   ? {
-                      justifyContent: "initial",
-                    }
+                    justifyContent: "initial",
+                  }
                   : {
-                      justifyContent: "center",
-                    },
+                    justifyContent: "center",
+                  },
               ]}
             >
               <ListItemIcon
@@ -175,11 +177,11 @@ export function SideBar({ open, handleDrawerClose }) {
                   },
                   open
                     ? {
-                        mr: 3,
-                      }
+                      mr: 3,
+                    }
                     : {
-                        mr: "auto",
-                      },
+                      mr: "auto",
+                    },
                 ]}
               >
                 {item.icon}
@@ -189,21 +191,28 @@ export function SideBar({ open, handleDrawerClose }) {
                 sx={[
                   open
                     ? {
-                        opacity: 1,
-                      }
+                      opacity: 1,
+                    }
                     : {
-                        opacity: 0,
-                      },
+                      opacity: 0,
+                    },
                 ]}
               />
             </ListItemButton>
+
+            </Tooltip>
           </ListItem>
         ))}
       </List>
+
+
+      
       <Divider />
       <List>
         {basicJubs2.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
+            <Tooltip title={open ? null: item.text } placement="left"  >
+
             <ListItemButton
               onClick={() => {
                 navigate(item.path);
@@ -212,14 +221,20 @@ export function SideBar({ open, handleDrawerClose }) {
                 {
                   minHeight: 48,
                   px: 2.5,
+                  bgcolor:
+                    location.pathname === item.path
+                      ? theme.palette.mode === "dark"
+                        ? grey[800]
+                        : grey[400]
+                      : null,
                 },
                 open
                   ? {
-                      justifyContent: "initial",
-                    }
+                    justifyContent: "initial",
+                  }
                   : {
-                      justifyContent: "center",
-                    },
+                    justifyContent: "center",
+                  },
               ]}
             >
               <ListItemIcon
@@ -230,11 +245,11 @@ export function SideBar({ open, handleDrawerClose }) {
                   },
                   open
                     ? {
-                        mr: 3,
-                      }
+                      mr: 3,
+                    }
                     : {
-                        mr: "auto",
-                      },
+                      mr: "auto",
+                    },
                 ]}
               >
                 {item.icon}
@@ -244,21 +259,30 @@ export function SideBar({ open, handleDrawerClose }) {
                 sx={[
                   open
                     ? {
-                        opacity: 1,
-                      }
+                      opacity: 1,
+                    }
                     : {
-                        opacity: 0,
-                      },
+                      opacity: 0,
+                    },
                 ]}
               />
             </ListItemButton>
+            
+            </Tooltip>
           </ListItem>
         ))}
       </List>
+
+
+
+
       <Divider />
+
       <List>
         {basicJubs3.map((item) => (
-          <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
+           <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
+            <Tooltip title={open ? null: item.text } placement="left"  >
+
             <ListItemButton
               onClick={() => {
                 navigate(item.path);
@@ -267,14 +291,20 @@ export function SideBar({ open, handleDrawerClose }) {
                 {
                   minHeight: 48,
                   px: 2.5,
+                  bgcolor:
+                    location.pathname === item.path
+                      ? theme.palette.mode === "dark"
+                        ? grey[800]
+                        : grey[400]
+                      : null,
                 },
                 open
                   ? {
-                      justifyContent: "initial",
-                    }
+                    justifyContent: "initial",
+                  }
                   : {
-                      justifyContent: "center",
-                    },
+                    justifyContent: "center",
+                  },
               ]}
             >
               <ListItemIcon
@@ -285,11 +315,11 @@ export function SideBar({ open, handleDrawerClose }) {
                   },
                   open
                     ? {
-                        mr: 3,
-                      }
+                      mr: 3,
+                    }
                     : {
-                        mr: "auto",
-                      },
+                      mr: "auto",
+                    },
                 ]}
               >
                 {item.icon}
@@ -299,14 +329,16 @@ export function SideBar({ open, handleDrawerClose }) {
                 sx={[
                   open
                     ? {
-                        opacity: 1,
-                      }
+                      opacity: 1,
+                    }
                     : {
-                        opacity: 0,
-                      },
+                      opacity: 0,
+                    },
                 ]}
               />
             </ListItemButton>
+            
+            </Tooltip>
           </ListItem>
         ))}
       </List>
