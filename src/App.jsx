@@ -1,12 +1,14 @@
 import * as React from "react";
 
 import Box from "@mui/material/Box";
-
+import { useState } from "react";
 import CssBaseline from "@mui/material/CssBaseline";
 import Typography from "@mui/material/Typography";
-import { styled } from "@mui/material/styles";
+import { createTheme, styled, ThemeProvider } from "@mui/material/styles";
 import { TopBar } from "./componenets/TopBar";
 import { SideBar } from "./componenets/SideBar";
+import { getDesignTokens } from "./theme";
+import { Outlet } from "react-router-dom";
 
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
@@ -27,18 +29,31 @@ export default function App() {
   const handleDrawerClose = () => {
     setOpen(false);
   };
+  const [mode, setMode] = useState(
+    localStorage.getItem("currentMode")
+      ? localStorage.getItem("currentMode")
+      : "light"
+  );
+  const theme = React.useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
+
   return (
-    <Box sx={{ display: "flex" }}>
-      <CssBaseline />
+    <ThemeProvider theme={theme}>
+      <Box sx={{ display: "flex" }}>
+        <CssBaseline />
 
-      <TopBar open={open} handleDrawerOpen={handleDrawerOpen} />
+        <TopBar
+          setMode={setMode}
+          open={open}
+          handleDrawerOpen={handleDrawerOpen}
+        />
 
-      <SideBar open={open} handleDrawerClose={handleDrawerClose} />
+        <SideBar open={open} handleDrawerClose={handleDrawerClose} />
 
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <DrawerHeader />
-        <Typography sx={{ marginBottom: 2 }}>Lorem ipsum</Typography>
+        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+          <DrawerHeader />
+          <Outlet />
+        </Box>
       </Box>
-    </Box>
+    </ThemeProvider>
   );
 }

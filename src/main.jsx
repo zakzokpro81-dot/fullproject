@@ -1,5 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { Dashboard } from "./pages/dashboard/Dashboard";
 import "./index.css";
 import {
   createBrowserRouter,
@@ -9,9 +10,15 @@ import {
 } from "react-router-dom";
 import { Router } from "@mui/icons-material";
 import App from "./App";
+import { Team } from "./pages/team/Team";
 
 const router = createBrowserRouter(
-  createRoutesFromElements(<Route path="/" element={<App />}></Route>)
+  createRoutesFromElements(
+    <Route path="/" element={<App />}>
+      <Route index element={<Dashboard />} />
+      <Route path="/team" element={<Team />} />
+    </Route>
+  )
 );
 
 createRoot(document.getElementById("root")).render(

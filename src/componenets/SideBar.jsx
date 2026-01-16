@@ -12,6 +12,15 @@ import MailIcon from "@mui/icons-material/Mail";
 
 import MuiDrawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
+import {
+  ContactsOutlined,
+  HomeOutlined,
+  PeopleOutline,
+  ReceiptOutlined,
+} from "@mui/icons-material";
+import { Avatar, Typography } from "@mui/material";
+import { useNavigate } from "react-router-dom";
+import { grey } from "@mui/material/colors";
 
 const drawerWidth = 240;
 
@@ -69,9 +78,29 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   ...theme.mixins.toolbar,
 }));
 
+const basicJubs = [
+  { text: "Depo", icon: <HomeOutlined />, path: "/" },
+  { text: "müştri", icon: <PeopleOutline />, path: "/team" },
+  { text: "sipariş", icon: <ContactsOutlined />, path: "/1" },
+  { text: "fatura", icon: <ReceiptOutlined />, path: "/12" },
+];
+
+const basicJubs2 = [
+  { text: "Depo", icon: <HomeOutlined />, path: "/3" },
+  { text: "müştri", icon: <PeopleOutline />, path: "/11" },
+  { text: "sipariş", icon: <ContactsOutlined />, path: "/5" },
+  { text: "fatura", icon: <ReceiptOutlined />, path: "/6" },
+];
+
+const basicJubs3 = [
+  { text: "Depo", icon: <HomeOutlined />, path: "/7" },
+  { text: "müştri", icon: <PeopleOutline />, path: "/8" },
+  { text: "sipariş", icon: <ContactsOutlined />, path: "/9" },
+  { text: "fatura", icon: <ReceiptOutlined />, path: "/10" },
+];
 export function SideBar({ open, handleDrawerClose }) {
   const theme = useTheme();
-
+  const navigate = useNavigate();
   return (
     <Drawer variant="permanent" open={open}>
       <DrawerHeader>
@@ -83,11 +112,102 @@ export function SideBar({ open, handleDrawerClose }) {
           )}
         </IconButton>
       </DrawerHeader>
+      <Avatar
+        sx={{
+          mx: "auto",
+          width: open ? "88px" : "44px",
+          transition: "0.25s",
+          height: open ? "88px" : "44px",
+          border: "2px solid grey",
+          my: 1,
+        }}
+        src="../src/images/zek.jpeg"
+      />
+      <Typography
+        align="center"
+        sx={{ fontSize: open ? "17" : 0, transition: "0.25s" }}
+      >
+        CepTek
+      </Typography>
+      <Typography
+        align="center"
+        sx={{
+          fontSize: open ? "17" : 0,
+          transition: "0.25s",
+          color: theme.palette.info.main,
+        }}
+      >
+        Admin
+      </Typography>
       <Divider />
       <List>
-        {["Inbox", "Starred", "Send email", "Drafts"].map((text, index) => (
-          <ListItem key={text} disablePadding sx={{ display: "block" }}>
+        {basicJubs.map((item) => (
+          <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
             <ListItemButton
+              onClick={() => {
+                navigate(item.path);
+              }}
+              sx={[
+                {
+                  minHeight: 48,
+                  px: 2.5,
+                  bgcolor:
+                    location.pathname === item.path
+                      ? theme.palette.mode === "dark"
+                        ? grey[800]
+                        : grey[400]
+                      : null,
+                },
+                open
+                  ? {
+                      justifyContent: "initial",
+                    }
+                  : {
+                      justifyContent: "center",
+                    },
+              ]}
+            >
+              <ListItemIcon
+                sx={[
+                  {
+                    minWidth: 0,
+                    justifyContent: "center",
+                  },
+                  open
+                    ? {
+                        mr: 3,
+                      }
+                    : {
+                        mr: "auto",
+                      },
+                ]}
+              >
+                {item.icon}
+              </ListItemIcon>
+              <ListItemText
+                primary={item.text}
+                sx={[
+                  open
+                    ? {
+                        opacity: 1,
+                      }
+                    : {
+                        opacity: 0,
+                      },
+                ]}
+              />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <Divider />
+      <List>
+        {basicJubs2.map((item) => (
+          <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
+            <ListItemButton
+              onClick={() => {
+                navigate(item.path);
+              }}
               sx={[
                 {
                   minHeight: 48,
@@ -117,10 +237,10 @@ export function SideBar({ open, handleDrawerClose }) {
                       },
                 ]}
               >
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                {item.icon}
               </ListItemIcon>
               <ListItemText
-                primary={text}
+                primary={item.text}
                 sx={[
                   open
                     ? {
@@ -137,9 +257,12 @@ export function SideBar({ open, handleDrawerClose }) {
       </List>
       <Divider />
       <List>
-        {["All mail", "Trash", "Spam"].map((text, index) => (
-          <ListItem key={text} disablePadding sx={{ display: "block" }}>
+        {basicJubs3.map((item) => (
+          <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
             <ListItemButton
+              onClick={() => {
+                navigate(item.path);
+              }}
               sx={[
                 {
                   minHeight: 48,
@@ -169,10 +292,10 @@ export function SideBar({ open, handleDrawerClose }) {
                       },
                 ]}
               >
-                {index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+                {item.icon}
               </ListItemIcon>
               <ListItemText
-                primary={text}
+                primary={item.text}
                 sx={[
                   open
                     ? {
@@ -187,6 +310,7 @@ export function SideBar({ open, handleDrawerClose }) {
           </ListItem>
         ))}
       </List>
+      <Divider />
     </Drawer>
   );
 }
