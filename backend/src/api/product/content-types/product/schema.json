@@ -1,10 +1,10 @@
 {
   "kind": "collectionType",
-  "collectionName": "device_variants",
+  "collectionName": "products",
   "info": {
-    "singularName": "device-variant",
-    "pluralName": "device-variants",
-    "displayName": "Device Variant"
+    "singularName": "product",
+    "pluralName": "products",
+    "displayName": "Product"
   },
   "options": {
     "draftAndPublish": true
@@ -20,18 +20,26 @@
       "targetField": "name",
       "required": true
     },
+    "description": {
+      "type": "text"
+    },
     "isActive": {
       "type": "boolean",
       "default": true
     },
-    "device_model": {
+    "device_variant": {
       "type": "relation",
       "relation": "oneToOne",
-      "target": "api::device-model.device-model"
+      "target": "api::device-variant.device-variant"
+    },
+    "category": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::category.category"
     },
     "image": {
       "type": "media",
-      "multiple": false,
+      "multiple": true,
       "allowedTypes": [
         "images"
       ]

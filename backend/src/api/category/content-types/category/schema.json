@@ -1,10 +1,10 @@
 {
   "kind": "collectionType",
-  "collectionName": "brands",
+  "collectionName": "categories",
   "info": {
-    "singularName": "brand",
-    "pluralName": "brands",
-    "displayName": "Brand"
+    "singularName": "category",
+    "pluralName": "categories",
+    "displayName": "Category"
   },
   "options": {
     "draftAndPublish": true
@@ -21,16 +21,12 @@
       "targetField": "name",
       "required": true
     },
+    "description": {
+      "type": "text"
+    },
     "isActive": {
       "type": "boolean",
       "default": true
-    },
-    "logo": {
-      "type": "media",
-      "multiple": false,
-      "allowedTypes": [
-        "images"
-      ]
     }
   }
 }

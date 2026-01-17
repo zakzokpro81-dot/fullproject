@@ -20,14 +20,14 @@
       "targetField": "name",
       "required": true
     },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    },
     "brand": {
       "type": "relation",
       "relation": "oneToOne",
-      "target": "api::brand.brand",
-      "inversedBy": "device_model"
-    },
-    "releaseYear": {
-      "type": "integer"
+      "target": "api::brand.brand"
     },
     "image": {
       "type": "media",
@@ -35,14 +35,6 @@
       "allowedTypes": [
         "images"
       ]
-    },
-    "isActive": {
-      "type": "boolean",
-      "default": true
-    },
-    "order": {
-      "type": "integer",
-      "default": 0
     }
   }
 }
