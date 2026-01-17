@@ -1,0 +1,56 @@
+{
+  "kind": "collectionType",
+  "collectionName": "device_variants",
+  "info": {
+    "singularName": "device-variant",
+    "pluralName": "device-variants",
+    "displayName": "Device Variant"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "name",
+      "required": true
+    },
+    "device_model": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::device-model.device-model"
+    },
+    "modelCode": {
+      "type": "string"
+    },
+    "networkType": {
+      "type": "enumeration",
+      "enum": [
+        "g4",
+        "g5"
+      ]
+    },
+    "region": {
+      "type": "enumeration",
+      "enum": [
+        "Global",
+        "China",
+        "India",
+        "Europe"
+      ]
+    },
+    "isActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}
