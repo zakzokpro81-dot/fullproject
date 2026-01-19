@@ -496,7 +496,7 @@ export interface ApiCategoryCategory extends Struct.CollectionTypeSchema {
 export interface ApiDeviceModelDeviceModel extends Struct.CollectionTypeSchema {
   collectionName: 'device_models';
   info: {
-    displayName: 'Device Model';
+    displayName: 'Device Family';
     pluralName: 'device-models';
     singularName: 'device-model';
   };
@@ -537,14 +537,10 @@ export interface ApiDeviceVariantDeviceVariant
     draftAndPublish: true;
   };
   attributes: {
+    Color: Schema.Attribute.Enumeration<['Red', 'Mavi', 'Black']>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
-    device_model: Schema.Attribute.Relation<
-      'oneToOne',
-      'api::device-model.device-model'
-    >;
-    image: Schema.Attribute.Media<'images'>;
     isActive: Schema.Attribute.Boolean & Schema.Attribute.DefaultTo<true>;
     locale: Schema.Attribute.String & Schema.Attribute.Private;
     localizations: Schema.Attribute.Relation<
@@ -552,7 +548,9 @@ export interface ApiDeviceVariantDeviceVariant
       'api::device-variant.device-variant'
     > &
       Schema.Attribute.Private;
+    Memory: Schema.Attribute.Enumeration<['gb128', 'gb256', 'T1']>;
     name: Schema.Attribute.String & Schema.Attribute.Required;
+    Network: Schema.Attribute.Enumeration<['g4', 'g5']>;
     publishedAt: Schema.Attribute.DateTime;
     slug: Schema.Attribute.UID<'name'> & Schema.Attribute.Required;
     updatedAt: Schema.Attribute.DateTime;
@@ -569,14 +567,17 @@ export interface ApiProductProduct extends Struct.CollectionTypeSchema {
     singularName: 'product';
   };
   options: {
-    draftAndPublish: true;
+    draftAndPublish: false;
   };
   attributes: {
-    category: Schema.Attribute.Relation<'oneToOne', 'api::category.category'>;
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     description: Schema.Attribute.Text;
+    device_family: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::device-model.device-model'
+    >;
     device_variant: Schema.Attribute.Relation<
       'oneToOne',
       'api::device-variant.device-variant'

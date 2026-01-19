@@ -1,11 +1,36 @@
 import * as React from "react";
 import Box from "@mui/material/Box";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { useGetproductByNameQuery } from "../../../src/redux/Product";
+import {supabase} from "../../../src/config/uspabaseClient"
 
-const rows = [
+export function Dashboard() {
+    const { data, error, isLoading } = useGetproductByNameQuery("products")
+ // console.log(data)
+  //console.log(error)
+console.log(supabase)
+
+  
+  if(isLoading){
+    return(
+      <>
+      isloading
+      </>
+    )
+  }
+  if(error){
+    return(
+      <>
+      {error}
+      </>
+    )
+  }
+
+  if(data){
+    const rows = [
   {
     id: 1,
-    model: "iphone 11",
+    model: data.data[0].name,
     piece: "ekran",
     Quality: "orjinal",
     marka: "gx",
@@ -14,7 +39,7 @@ const rows = [
   },
   {
     id: 2,
-    model: "iphone 12",
+    model:  data.data[1].name,
     piece: "batarya",
     Quality: "orjinal",
     marka: "gx",
@@ -23,7 +48,7 @@ const rows = [
   },
   {
     id: 3,
-    model: "iphone 13",
+    model:  data.data[2].name,
     piece: "ekran",
     Quality: "orjinal",
     marka: "gx",
@@ -66,6 +91,16 @@ const rows = [
     Quanity: "2",
     price: "10",
   },
+  {
+    id: 8,
+    model: "iphone 18",
+    piece: "ekran",
+    Quality: "orjinal",
+    marka: "gx",
+    Quanity: "2",
+    price: "10",
+  },
+  
 ];
 
 const columns = [
@@ -113,12 +148,13 @@ const columns = [
   },
 ];
 
+
 const newData = {
   columns: columns,
   rows: rows,
 };
 const VISIBLE_FIELDS = [
-  "model",
+  "modedsdfdl",
   "piece",
   "Quality",
   "Quality",
@@ -126,21 +162,38 @@ const VISIBLE_FIELDS = [
   "price",
 ];
 
-export function Dashboard() {
-  const data = newData;
-
-  // Otherwise filter will be applied on fields such as the hidden column id
-  const columns = React.useMemo(
-    () =>
-      data.columns.filter((column) => VISIBLE_FIELDS.includes(column.field)),
-    [data.columns]
+const data2 = newData;
+    return (
+    <Box sx={{ minHeightheight: 300, width: "98%" }}>
+      <DataGrid
+        checkboxSelection
+        {...data2}
+        initialState={{
+          filter: {
+            filterModel: {
+              items: [],
+              quickFilterValues: [],
+            },
+          },
+        }}
+        disableColumnFilter
+        disableDensitySelector
+        // @ts-ignore
+        columns={columns}
+        showToolbar
+        slots={{
+          toolbar: GridToolbar,
+        }}
+      />
+    </Box>
   );
+  }
 
   return (
     <Box sx={{ height: 400, width: "98%" }}>
       <DataGrid
         checkboxSelection
-        {...data}
+        {...data2}
         initialState={{
           filter: {
             filterModel: {

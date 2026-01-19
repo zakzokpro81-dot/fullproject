@@ -7,7 +7,7 @@
     "displayName": "Product"
   },
   "options": {
-    "draftAndPublish": true
+    "draftAndPublish": false
   },
   "pluginOptions": {},
   "attributes": {
@@ -32,17 +32,17 @@
       "relation": "oneToOne",
       "target": "api::device-variant.device-variant"
     },
-    "category": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::category.category"
-    },
     "image": {
       "type": "media",
       "multiple": true,
       "allowedTypes": [
         "images"
       ]
+    },
+    "device_family": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::device-model.device-model"
     }
   }
 }

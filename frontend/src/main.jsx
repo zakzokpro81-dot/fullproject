@@ -12,19 +12,26 @@ import { Router } from "@mui/icons-material";
 import App from "./App";
 import { Team } from "./pages/team/Team";
 import { Input } from "./pages/input/Input";
+import { Provider } from "react-redux";
+import { store } from "./redux/store";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-    <Route path="/" element={<App />}>
+   
+   <Route path="/" element={<App />}>
       <Route index element={<Dashboard />} />
       <Route path="/team" element={<Team />} />
       <Route path="/input" element={<Input />} />
     </Route>
+ 
+ 
   )
 );
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
+      <Provider store={store}>
     <RouterProvider router={router} />
+     </Provider>,
   </StrictMode>
 );
