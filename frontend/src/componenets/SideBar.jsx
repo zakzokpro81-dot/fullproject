@@ -86,7 +86,7 @@ const basicJubs = [
 ];
 
 const basicJubs2 = [
-  { text: "Depo", icon: <HomeOutlined />, path: "/3" },
+  { text: "FamilyList", icon: <HomeOutlined />, path: "/FamilyList" },
   { text: "müştri", icon: <PeopleOutline />, path: "/11" },
   { text: "sipariş", icon: <ContactsOutlined />, path: "/5" },
   { text: "fatura", icon: <ReceiptOutlined />, path: "/6" },

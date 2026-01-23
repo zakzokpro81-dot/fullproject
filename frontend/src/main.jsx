@@ -16,6 +16,7 @@ import { Provider } from "react-redux";
 import { store } from "./redux/store";
 import { BrandList } from "../src/features/brands/BrandList";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {FamilyList} from "../src/features/families/FamilyList";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const router = createBrowserRouter(
       <Route path="/team" element={<Team />} />
       <Route path="/input" element={<Input />} />
       <Route path="/BrandList" element={<BrandList  />} />
+      <Route path="/FamilyList" element={<FamilyList  />} />
     </Route>,
   ),
 );

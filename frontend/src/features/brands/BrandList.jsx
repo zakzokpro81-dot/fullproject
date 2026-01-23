@@ -30,12 +30,8 @@ import {
 export function BrandList() {
   const queryClient = useQueryClient();
 
-  const [searchText, setSearchText] = useState("");
-
   const [selectedBrand, setSelectedBrand] = useState(null)
-
   const [openDelete, setOpenDelete] = useState(false);
-
   const [openForm, setOpenForm] = useState(false);
   const [mode, setMode] = useState("add");
 
@@ -99,24 +95,12 @@ export function BrandList() {
     }
   };
 
-  // const handleDelete = (id) => {
-  //   if (window.confirm("Are you sure you want to delete this brand?")) {
-  //     deleteMutation.mutate(id);
-  //   }
-  // };
 
   const handleDeleteClick = (brand) => {
     setSelectedBrand(brand);
     setOpenDelete(true);
   };
 
-  // const confirmDelete = () => {
-  //   deleteMutation.mutate(selectedId);
-
-
-  //   setOpenDelete(false);
-  //   setSelectedId(null);
-  // };
 
 
   const confirmDelete = () => {
