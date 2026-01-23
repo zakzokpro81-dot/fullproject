@@ -14,24 +14,28 @@ import { Team } from "./pages/team/Team";
 import { Input } from "./pages/input/Input";
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
+import { BrandList } from "../src/features/brands/BrandList";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 const router = createBrowserRouter(
   createRoutesFromElements(
-   
-   <Route path="/" element={<App />}>
+    <Route path="/" element={<App />}>
       <Route index element={<Dashboard />} />
       <Route path="/team" element={<Team />} />
       <Route path="/input" element={<Input />} />
-    </Route>
- 
- 
-  )
+      <Route path="/BrandList" element={<BrandList />} />
+    </Route>,
+  ),
 );
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
+    <QueryClientProvider client={queryClient}>
       <Provider store={store}>
-    <RouterProvider router={router} />
-     </Provider>,
-  </StrictMode>
+        <RouterProvider router={router} />
+      </Provider>
+    </QueryClientProvider>
+  </StrictMode>,
 );

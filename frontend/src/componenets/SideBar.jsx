@@ -82,7 +82,7 @@ const basicJubs = [
   { text: "Depo", icon: <HomeOutlined />, path: "/" },
   { text: "müştri", icon: <PeopleOutline />, path: "/team" },
   { text: "sipariş", icon: <ContactsOutlined />, path: "/input" },
-  { text: "fatura", icon: <ReceiptOutlined />, path: "/12" },
+  { text: "fatura", icon: <ReceiptOutlined />, path: "/BrandList" },
 ];
 
 const basicJubs2 = [
@@ -143,201 +143,190 @@ export function SideBar({ open, handleDrawerClose }) {
       <List>
         {basicJubs.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
-            <Tooltip title={open ? null: item.text } placement="left"  >
-
-            <ListItemButton
-              onClick={() => {
-                navigate(item.path);
-              }}
-              sx={[
-                {
-                  minHeight: 48,
-                  px: 2.5,
-                  bgcolor:
-                    location.pathname === item.path
-                      ? theme.palette.mode === "dark"
-                        ? grey[800]
-                        : grey[400]
-                      : null,
-                },
-                open
-                  ? {
-                    justifyContent: "initial",
-                  }
-                  : {
-                    justifyContent: "center",
-                  },
-              ]}
-            >
-              <ListItemIcon
+            <Tooltip title={open ? null : item.text} placement="left">
+              <ListItemButton
+                onClick={() => {
+                  navigate(item.path);
+                }}
                 sx={[
                   {
-                    minWidth: 0,
-                    justifyContent: "center",
+                    minHeight: 48,
+                    px: 2.5,
+                    bgcolor:
+                      location.pathname === item.path
+                        ? theme.palette.mode === "dark"
+                          ? grey[800]
+                          : grey[400]
+                        : null,
                   },
                   open
                     ? {
-                      mr: 3,
-                    }
+                        justifyContent: "initial",
+                      }
                     : {
-                      mr: "auto",
-                    },
+                        justifyContent: "center",
+                      },
                 ]}
               >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={item.text}
-                sx={[
-                  open
-                    ? {
-                      opacity: 1,
-                    }
-                    : {
-                      opacity: 0,
+                <ListItemIcon
+                  sx={[
+                    {
+                      minWidth: 0,
+                      justifyContent: "center",
                     },
-                ]}
-              />
-            </ListItemButton>
-
+                    open
+                      ? {
+                          mr: 3,
+                        }
+                      : {
+                          mr: "auto",
+                        },
+                  ]}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  sx={[
+                    open
+                      ? {
+                          opacity: 1,
+                        }
+                      : {
+                          opacity: 0,
+                        },
+                  ]}
+                />
+              </ListItemButton>
             </Tooltip>
           </ListItem>
         ))}
       </List>
 
-
-      
       <Divider />
       <List>
         {basicJubs2.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
-            <Tooltip title={open ? null: item.text } placement="left"  >
-
-            <ListItemButton
-              onClick={() => {
-                navigate(item.path);
-              }}
-              sx={[
-                {
-                  minHeight: 48,
-                  px: 2.5,
-                  bgcolor:
-                    location.pathname === item.path
-                      ? theme.palette.mode === "dark"
-                        ? grey[800]
-                        : grey[400]
-                      : null,
-                },
-                open
-                  ? {
-                    justifyContent: "initial",
-                  }
-                  : {
-                    justifyContent: "center",
-                  },
-              ]}
-            >
-              <ListItemIcon
+            <Tooltip title={open ? null : item.text} placement="left">
+              <ListItemButton
+                onClick={() => {
+                  navigate(item.path);
+                }}
                 sx={[
                   {
-                    minWidth: 0,
-                    justifyContent: "center",
+                    minHeight: 48,
+                    px: 2.5,
+                    bgcolor:
+                      location.pathname === item.path
+                        ? theme.palette.mode === "dark"
+                          ? grey[800]
+                          : grey[400]
+                        : null,
                   },
                   open
                     ? {
-                      mr: 3,
-                    }
+                        justifyContent: "initial",
+                      }
                     : {
-                      mr: "auto",
-                    },
+                        justifyContent: "center",
+                      },
                 ]}
               >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={item.text}
-                sx={[
-                  open
-                    ? {
-                      opacity: 1,
-                    }
-                    : {
-                      opacity: 0,
+                <ListItemIcon
+                  sx={[
+                    {
+                      minWidth: 0,
+                      justifyContent: "center",
                     },
-                ]}
-              />
-            </ListItemButton>
-            
+                    open
+                      ? {
+                          mr: 3,
+                        }
+                      : {
+                          mr: "auto",
+                        },
+                  ]}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  sx={[
+                    open
+                      ? {
+                          opacity: 1,
+                        }
+                      : {
+                          opacity: 0,
+                        },
+                  ]}
+                />
+              </ListItemButton>
             </Tooltip>
           </ListItem>
         ))}
       </List>
-
-
-
 
       <Divider />
 
       <List>
         {basicJubs3.map((item) => (
-           <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
-            <Tooltip title={open ? null: item.text } placement="left"  >
-
-            <ListItemButton
-              onClick={() => {
-                navigate(item.path);
-              }}
-              sx={[
-                {
-                  minHeight: 48,
-                  px: 2.5,
-                  bgcolor:
-                    location.pathname === item.path
-                      ? theme.palette.mode === "dark"
-                        ? grey[800]
-                        : grey[400]
-                      : null,
-                },
-                open
-                  ? {
-                    justifyContent: "initial",
-                  }
-                  : {
-                    justifyContent: "center",
-                  },
-              ]}
-            >
-              <ListItemIcon
+          <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
+            <Tooltip title={open ? null : item.text} placement="left">
+              <ListItemButton
+                onClick={() => {
+                  navigate(item.path);
+                }}
                 sx={[
                   {
-                    minWidth: 0,
-                    justifyContent: "center",
+                    minHeight: 48,
+                    px: 2.5,
+                    bgcolor:
+                      location.pathname === item.path
+                        ? theme.palette.mode === "dark"
+                          ? grey[800]
+                          : grey[400]
+                        : null,
                   },
                   open
                     ? {
-                      mr: 3,
-                    }
+                        justifyContent: "initial",
+                      }
                     : {
-                      mr: "auto",
-                    },
+                        justifyContent: "center",
+                      },
                 ]}
               >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={item.text}
-                sx={[
-                  open
-                    ? {
-                      opacity: 1,
-                    }
-                    : {
-                      opacity: 0,
+                <ListItemIcon
+                  sx={[
+                    {
+                      minWidth: 0,
+                      justifyContent: "center",
                     },
-                ]}
-              />
-            </ListItemButton>
-            
+                    open
+                      ? {
+                          mr: 3,
+                        }
+                      : {
+                          mr: "auto",
+                        },
+                  ]}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  sx={[
+                    open
+                      ? {
+                          opacity: 1,
+                        }
+                      : {
+                          opacity: 0,
+                        },
+                  ]}
+                />
+              </ListItemButton>
             </Tooltip>
           </ListItem>
         ))}
