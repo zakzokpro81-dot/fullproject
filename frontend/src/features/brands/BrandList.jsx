@@ -13,10 +13,10 @@
 // هذا هو “المايسترو”
 
 import { useState } from "react";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, Paper, TextField } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
+import { GridToolbar } from "@mui/x-data-grid";
 import { getBrands, createBrand, updateBrand, deleteBrand } from "./brand.api";
 import { brandColumns } from "./brand.columns";
 import BrandForm from "./BrandForm";
@@ -30,12 +30,14 @@ import {
 export function BrandList() {
   const queryClient = useQueryClient();
 
+  const [searchText, setSearchText] = useState("");
+
+  const [selectedBrand, setSelectedBrand] = useState(null)
+
   const [openDelete, setOpenDelete] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
 
   const [openForm, setOpenForm] = useState(false);
   const [mode, setMode] = useState("add");
-  const [selectedBrand, setSelectedBrand] = useState(null);
 
   // Fetch brands
   const { data: brands = [], isLoading } = useQuery({
@@ -103,17 +105,60 @@ export function BrandList() {
   //   }
   // };
 
-  const handleDeleteClick = (id) => {
-    setSelectedId(id);
+  const handleDeleteClick = (brand) => {
+    setSelectedBrand(brand);
     setOpenDelete(true);
   };
 
-  const confirmDelete = () => {
-    deleteMutation.mutate(selectedId);
+  // const confirmDelete = () => {
+  //   deleteMutation.mutate(selectedId);
 
-    setOpenDelete(false);
-    setSelectedId(null);
-  };
+
+  //   setOpenDelete(false);
+  //   setSelectedId(null);
+  // };
+
+
+  const confirmDelete = () => {
+    if (!selectedBrand) return
+
+    deleteMutation.mutate(selectedBrand.id)
+    setOpenDelete(false)
+    setSelectedBrand(null)
+  }
+
+
+
+
+  function BrandGridToolbar({ searchText, onSearchChange }) {
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          p: 1,
+          gap: 2,
+          flexWrap: "wrap",
+        }}
+      >
+        {/* Left: Search */}
+        <TextField
+          size="small"
+          label="Search"
+          value={searchText}
+          onChange={(e) => onSearchChange(e.target.value)}
+          sx={{ width: 250 }}
+        />
+
+        {/* Right: DataGrid built-in options */}
+        <GridToolbar />
+      </Box>
+    );
+  }
+
+
+
 
   return (
     <Box>
@@ -129,14 +174,32 @@ export function BrandList() {
         </Button>
       </Box>
 
-      <DataGrid
-        rows={brands}
-        columns={brandColumns(handleOpenEdit, handleDeleteClick)}
-        autoHeight
-        loading={isLoading}
-        pageSizeOptions={[10, 25, 50]}
-        disableRowSelectionOnClick
-      />
+
+     
+
+
+      <Box display="flex" >
+        <DataGrid
+          rows={brands}
+          columns={brandColumns(handleOpenEdit, handleDeleteClick)}
+          autoHeight
+          loading={isLoading}
+          pageSizeOptions={[10, 25, 50]}
+
+          sx={{
+            width: "100%",
+          }}
+          showToolbar
+           slots={{
+    toolbar: GridToolbar,
+  }}
+  slotProps={{
+    toolbar: {
+      quickFilterProps: { quickFilterAlwaysVisible: true },
+    },
+  }}
+          />
+      </Box>
 
       <BrandForm
         open={openForm}
@@ -146,11 +209,16 @@ export function BrandList() {
         onSubmit={handleSubmit}
       />
 
-      <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
+      <Dialog open={openDelete} onClose={() => setOpenDelete(false)} >
         <DialogTitle>تأكيد الحذف</DialogTitle>
 
         <DialogContent>
-          هل أنت متأكد أنك تريد حذف هذا البراند؟ لا يمكن التراجع عن هذه العملية.
+
+
+          هل أنت متأكد أنك تريد حذف البراند{" "}
+          <strong>{selectedBrand?.name}</strong>؟
+          <br />
+          لا يمكن التراجع عن هذه العملية.
         </DialogContent>
 
         <DialogActions>

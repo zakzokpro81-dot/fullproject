@@ -12,8 +12,9 @@
 
 // الهدف:
 // نفس الجدول ممكن نستخدمه لاحقاً مع DataGrid أو Table ثانية بدون تعديل المنطق
-
-
+import { Box, IconButton } from "@mui/material";
+import EditNoteIcon from '@mui/icons-material/EditNote';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 export const brandColumns = (onEdit, onDelete) => [
   {
@@ -43,10 +44,19 @@ export const brandColumns = (onEdit, onDelete) => [
       const row = params.row;
 
       return (
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => onEdit(row)}>Edit</button>
-          <button onClick={() => onDelete(row.id)}>Delete</button>
-        </div>
+        <>
+          <Box >
+            <IconButton onClick={() => onEdit(row)}>
+              <EditNoteIcon />
+            </IconButton>
+            <IconButton onClick={() => onDelete(row )}>
+
+              <DeleteIcon />
+
+            </IconButton>
+          </Box>
+
+        </>
       );
     },
   },

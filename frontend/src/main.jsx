@@ -25,7 +25,7 @@ const router = createBrowserRouter(
       <Route index element={<Dashboard />} />
       <Route path="/team" element={<Team />} />
       <Route path="/input" element={<Input />} />
-      <Route path="/BrandList" element={<BrandList />} />
+      <Route path="/BrandList" element={<BrandList  />} />
     </Route>,
   ),
 );

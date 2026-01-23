@@ -49,9 +49,23 @@ export default function App() {
 
         <SideBar open={open} handleDrawerClose={handleDrawerClose} />
 
-        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <Box component="main" sx={{ flexGrow: 1, minWidth: 0 , p: 3 }}>
           <DrawerHeader />
-          <Outlet />
+
+          <Box
+           
+            sx={{
+              flexGrow: 1,
+              width: "100%",
+              minWidth: 0,    
+              overflowX: "hidden",
+            }}
+          >
+            <Outlet />
+          </Box>
+
+
+
         </Box>
       </Box>
     </ThemeProvider>
