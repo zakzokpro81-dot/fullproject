@@ -1,163 +1,83 @@
-import * as React from "react";
-import Box from "@mui/material/Box";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import React, { useEffect, useState } from "react";
+import supabase from "../../config/supabase";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Typography
+} from "@mui/material";
 
-const rows = [
-  {
-    id: 1,
-    model: "iphone 11",
-    piece: "ekran",
-    Quality: "orjinal",
-    marka: "gx",
-    Quanity: "2",
-    price: "10",
-  },
-  {
-    id: 2,
-    model: "iphone 12",
-    piece: "batarya",
-    Quality: "orjinal",
-    marka: "gx",
-    Quanity: "2",
-    price: "10",
-  },
-  {
-    id: 3,
-    model: "iphone 13",
-    piece: "ekran",
-    Quality: "orjinal",
-    marka: "gx",
-    Quanity: "2",
-    price: "10",
-  },
-  {
-    id: 4,
-    model: "iphone 14",
-    piece: "ekran",
-    Quality: "orjinal",
-    marka: "gx",
-    Quanity: "2",
-    price: "10",
-  },
-  {
-    id: 5,
-    model: "iphone 15",
-    piece: "ekran",
-    Quality: "orjinal",
-    marka: "gx",
-    Quanity: "2",
-    price: "10",
-  },
-  {
-    id: 6,
-    model: "iphone 16",
-    piece: "ekran",
-    Quality: "orjinal",
-    marka: "gx",
-    Quanity: "2",
-    price: "10",
-  },
-  {
-    id: 7,
-    model: "iphone 17",
-    piece: "ekran",
-    Quality: "orjinal",
-    marka: "gx",
-    Quanity: "2",
-    price: "10",
-  },
-];
+export  function Dashboard() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-const columns = [
-  {
-    field: "model",
-    headerName: "model",
-    flex: 1,
-    align: "center",
-    headerAlign: "center",
-  },
-  {
-    field: "piece",
-    headerName: "parça",
-    flex: 1,
-    align: "center",
-    headerAlign: "center",
-  },
-  {
-    field: "Quality",
-    headerName: "kalite",
-    flex: 1,
-    align: "center",
-    headerAlign: "center",
-  },
-  {
-    field: "marka",
-    headerName: "marka",
-    flex: 1,
-    align: "center",
-    headerAlign: "center",
-  },
-  {
-    field: "Quanity",
-    headerName: "adet",
-    flex: 1,
-    align: "center",
-    headerAlign: "center",
-  },
-  {
-    field: "price",
-    headerName: "fiyat",
-    flex: 1,
-    align: "center",
-    headerAlign: "center",
-  },
-];
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: modelsData, error } = await supabase
+        .from("models")
+        .select(`
+          id,
+          name,
+          family (
+            id,
+            name,
+            brand (
+              id,
+              name
+            )
+          )
+        `);
 
-const newData = {
-  columns: columns,
-  rows: rows,
-};
-const VISIBLE_FIELDS = [
-  "model",
-  "piece",
-  "Quality",
-  "Quality",
-  "Quanity",
-  "price",
-];
+      if (error) {
+        console.log("Error fetching data:", error);
+        setLoading(false);
+        return;
+      }
 
-export function Dashboard() {
-  const data = newData;
+      // تحويل البيانات لتكون بالشكل المطلوب
+      const formatted = modelsData.map((item) => ({
+        id: item.id,
+        brand: item.family.brand.name,
+        family: item.family.name,
+        model: item.name,
+      }));
 
-  // Otherwise filter will be applied on fields such as the hidden column id
-  const columns = React.useMemo(
-    () =>
-      data.columns.filter((column) => VISIBLE_FIELDS.includes(column.field)),
-    [data.columns]
-  );
+      setData(formatted);
+      setLoading(false);
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) return <Typography>Loading...</Typography>;
 
   return (
-    <Box sx={{ height: 400, width: "98%" }}>
-      <DataGrid
-        checkboxSelection
-        {...data}
-        initialState={{
-          filter: {
-            filterModel: {
-              items: [],
-              quickFilterValues: ["iphone"],
-            },
-          },
-        }}
-        disableColumnFilter
-        disableDensitySelector
-        // @ts-ignore
-        columns={columns}
-        showToolbar
-        slots={{
-          toolbar: GridToolbar,
-        }}
-      />
-    </Box>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+          
+            <TableCell>Model</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {data.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell>
+               
+{row.brand} {row.family} {row.model}
+               
+                
+                </TableCell>
+             
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 }

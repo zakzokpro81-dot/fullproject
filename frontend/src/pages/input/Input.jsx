@@ -5,29 +5,62 @@ import { Button, MenuItem, Select } from '@mui/material';
 import Box from '@mui/material/Box';
 import TextField from '@mui/material/TextField';
 import { useForm } from "react-hook-form"
-import { useState } from 'react';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-const data = [
-    {
-        value: "iphone",
-        lable: "iphone",
-    },
-    {
-        value: "samsung",
-        lable: "samsung",
-    },
-    {
-        value: "redmi",
-        lable: "redmi",
-    }
-]
+import { useState, useEffect } from "react";
+import supabase from "../../config/supabase";
+
 
 
 
 export function Input() {
     const [open, setOpen] = useState(false);
-   
+
+    const [selectedBrand, setSelectedBrand] = useState(null);
+    const [selectedFamily, setSelectedFamily] = useState(null);
+    const [selectedModel, setSelectedModel] = useState(null);
+
+
+
+    const [brands, setBrands] = useState([]);
+    const [families, setFamilies] = useState([]);
+    const [models, setModels] = useState([]);
+
+    useEffect(() => {
+        const fetchBrand = async () => {
+            const { data, error } = await supabase.from("brands").select();
+            if (error) return console.log("Brand error:", error);
+            setBrands(data);
+        };
+
+        const fetchFamilies = async () => {
+            const { data, error } = await supabase.from("families").select();
+            if (error) return console.log("Families error:", error);
+            setFamilies(data);
+        };
+
+        const fetchModels = async () => {
+            const { data, error } = await supabase.from("models").select();
+            if (error) return console.log("Models error:", error);
+            setModels(data);
+        };
+
+        fetchBrand();
+        fetchFamilies();
+        fetchModels();
+    }, []);
+
+
+
+
+
+    // العائلات الخاصة بالبراند المختار
+    const filteredFamilies = families.filter(f => f.brand === selectedBrand);
+
+    // الموديلات الخاصة بالفاميلي المختار
+    const filteredModels = models.filter(m => m.family === selectedFamily);
+
+
 
 
 
@@ -63,18 +96,72 @@ export function Input() {
             autoComplete="off"
         >
 
+
+        
+
+
+
+
+            {/* Brand Dropdown */}
             <Select
-                defaultValue={"iphone"}
-                variant="filled"
-            >
-                {data.map((item) => {
-                    return (
-                        <MenuItem key={item.value} value={item.value} >
-                            {item.lable}
-                        </MenuItem>
-                    )
-                })}
+            
+{...register("brand", { required: true,  })}
+                helperText={errors.parça ? "eksik veri" : null}
+                error={errors.parça}
+
+            variant="filled" value={selectedBrand || ""} onChange={e => {
+                setSelectedBrand(Number(e.target.value));
+                setSelectedFamily(null); // إعادة تعيين العائلة عند تغيير البراند
+                setSelectedModel(null);  // إعادة تعيين الموديل
+            }}>
+                <MenuItem value="">select brand</MenuItem>
+                {brands.map(b => (
+                    <MenuItem key={b.id} value={b.id}>{b.name}</MenuItem>
+                ))}
             </Select>
+
+            {/* Family Dropdown */}
+            <Select 
+            
+            {...register("family", { required: true,  })}
+                helperText={errors.parça ? "eksik veri" : null}
+                error={errors.parça}
+            variant="filled" value={selectedFamily || ""} onChange={e => {
+                setSelectedFamily(Number(e.target.value));
+                setSelectedModel(null); // إعادة تعيين الموديل عند تغيير العائلة
+            }} disabled={!selectedBrand}>
+                <MenuItem value="">select family</MenuItem>
+                {filteredFamilies.map(f => (
+                    <MenuItem key={f.id} value={f.id}>{f.name}</MenuItem>
+                ))}
+            </Select>
+
+            {/* Model Dropdown */}
+            <Select variant="filled" value={selectedModel || ""}
+                
+                {...register("model", { required: true,  })}
+                helperText={errors.parça ? "eksik veri" : null}
+                error={errors.parça}
+
+                onChange={e => setSelectedModel(Number(e.target.value))} disabled={!selectedFamily}>
+                <MenuItem value="">select model</MenuItem>
+                {filteredModels.map(m => (
+                    <MenuItem key={m.id} value={m.id}>{m.name}</MenuItem>
+                ))}
+            </Select>
+
+
+
+
+
+
+
+
+
+
+
+
+           
 
 
 
@@ -117,8 +204,8 @@ export function Input() {
                 </Button>
 
                 <Snackbar
-                    anchorOrigin={{ vertical :"bottom", horizontal :"center" }}
-                    
+                    anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+
                     open={open}
                     open={open} autoHideDuration={6000} onClose={handleClose}>
                     <Alert

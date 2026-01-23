@@ -24,16 +24,27 @@
       "type": "boolean",
       "default": true
     },
-    "device_model": {
-      "type": "relation",
-      "relation": "oneToOne",
-      "target": "api::device-model.device-model"
+    "Network": {
+      "type": "enumeration",
+      "enum": [
+        "g4",
+        "g5"
+      ]
     },
-    "image": {
-      "type": "media",
-      "multiple": false,
-      "allowedTypes": [
-        "images"
+    "Color": {
+      "type": "enumeration",
+      "enum": [
+        "Red",
+        "Mavi",
+        "Black"
+      ]
+    },
+    "Memory": {
+      "type": "enumeration",
+      "enum": [
+        "gb128",
+        "gb256",
+        "T1"
       ]
     }
   }
