@@ -1,44 +1,41 @@
-// src/features/products/ProductsList.jsx
 import React from 'react';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import { Box, Button, Dialog, DialogContent, DialogTitle } from '@mui/material';
 import { productColumns } from './product.columns';
 import { ProductForm } from './ProductForm';
+import { useQuery } from '@tanstack/react-query';
+import { getProducts } from './product.api';
 
 export function ProductsList() {
-    const [products, setProducts] = React.useState([]);
+    const { data: products = [], refetch } = useQuery({ queryKey: ['products'], queryFn: getProducts });
+
     const [openForm, setOpenForm] = React.useState(false);
     const [selectedProduct, setSelectedProduct] = React.useState(null);
 
-    // عند الضغط على تعديل
     const handleEdit = (product) => {
         setSelectedProduct(product);
         setOpenForm(true);
     };
 
-    // عند الضغط على حذف
     const handleDelete = (product) => {
         console.log('Delete product:', product.id);
-        // الربط مع deleteMutation لاحقًا
+        // link with deleteMutation later
     };
 
-    // غلق الفورم
     const handleCloseForm = () => {
         setOpenForm(false);
         setSelectedProduct(null);
     };
 
-    // عند حفظ الفورم
-    const handleSubmitForm = (data) => {
-        console.log('Form submitted:', data);
+    const handleSubmitForm = () => {
         handleCloseForm();
-        // الربط مع create/update Mutation لاحقًا
+        refetch(); // refresh product list
     };
 
     return (
         <Box sx={{ height: 600, width: '100%' }}>
             <Button variant="contained" onClick={() => setOpenForm(true)} sx={{ mb: 2 }}>
-                إضافة منتج
+                Add Product
             </Button>
 
             <DataGrid
@@ -52,11 +49,9 @@ export function ProductsList() {
             />
 
             <Dialog open={openForm} onClose={handleCloseForm} maxWidth="sm" fullWidth>
-                <DialogTitle>
-                    {selectedProduct ? 'تعديل المنتج' : 'إضافة منتج'}
-                </DialogTitle>
+                <DialogTitle>{selectedProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
                 <DialogContent>
-                    <ProductForm defaultValues={selectedProduct || {}} onSubmit={handleSubmitForm} />
+                    <ProductForm defaultValues={selectedProduct || {}} onSuccess={handleSubmitForm} />
                 </DialogContent>
             </Dialog>
         </Box>

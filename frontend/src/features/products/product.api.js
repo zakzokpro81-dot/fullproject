@@ -55,3 +55,34 @@ export async function getModelsWithBrandAndFamily() {
     }));
 }
 
+
+export async function getWarehouses() {
+  const { data, error } = await supabase
+    .from('warehouses')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+// جلب كل Variants مع القيم الخاصة بها
+export async function getVariantsWithValues() {
+  const { data, error } = await supabase
+    .from('variants')
+    .select(`
+      id,
+      name,
+      values:variant_values(id, value)
+    `)
+    .order('id', { ascending: true });
+
+  if (error) throw error;
+
+  // تحويل البيانات لتصبح مسطحة بشكل مناسب للفورم
+  return data.map(v => ({
+    id: v.id,
+    name: v.name,
+    values: v.values.map(val => ({ id: val.id, value: val.value }))
+  }));
+}
