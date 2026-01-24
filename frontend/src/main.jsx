@@ -19,6 +19,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {FamilyList} from "../src/features/families/FamilyList";
 import {ModelsList} from "../src/features/models/ModelsList";
 import {ProductsList} from "../src/features/products/ProductList";
+import {WarehousesList} from "../src/features/warehouses/WarehousesList";
+import {WarehouseStockList} from "../src/features/WarehouseStock/WarehouseStockList";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter(
@@ -31,6 +33,8 @@ const router = createBrowserRouter(
       <Route path="/FamilyList" element={<FamilyList  />} />
       <Route path="/ModelsList" element={<ModelsList  />} />
       <Route path="/ProductsList" element={<ProductsList  />} />
+      <Route path="/WarehousesList" element={<WarehousesList  />} />
+      <Route path="/WarehouseStockList" element={<WarehouseStockList  />} />
     </Route>,
   ),
 );

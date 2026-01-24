@@ -89,11 +89,11 @@ const basicJubs2 = [
   { text: "FamilyList", icon: <HomeOutlined />, path: "/FamilyList" },
   { text: "ModelsList", icon: <PeopleOutline />, path: "/ModelsList" },
   { text: "ProductsList", icon: <ContactsOutlined />, path: "/ProductsList" },
-  { text: "fatura", icon: <ReceiptOutlined />, path: "/6" },
+  { text: "WarehousesList", icon: <ReceiptOutlined />, path: "/WarehousesList" },
 ];
 
 const basicJubs3 = [
-  { text: "Depo", icon: <HomeOutlined />, path: "/7" },
+  { text: "WarehouseStockList", icon: <HomeOutlined />, path: "/WarehouseStockList" },
   { text: "müştri", icon: <PeopleOutline />, path: "/8" },
   { text: "sipariş", icon: <ContactsOutlined />, path: "/9" },
   { text: "fatura", icon: <ReceiptOutlined />, path: "/10" },
