@@ -1,149 +1,156 @@
 //الصفحة الرئيسية للـ Families، تعرض DataGrid، Toolbar، وDialog حذف.
 
 
-
-// src/features/families/FamilyList.jsx
-
-import React, { useState } from "react";
-import {
-    Box,
-    Typography,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-} from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { useState } from "react";
+import { Box, Button, Dialog, DialogTitle, DialogActions, DialogContent, Typography } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-import FamilyForm from "./FamilyForm";
-import { familyColumns } from "./family.columns";
+import { GridToolbar } from "@mui/x-data-grid";
 import { getFamilies, createFamily, updateFamily, deleteFamily } from "./family.api";
+import { familyColumns } from "./family.columns";
+import FamilyForm from "./FamilyForm";
+import ScrollToTopButton from "../../componenets/ScrollToTopButton";
 
-export  function FamilyList() {
+export function FamilyList() {
     const queryClient = useQueryClient();
 
-    const [selectedFamily, setSelectedFamily] = useState(null);
     const [openForm, setOpenForm] = useState(false);
-    const [mode, setMode] = useState("add");
-
-    const [openDelete, setOpenDelete] = useState(false);
+    const [selectedFamily, setSelectedFamily] = useState(null);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [deleteId, setDeleteId] = useState(null);
 
     // Fetch families
     const { data: families = [], isLoading } = useQuery({
         queryKey: ["families"],
         queryFn: getFamilies,
+
     });
 
-    // Mutations
+    // Create mutation
     const createMutation = useMutation({
         mutationFn: createFamily,
         onSuccess: () => {
             queryClient.invalidateQueries(["families"]);
-            handleCloseForm();
+            setOpenForm(false);
         },
     });
 
+    // Update mutation
     const updateMutation = useMutation({
-        mutationFn: ({ id, data }) => updateFamily(id, data),
+        mutationFn: updateFamily,
         onSuccess: () => {
             queryClient.invalidateQueries(["families"]);
-            handleCloseForm();
-        },
-    });
-
-    const deleteMutation = useMutation({
-        mutationFn: deleteFamily,
-        onSuccess: () => {
-            queryClient.invalidateQueries(["families"]);
-            setOpenDelete(false);
+            setOpenForm(false);
             setSelectedFamily(null);
         },
     });
 
-    // Handlers
-    const handleOpenAdd = () => {
-        setMode("add");
+    // Delete mutation
+    const deleteMutation = useMutation({
+        mutationFn: deleteFamily,
+        onSuccess: () => {
+            queryClient.invalidateQueries(["families"]);
+            setOpenDeleteDialog(false);
+            setDeleteId(null);
+        },
+    });
+
+    const handleAdd = () => {
         setSelectedFamily(null);
         setOpenForm(true);
     };
 
-    const handleOpenEdit = (family) => {
-        setMode("edit");
+    const handleEdit = (family) => {
         setSelectedFamily(family);
         setOpenForm(true);
     };
 
-    const handleCloseForm = () => {
-        setOpenForm(false);
-        setSelectedFamily(null);
+    const handleDeleteClick = (id) => {
+        setDeleteId(id);
+        setOpenDeleteDialog(true);
     };
 
-    const handleSubmit = (data) => {
-        if (mode === "add") {
-            createMutation.mutate(data);
+    const handleDeleteConfirm = () => {
+        deleteMutation.mutate(deleteId);
+    };
+
+    const handleFormSubmit = (data) => {
+        if (selectedFamily) {
+            updateMutation.mutate({ id: selectedFamily.id, ...data });
         } else {
-            updateMutation.mutate({ id: selectedFamily.id, data });
+            createMutation.mutate(data);
         }
     };
 
-    const handleDeleteClick = (family) => {
-        setSelectedFamily(family);
-        setOpenDelete(true);
-    };
-
-    const confirmDelete = () => {
-        if (!selectedFamily) return;
-        deleteMutation.mutate(selectedFamily.id);
-    };
-
     return (
-        <Box>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Typography variant="h5">Families</Typography>
-                <Button variant="contained" onClick={handleOpenAdd}>
+        <Box p={2}>
+
+            <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                mb={2}
+            >
+                <Typography variant="h5">Family</Typography>
+                <Button variant="contained" onClick={handleAdd} sx={{ mb: 2 }}>
                     Add Family
                 </Button>
             </Box>
 
-            <Box sx={{ width: "100%", overflowX: "auto" }}>
-                <DataGrid
-                    rows={families|| []}
-                    columns={familyColumns(handleOpenEdit, handleDeleteClick)}
-                    autoHeight
-                    loading={isLoading}
-                    pageSizeOptions={[10, 25, 50]}
-                    initialState={{
-                        pagination: { paginationModel: { page: 0, pageSize: 25 } },
-                    }}
-                    slots={{
-                        toolbar: GridToolbar,
-                    }}
-                />
-            </Box>
 
+
+
+            <DataGrid
+                rows={families}
+                columns={familyColumns(handleEdit, handleDeleteClick)}
+                loading={isLoading}
+                autoHeight
+                pageSize={10}
+                rowsPerPageOptions={[10, 20, 50]}
+                sx={{
+                    width: "100%",
+                }}
+                showToolbar
+                slots={{
+                    toolbar: GridToolbar,
+                }}
+                
+            />
+            
+  <ScrollToTopButton />
+            {/* Form Dialog */}
             <FamilyForm
                 open={openForm}
-                mode={mode}
+                onClose={() => setOpenForm(false)}
+                onSubmit={handleFormSubmit}
+                defaultValues={selectedFamily}
                 initialData={selectedFamily}
-                onClose={handleCloseForm}
-                onSubmit={handleSubmit}
             />
 
-            <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
-                <DialogTitle>Confirm Delete</DialogTitle>
+            {/* Delete Confirmation Dialog */}
+
+            <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)} >
+                <DialogTitle>Delete Confirm</DialogTitle>
+
                 <DialogContent>
-                    Are you sure you want to delete family{" "}
-                    <strong>{selectedFamily?.name}</strong>? This action cannot be undone.
+
+
+                    Are you sure you want to delete this family?{" "}
+                    <strong>{selectedFamily?.name}</strong>
+                    <br />
+                    no back
                 </DialogContent>
+
                 <DialogActions>
-                    <Button onClick={() => setOpenDelete(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={confirmDelete}>
+                    <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
+                    <Button variant="contained" onClick={handleDeleteConfirm}>
                         Delete
                     </Button>
                 </DialogActions>
             </Dialog>
+
+
+
         </Box>
     );
 }

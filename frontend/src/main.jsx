@@ -17,7 +17,8 @@ import { store } from "./redux/store";
 import { BrandList } from "../src/features/brands/BrandList";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {FamilyList} from "../src/features/families/FamilyList";
-
+import {ModelsList} from "../src/features/models/ModelsList";
+import {ProductsList} from "../src/features/products/ProductList";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter(
@@ -28,6 +29,8 @@ const router = createBrowserRouter(
       <Route path="/input" element={<Input />} />
       <Route path="/BrandList" element={<BrandList  />} />
       <Route path="/FamilyList" element={<FamilyList  />} />
+      <Route path="/ModelsList" element={<ModelsList  />} />
+      <Route path="/ProductsList" element={<ProductsList  />} />
     </Route>,
   ),
 );

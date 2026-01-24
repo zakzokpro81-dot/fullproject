@@ -5,33 +5,45 @@
 
 
 // src/features/families/family.api.js
+// family.api.js
+// دوال CRUD للتعامل مع Supabase لميزة Families
+
 
 import supabase from "../../config/supabase";
 
-// Get all families
-export async function getFamilies() {
+// Fetch all families
+export const getFamilies = async () => {
     const { data, error } = await supabase
         .from("families")
-        .select("id, name, slug, is_active, brand (id, name)")
-        .order("name", { ascending: true });
+        .select(`
+      id,
+      name,
+      slug,
+      is_active,
+      brand,
+      category,
+       brands:brands!families_brand_fkey ( id, name ),
+  categories:categories!families_catagori_fkey ( id, name )
+    `)
+        .order("id", { ascending: true });
 
     if (error) throw error;
     return data;
-}
+};
 
-// Create a new family
-export async function createFamily(family) {
+// Create family
+export const createFamily = async (family) => {
     const { data, error } = await supabase
         .from("families")
-        .insert(family)
+        .insert([family])
         .select();
 
     if (error) throw error;
     return data[0];
-}
+};
 
-// Update an existing family
-export async function updateFamily(id, family) {
+// Update family
+export const updateFamily = async ({ id, ...family }) => {
     const { data, error } = await supabase
         .from("families")
         .update(family)
@@ -40,15 +52,15 @@ export async function updateFamily(id, family) {
 
     if (error) throw error;
     return data[0];
-}
+};
 
-// Delete a family
-export async function deleteFamily(id) {
-    const { data, error } = await supabase
+// Delete family
+export const deleteFamily = async (id) => {
+    const { error } = await supabase
         .from("families")
         .delete()
         .eq("id", id);
 
     if (error) throw error;
-    return data;
-}
+    return true;
+};

@@ -87,8 +87,8 @@ const basicJubs = [
 
 const basicJubs2 = [
   { text: "FamilyList", icon: <HomeOutlined />, path: "/FamilyList" },
-  { text: "müştri", icon: <PeopleOutline />, path: "/11" },
-  { text: "sipariş", icon: <ContactsOutlined />, path: "/5" },
+  { text: "ModelsList", icon: <PeopleOutline />, path: "/ModelsList" },
+  { text: "ProductsList", icon: <ContactsOutlined />, path: "/ProductsList" },
   { text: "fatura", icon: <ReceiptOutlined />, path: "/6" },
 ];
 

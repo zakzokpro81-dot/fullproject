@@ -3,7 +3,7 @@
 
 // src/features/families/FamilyForm.jsx
 
-import React, { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -11,151 +11,114 @@ import {
     DialogActions,
     Button,
     TextField,
+    FormControl,
+    InputLabel,
+    Select,
     MenuItem,
+    Checkbox,
+    FormControlLabel,
+    Stack,
 } from "@mui/material";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { familySchema } from "./family.schema";
-import { getBrands } from "../brands/brand.api";
-import { getCategories } from "./category.api";
+import { useQuery } from "@tanstack/react-query";
+import supabase from "../../config/supabase";
 
-export default function FamilyForm({ open, onClose, mode, initialData, onSubmit }) {
+export default function FamilyForm({ open, onClose, onSubmit, defaultValues }) {
     const {
-        control,
+        register,
         handleSubmit,
         reset,
         formState: { errors },
     } = useForm({
         resolver: zodResolver(familySchema),
-        defaultValues: {
-            name: "",
-            slug: "",
-            brand: "",
-            category: "",
-            is_active: true,
+        defaultValues,
+    });
+
+    // fetch brands
+    const { data: brands = [] } = useQuery({
+        queryKey: ["brands"],
+        queryFn: async () => {
+            const { data, error } = await supabase.from("brands").select("id, name");
+            if (error) throw error;
+            return data;
         },
     });
 
-    const [brands, setBrands] = useState([]);
-    const [categories, setCategories] = useState([]);
+    // fetch categories
+    const { data: categories = [] } = useQuery({
+        queryKey: ["categories"],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from("categories")
+                .select("id, name");
+            if (error) throw error;
+            return data;
+        },
+    });
 
     useEffect(() => {
-        // Fetch brands for select
-        getBrands().then((data) => setBrands(data)).catch(console.error);
-        getCategories().then((data) => setCategories(data)).catch(console.error);
-    }, []);
-
-    useEffect(() => {
-        if (initialData) {
-            reset(initialData);
-        } else {
-            reset({
-                name: "",
-                slug: "",
-                brand: "",
-                category: "",
-                is_active: true,
-            });
-        }
-    }, [initialData, reset]);
-
-    const submitHandler = (data) => {
-        onSubmit(data);
-    };
-
-
-
-
+        reset(defaultValues);
+    }, [defaultValues, reset]);
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle>{mode === "add" ? "Add Family" : "Edit Family"}</DialogTitle>
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+            <DialogTitle>
+                {defaultValues?.id ? "Edit Family" : "Add Family"}
+            </DialogTitle>
 
-            <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
-                <Controller
-                    name="name"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            label="Family Name"
-                            error={!!errors.name}
-                            helperText={errors.name?.message}
-                            fullWidth
-                        />
-                    )}
-                />
+            <DialogContent>
+                <Stack spacing={2} mt={1}>
+                    <TextField
+                        label="Family Name"
+                        {...register("name")}
+                        error={!!errors.name}
+                        helperText={errors.name?.message}
+                        fullWidth
+                    />
 
-                <Controller
-                    name="slug"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            label="Slug"
-                            error={!!errors.slug}
-                            helperText={errors.slug?.message}
-                            fullWidth
-                        />
-                    )}
-                />
+                    <TextField
+                        label="Slug"
+                        {...register("slug")}
+                        error={!!errors.slug}
+                        helperText={errors.slug?.message}
+                        fullWidth
+                    />
 
-                <Controller
-                    name="brand"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField {...field} select label="Brand" fullWidth error={!!errors.brand} helperText={errors.brand?.message}>
-                            {brands.map((b) => (
-                                <MenuItem key={b.id} value={b.id}>
-                                    {b.name}
+                    <FormControl fullWidth error={!!errors.brand}>
+                        <InputLabel>Brand</InputLabel>
+                        <Select defaultValue="" {...register("brand")}>
+                            {brands.map((brand) => (
+                                <MenuItem key={brand.id} value={brand.id}>
+                                    {brand.name}
                                 </MenuItem>
                             ))}
-                        </TextField>
-                    )}
-                />
+                        </Select>
+                    </FormControl>
 
-                <Controller
-                    name="category"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            select
-                            label="Category"
-                            fullWidth
-                            error={!!errors.category}
-                            helperText={errors.category?.message}
-                        >
-                            {categories.map((c) => (
-                                <MenuItem key={c.id} value={c.id}>
-                                    {c.name}
+                    <FormControl fullWidth error={!!errors.category}>
+                        <InputLabel>Category</InputLabel>
+                        <Select defaultValue="" {...register("category")}>
+                            {categories.map((cat) => (
+                                <MenuItem key={cat.id} value={cat.id}>
+                                    {cat.name}
                                 </MenuItem>
                             ))}
-                        </TextField>
-                    )}
-                />
+                        </Select>
+                    </FormControl>
 
-                <Controller
-                    name="is_active"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            select
-                            label="Status"
-                            fullWidth
-                        >
-                            <MenuItem value={true}>Active</MenuItem>
-                            <MenuItem value={false}>Inactive</MenuItem>
-                        </TextField>
-                    )}
-                />
+                    <FormControlLabel
+                        control={<Checkbox {...register("is_active")} defaultChecked />}
+                        label="Active"
+                    />
+                </Stack>
             </DialogContent>
 
             <DialogActions>
                 <Button onClick={onClose}>Cancel</Button>
-                <Button variant="contained" onClick={handleSubmit(submitHandler)}>
-                    {mode === "add" ? "Add" : "Save"}
+                <Button variant="contained" onClick={handleSubmit(onSubmit)}>
+                    Save
                 </Button>
             </DialogActions>
         </Dialog>

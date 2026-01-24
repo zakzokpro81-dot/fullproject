@@ -1,56 +1,58 @@
-// src/features/families/family.columns.js
-import { Box, IconButton } from "@mui/material";
-import EditNoteIcon from '@mui/icons-material/EditNote';
-import DeleteIcon from '@mui/icons-material/Delete';
-
+// family.columns.js
+// تعريف أعمدة DataGrid لميزة Families
+// تشمل الأعمدة الأساسية وأزرار Actions (Edit / Delete)
+// callback يتم تمريره من FamilyList.jsx
+import { IconButton, Stack } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 export const familyColumns = (onEdit, onDelete) => [
+    {
+        field: "id",
+        headerName: "ID",
+        width: 80,
+    },
     {
         field: "name",
         headerName: "Family Name",
         flex: 1,
     },
     {
-        field: "slug",
-        headerName: "Slug",
-        flex: 1,
+        field: "brand_name",
+        headerName: "Brand",
+        width: 150,
+        valueGetter: (value, row) => row?.brands?.name || ""
     },
     {
-    field: "brandName",
-    headerName: "Brand",
-    flex: 1,
-    valueGetter: (params) => params?.row?.brand?.name || "—", // ← تحقق من كل شيء
-  },
-    {
-        field: "category",
+        field: "category_name",
         headerName: "Category",
-        flex: 1,
-        valueGetter: (params) => params.row.category?.name || params.row.category,
+        width: 150,
+        valueGetter: (value, row) => row?.categories?.name || ""
     },
+
+
+
     {
         field: "is_active",
-        headerName: "Status",
+        headerName: "Active",
         width: 120,
-        renderCell: (params) => (params.value ? "Active" : "Inactive"),
+        renderCell: (params) => (params.value ? "Yes" : "No"),
     },
     {
         field: "actions",
         headerName: "Actions",
-        width: 160,
+        width: 150,
         sortable: false,
         filterable: false,
-        renderCell: (params) => {
-            const row = params.row;
-            return (
-                <Box>
-                    <IconButton onClick={() => onEdit(row)}>
-                        <EditNoteIcon />
-                    </IconButton>
-                    <IconButton onClick={() => onDelete(row)}>
-                        <DeleteIcon />
-                    </IconButton>
-                </Box>
-            );
-        },
+        renderCell: (params) => (
+            <Stack direction="row" spacing={1}>
+                <IconButton onClick={() => onEdit(params.row)}>
+                    <EditIcon />
+                </IconButton>
+                <IconButton onClick={() => onDelete(params.row.id)}>
+                    <DeleteIcon />
+                </IconButton>
+            </Stack>
+        ),
     },
 ];

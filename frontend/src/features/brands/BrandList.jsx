@@ -26,6 +26,7 @@ import {
   DialogContent,
   DialogActions,
 } from "@mui/material";
+import ScrollToTopButton from "../../componenets/ScrollToTopButton";
 
 export function BrandList() {
   const queryClient = useQueryClient();
@@ -159,7 +160,7 @@ export function BrandList() {
       </Box>
 
 
-     
+
 
 
       <Box display="flex" >
@@ -174,15 +175,11 @@ export function BrandList() {
             width: "100%",
           }}
           showToolbar
-           slots={{
-    toolbar: GridToolbar,
-  }}
-  slotProps={{
-    toolbar: {
-      quickFilterProps: { quickFilterAlwaysVisible: true },
-    },
-  }}
-          />
+          slots={{
+            toolbar: GridToolbar,
+          }}
+          
+        />
       </Box>
 
       <BrandForm
@@ -192,7 +189,8 @@ export function BrandList() {
         onClose={handleCloseForm}
         onSubmit={handleSubmit}
       />
-
+      
+  <ScrollToTopButton />
       <Dialog open={openDelete} onClose={() => setOpenDelete(false)} >
         <DialogTitle>تأكيد الحذف</DialogTitle>
 
