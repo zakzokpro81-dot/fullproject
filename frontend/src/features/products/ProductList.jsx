@@ -7,14 +7,22 @@ import {
     DialogContent,
     DialogActions,
     Typography,
+    Stack,
 } from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import {
+    DataGrid, GridToolbar, GridToolbarContainer,
+    GridToolbarQuickFilter,
+    GridToolbarColumnsButton,
+    GridToolbarFilterButton,
+    GridToolbarExport,
+} from "@mui/x-data-grid";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import {
     getProducts,
     updateProduct,
     deleteProduct,
+    deleteProducts,
     createProductWithStock, // ✅ بدل createProduct
 } from "./product.api";
 
@@ -23,6 +31,7 @@ import ProductForm from "./ProductForm";
 
 export function ProductsList() {
     const queryClient = useQueryClient();
+    const [selectedIds, setSelectedIds] = useState([]);
 
     const [openFormDialog, setOpenFormDialog] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -83,11 +92,60 @@ export function ProductsList() {
 
     const handleFormSubmit = (data) => {
         if (selectedProduct) {
+            //  console.log("data is ", data)
             updateMutation.mutate({ id: selectedProduct.id, data });
         } else {
             createMutation.mutate(data); // ✅ الآن يدخل product + warehouse_stock
         }
     };
+
+    function ToolbarWithDelete({ selectedIds = [], onDeleteSelected }) {
+        return (
+            <GridToolbarContainer
+                sx={{
+                    justifyContent: "space-between",
+                    width: "100%",
+                    alignItems: "center",
+                }}
+            >
+
+                <Stack direction="row" spacing={1} alignItems="center">
+                    <Button
+                        color="error"
+                        variant="contained"
+                        size="small"
+                        disabled={selectedIds.length === 0}
+                        onClick={onDeleteSelected}
+                    >
+                        Delete Selected ({selectedIds.length})
+                    </Button>
+                    <GridToolbarColumnsButton />
+                    <GridToolbarFilterButton />
+                    <GridToolbarExport />
+                    <GridToolbarQuickFilter />
+
+
+                </Stack>
+            </GridToolbarContainer>
+        );
+    }
+const handleDeleteSelected = async () => {
+  try {
+    const idsArray = Array.from(selectedIds.ids);
+
+    console.log("Deleting IDs:", idsArray);
+
+    await deleteProducts(idsArray);
+
+    queryClient.invalidateQueries(["products"]);
+    setSelectedIds({ type: "include", ids: new Set() });
+  } catch (err) {
+    console.error("DELETE ERROR:", err);
+  }
+};
+
+
+
 
     return (
         <Box>
@@ -103,9 +161,24 @@ export function ProductsList() {
                 columns={productColumns(handleEditClick, handleDeleteClick)}
                 loading={isLoading}
                 autoHeight
-                pageSize={10}
+                //   pagelength={10}
+                disableRowSelectionOnClick
                 sx={{ width: "100%" }}
-                slots={{ toolbar: GridToolbar }}
+                checkboxSelection
+                showToolbar
+                onRowSelectionModelChange={(newSelection) => {
+                    setSelectedIds(newSelection);
+                }}
+
+                slots={{ toolbar: ToolbarWithDelete }}
+                slotProps={{
+                    toolbar: {
+                        selectedIds,
+                        onDeleteSelected: handleDeleteSelected,
+                    },
+                }}
+
+
             />
 
             <ProductForm

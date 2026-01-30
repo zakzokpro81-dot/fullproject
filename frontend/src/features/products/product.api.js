@@ -1,4 +1,4 @@
-import  supabase  from "../../config/supabase";
+import supabase from "../../config/supabase";
 
 export async function getProducts() {
   const { data, error } = await supabase
@@ -7,7 +7,8 @@ export async function getProducts() {
       *,
       brands(id, name),
       families(id, name),
-      models(id, name)
+      models(id, name),
+      part_types(id, name)
     `)
     .order("id", { ascending: false });
 
@@ -19,30 +20,18 @@ export async function getModelsForProduct() {
   const { data, error } = await supabase
     .from("models")
     .select(`
-      id,
-      name,
-      families(
-        id,
-        name,
-        brands(
-          id,
-          name
-        )
-      )
+      id, name, families(id, name, brands(id, name))
     `);
 
   if (error) throw error;
   return data;
 }
 
-
 export async function createProduct(formData) {
-  // تحقق أن warehouse_id موجود
   if (!formData.warehouse_id) {
     throw new Error("Warehouse is required");
   }
 
-  // 1️⃣ إدخال المنتج في جدول products فقط
   const { data: product, error: productError } = await supabase
     .from("products")
     .insert({
@@ -55,7 +44,9 @@ export async function createProduct(formData) {
       sell_price: formData.sell_price,
       description: formData.description,
       part_type_id: formData.part_type_id,
+      part_name: formData.part_name,
       is_active: formData.is_active,
+      stock: formData.stock,
     })
     .select()
     .single();
@@ -65,13 +56,12 @@ export async function createProduct(formData) {
     throw productError;
   }
 
-  // 2️⃣ إدخال المخزون في warehouse_stock
   const { error: stockError } = await supabase
     .from("warehouse_stock")
     .insert({
       warehouse_id: Number(formData.warehouse_id),
       product_id: product.id,
-      quantity: Number(formData.quantity),
+      quantity: Number(formData.stock),
       product_variant_id: formData.product_variant_id || null,
     });
 
@@ -83,23 +73,55 @@ export async function createProduct(formData) {
   return product;
 }
 
+export async function updateProduct(id, data) {
+  const {
+    warehouse_id,
+    stock,
+    ...productData
+  } = data;
 
-export async function updateProduct(id, product) {
-  const { data, error } = await supabase
+  const { error: productError } = await supabase
     .from("products")
-    .update(product)
-    .eq("id", id)
-    .select()
-    .single();
+    .update({
+      ...productData,
+      stock: stock,
+    })
 
-  if (error) {
-    console.error("Update product error:", error);
-    throw error;
-  }
-  return data;
+    .eq("id", id);
+
+  if (productError) throw productError;
+
+  const { error: stockError } = await supabase
+    .from("warehouse_stock")
+    .update({
+      warehouse_id: warehouse_id,
+      quantity: stock,
+    })
+    .eq("product_id", id);
+
+  if (stockError) throw stockError;
+
+  return true;
 }
 
+// export async function deleteProduct(id) {
+//   const { error } = await supabase
+//     .from("products")
+//     .delete()
+//     .eq("id", id);
+
+//   if (error) throw error;
+// }
 export async function deleteProduct(id) {
+  // 1️⃣ حذف المخزون أولاً
+  const { error: stockError } = await supabase
+    .from("warehouse_stock")
+    .delete()
+    .eq("product_id", id);
+
+  if (stockError) throw stockError;
+
+  // 2️⃣ حذف المنتج
   const { error } = await supabase
     .from("products")
     .delete()
@@ -108,8 +130,29 @@ export async function deleteProduct(id) {
   if (error) throw error;
 }
 
+export async function deleteProducts(ids) {
+  if (!Array.isArray(ids) || ids.length === 0) return;
+
+  const numericIds = ids.map(id => Number(id));
+
+  const { error: stockError } = await supabase
+    .from("warehouse_stock")
+    .delete()
+    .in("product_id", numericIds);
+
+  if (stockError) throw stockError;
+
+  const { error: productError } = await supabase
+    .from("products")
+    .delete()
+    .in("id", numericIds);
+
+  if (productError) throw productError;
+}
+
+
+
 export const createProductWithStock = async (data) => {
-  // 1. insert product
   const { data: product, error: productError } = await supabase
     .from("products")
     .insert({
@@ -121,6 +164,9 @@ export const createProductWithStock = async (data) => {
       cost_price: data.cost_price,
       is_active: data.is_active,
       description: data.description,
+      part_type_id: data.part_type_id,
+      part_name: data.part_name,
+      stock: data.stock,
     })
     .select()
     .single();
@@ -130,14 +176,13 @@ export const createProductWithStock = async (data) => {
     throw productError;
   }
 
-  // 2. insert warehouse_stock
   const { error: stockError } = await supabase
     .from("warehouse_stock")
     .insert({
       warehouse_id: data.warehouse_id,
       product_id: product.id,
       product_variant_id: null,
-      quantity: data.stock, // ✅ الاسم الصحيح للعمود
+      quantity: data.stock,
     });
 
   if (stockError) {

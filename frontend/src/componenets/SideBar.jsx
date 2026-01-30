@@ -93,7 +93,7 @@ const basicJubs2 = [
 ];
 
 const basicJubs3 = [
-  { text: "WarehouseStockList", icon: <HomeOutlined />, path: "/WarehouseStockList" },
+  { text: "BulkProductCreate", icon: <HomeOutlined />, path: "/BulkProductCreate" },
   { text: "müştri", icon: <PeopleOutline />, path: "/8" },
   { text: "sipariş", icon: <ContactsOutlined />, path: "/9" },
   { text: "fatura", icon: <ReceiptOutlined />, path: "/10" },

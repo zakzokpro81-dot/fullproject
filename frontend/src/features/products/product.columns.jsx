@@ -33,10 +33,21 @@ export const productColumns = (onEdit, onDelete) => [
   // },
 
   {
-    field: "sell_price",
-    headerName: "Price",
+    field: "part_name",
+    headerName: "part_name",
     width: 120,
   },
+  {
+    field: "sell_price",
+    headerName: "sell_price",
+    width: 120,
+  },
+   {
+    field: "cost_price",
+    headerName: "cost_price",
+    width: 120,
+  },
+
 
   {
     field: "stock",

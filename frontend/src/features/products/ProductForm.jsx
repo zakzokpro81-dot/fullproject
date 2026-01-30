@@ -18,7 +18,6 @@ import { getModelsForProduct } from "./product.api";
 import { useEffect, useState } from "react";
 import supabase from "../../config/supabase";
 
-// normalize Turkish characters
 function normalizeText(text) {
   const map = { ç: "c", ğ: "g", ı: "i", İ: "i", ö: "o", ş: "s", ü: "u" };
   return text.toLowerCase().replace(/[çğıİöşü]/g, (m) => map[m]);
@@ -44,12 +43,18 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
       stock: 0,
       is_active: true,
       description: "",
-      warehouse_id: "", // مهم
+      warehouse_id: "",
+      part_type_id: 0,
+      part_name: "",
     },
   });
-  const [aaa, setaaa] = useState(1)
+
+  const [aaa, setaaa] = useState(1);
+  const [bbb, setbbb] = useState(1);
+  const [eee, seteee] = useState("");
 
   const warehouseValue = watch("warehouse_id");
+  const partValue = watch("part_type_id");
 
   const { data: models = [] } = useQuery({
     queryKey: ["models-for-products"],
@@ -61,6 +66,20 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
     queryFn: async () => {
       const { data, error } = await supabase
         .from("warehouses")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("id", { ascending: true });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: parts = [], isLoading: partsLoading } = useQuery({
+    queryKey: ["parts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("part_types")
         .select("id, name")
         .eq("is_active", true)
         .order("id", { ascending: true });
@@ -82,12 +101,11 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
     family_name: m.families?.name,
   }));
 
-  // Reset form
   useEffect(() => {
     if (defaultValues) {
       reset({
         ...defaultValues,
-        warehouse_id: defaultValues.warehouse_id ?? "", // لا تمسحه
+        warehouse_id: defaultValues.warehouse_id ?? "",
       });
     } else {
       reset({
@@ -101,16 +119,26 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
         is_active: true,
         description: "",
         warehouse_id: "",
+        part_name: "",
+        part_type_id: 0,
       });
     }
   }, [defaultValues, reset]);
 
-  // set default warehouse
   useEffect(() => {
     if (warehouses.length > 0 && !warehouseValue) {
       setValue("warehouse_id", warehouses[0].id, { shouldDirty: true });
+      setaaa(Number(warehouses[0].id));
     }
   }, [warehouses, setValue, warehouseValue]);
+
+  useEffect(() => {
+    if (parts.length > 0 && !partValue) {
+      setValue("part_type_id", parts[0].id, { shouldDirty: true });
+      setbbb(parts[0].id);
+      seteee(parts[0].name);
+    }
+  }, [parts, setValue, partValue]);
 
   const handleSelectModel = (value) => {
     if (!value) return;
@@ -130,11 +158,10 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
       cost_price: Number(data.cost_price),
       stock: Number(data.stock),
       description: data.description ?? "",
-      warehouse_id: aaa, // ✅ من الفورم الحقيقي
+      part_name: eee,
+      warehouse_id: aaa,
+      part_type_id: bbb,
     };
-
-    console.log("FORM DATA:", payload);
-    console.log("DATA:", data);
 
     onSubmit(payload);
     reset();
@@ -168,6 +195,31 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
         />
 
         <TextField
+          select
+          fullWidth
+          margin="normal"
+          label="Parts"
+          value={partValue || ""}
+          onChange={(e) => {
+            const selectedId = Number(e.target.value);
+            const selectedPart = parts.find((p) => p.id === selectedId);
+
+            setValue("part_type_id", selectedId, { shouldDirty: true });
+            setbbb(selectedId);
+            seteee(selectedPart?.name || "");
+          }}
+          error={!!errors.part_type_id}
+          helperText={errors.part_type_id?.message}
+          disabled={partsLoading}
+        >
+          {parts.map((part) => (
+            <MenuItem key={part.id} value={part.id}>
+              {part.name}
+            </MenuItem>
+          ))}
+        </TextField>
+
+        <TextField
           fullWidth
           margin="normal"
           label="Sell Price"
@@ -193,32 +245,24 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
           {...register("stock", { valueAsNumber: true })}
         />
 
-        {/* Warehouse */}
         <TextField
           select
           fullWidth
           margin="normal"
           label="Warehouse"
           value={warehouseValue || ""}
-          // onChange={(e) => setValue("warehouse_id", e.target.value, { shouldDirty: true })}
           onChange={(e) => {
             setValue("warehouse_id", e.target.value, { shouldDirty: true });
-            setaaa(Number(e.target.value)); // ← هذا هو المطلوب
+            setaaa(Number(e.target.value));
           }}
-
-
           error={!!errors.warehouse_id}
           helperText={errors.warehouse_id?.message}
           disabled={warehousesLoading}
         >
           {warehouses.map((warehouse) => (
-
             <MenuItem key={warehouse.id} value={warehouse.id}>
               {warehouse.name}
             </MenuItem>
-
-
-
           ))}
         </TextField>
 
