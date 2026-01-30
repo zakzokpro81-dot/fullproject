@@ -1,58 +1,132 @@
-import React from 'react';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Box, Button, Dialog, DialogContent, DialogTitle } from '@mui/material';
-import { productColumns } from './product.columns';
-import { ProductForm } from './ProductForm';
-import { useQuery } from '@tanstack/react-query';
-import { getProducts } from './product.api';
+import { useState } from "react";
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Typography,
+} from "@mui/material";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+import {
+    getProducts,
+    updateProduct,
+    deleteProduct,
+    createProductWithStock, // ✅ بدل createProduct
+} from "./product.api";
+
+import { productColumns } from "./product.columns";
+import ProductForm from "./ProductForm";
 
 export function ProductsList() {
-    const { data: products = [], refetch } = useQuery({ queryKey: ['products'], queryFn: getProducts });
+    const queryClient = useQueryClient();
 
-    const [openForm, setOpenForm] = React.useState(false);
-    const [selectedProduct, setSelectedProduct] = React.useState(null);
+    const [openFormDialog, setOpenFormDialog] = useState(false);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
 
-    const handleEdit = (product) => {
-        setSelectedProduct(product);
-        setOpenForm(true);
-    };
+    const { data: products = [], isLoading } = useQuery({
+        queryKey: ["products"],
+        queryFn: getProducts,
+    });
 
-    const handleDelete = (product) => {
-        console.log('Delete product:', product.id);
-        // link with deleteMutation later
-    };
+    // CREATE
+    const createMutation = useMutation({
+        mutationFn: createProductWithStock, // ✅ هنا التعديل المهم
+        onSuccess: () => {
+            queryClient.invalidateQueries(["products"]);
+            setOpenFormDialog(false);
+        },
+    });
 
-    const handleCloseForm = () => {
-        setOpenForm(false);
+    // UPDATE
+    const updateMutation = useMutation({
+        mutationFn: ({ id, data }) => updateProduct(id, data),
+        onSuccess: () => {
+            queryClient.invalidateQueries(["products"]);
+            setOpenFormDialog(false);
+            setSelectedProduct(null);
+        },
+    });
+
+    // DELETE
+    const deleteMutation = useMutation({
+        mutationFn: deleteProduct,
+        onSuccess: () => {
+            queryClient.invalidateQueries(["products"]);
+            setOpenDeleteDialog(false);
+            setSelectedProduct(null);
+        },
+    });
+
+    const handleAddClick = () => {
         setSelectedProduct(null);
+        setOpenFormDialog(true);
     };
 
-    const handleSubmitForm = () => {
-        handleCloseForm();
-        refetch(); // refresh product list
+    const handleEditClick = (product) => {
+        setSelectedProduct(product);
+        setOpenFormDialog(true);
+    };
+
+    const handleDeleteClick = (product) => {
+        setSelectedProduct(product);
+        setOpenDeleteDialog(true);
+    };
+
+    const handleDeleteConfirm = () => {
+        deleteMutation.mutate(selectedProduct.id);
+    };
+
+    const handleFormSubmit = (data) => {
+        if (selectedProduct) {
+            updateMutation.mutate({ id: selectedProduct.id, data });
+        } else {
+            createMutation.mutate(data); // ✅ الآن يدخل product + warehouse_stock
+        }
     };
 
     return (
-        <Box sx={{ height: 600, width: '100%' }}>
-            <Button variant="contained" onClick={() => setOpenForm(true)} sx={{ mb: 2 }}>
-                Add Product
-            </Button>
+        <Box>
+            <Box display="flex" justifyContent="space-between" mb={2}>
+                <Typography variant="h5">Products</Typography>
+                <Button variant="contained" onClick={handleAddClick}>
+                    Add Product
+                </Button>
+            </Box>
 
             <DataGrid
                 rows={products}
-                columns={productColumns(handleEdit, handleDelete)}
+                columns={productColumns(handleEditClick, handleDeleteClick)}
+                loading={isLoading}
+                autoHeight
                 pageSize={10}
-                rowsPerPageOptions={[10, 25, 50]}
-                components={{ Toolbar: GridToolbar }}
-                sx={{ width: '100%' }}
-                getRowId={(row) => row.id}
+                sx={{ width: "100%" }}
+                slots={{ toolbar: GridToolbar }}
             />
 
-            <Dialog open={openForm} onClose={handleCloseForm} maxWidth="sm" fullWidth>
-                <DialogTitle>{selectedProduct ? 'Edit Product' : 'Add Product'}</DialogTitle>
+            <ProductForm
+                open={openFormDialog}
+                onClose={() => setOpenFormDialog(false)}
+                onSubmit={handleFormSubmit}
+                defaultValues={selectedProduct}
+            />
+
+            <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+                <DialogTitle>Delete Confirm</DialogTitle>
                 <DialogContent>
-                    <ProductForm defaultValues={selectedProduct || {}} onSuccess={handleSubmitForm} />
+                    Are you sure you want to delete this product?{" "}
+                    <strong>{selectedProduct?.name}</strong>
                 </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
+                    <Button variant="contained" onClick={handleDeleteConfirm}>
+                        Delete
+                    </Button>
+                </DialogActions>
             </Dialog>
         </Box>
     );

@@ -1,24 +1,86 @@
-import { GridActionsCellItem } from '@mui/x-data-grid';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { IconButton, Stack ,Button} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 export const productColumns = (onEdit, onDelete) => [
-  { field: 'id', headerName: 'ID', width: 70 },
-  { field: 'name', headerName: 'Product', flex: 1 },
-  { field: 'brand_name', headerName: 'Brand', width: 120 },
-  { field: 'family_name', headerName: 'Family', width: 120 },
-  { field: 'model_name', headerName: 'Model', width: 120 },
-  { field: 'sell_price', headerName: 'Sell Price', width: 100 },
-  { field: 'stock', headerName: 'Stock', width: 80 },
-  { field: 'is_active', headerName: 'Active', width: 80 },
+  //{ field: "id", headerName: "ID", width: 70 },
+
   {
-    field: 'actions',
-    type: 'actions',
-    headerName: 'Actions',
+    field: "name",
+    headerName: "Name",
+    flex: 1,
+  },
+
+  // {
+  //   field: "brand",
+  //   headerName: "Brand",
+  //   flex: 1,
+  //   valueGetter: (value, row) => row?.brands?.name || "",
+  // },
+
+  // {
+  //   field: "family",
+  //   headerName: "Family",
+  //   flex: 1,
+  //   valueGetter: (value, row) => row?.families?.name || "",
+  // },
+
+  // {
+  //   field: "model",
+  //   headerName: "Model",
+  //   flex: 1,
+  //   valueGetter: (value, row) => row?.models?.name || "",
+  // },
+
+  {
+    field: "sell_price",
+    headerName: "Price",
+    width: 120,
+  },
+
+  {
+    field: "stock",
+    headerName: "Stock",
     width: 100,
-    getActions: (params) => [
-      <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => onEdit(params.row)} />,
-      <GridActionsCellItem icon={<DeleteIcon />} label="Delete" onClick={() => onDelete(params.row)} />,
-    ],
+  },
+  {
+    field: "description",
+    headerName: "description  ",
+    width: 100,
+  },
+
+  {
+    field: "actions",
+    headerName: "Actions",
+    width: 160,
+    renderCell: (params) => (
+      <>
+
+
+
+      
+                <Stack direction="row" spacing={1}>
+                <IconButton onClick={() => onEdit(params.row)}>
+                    <EditIcon />
+                </IconButton>
+                <IconButton onClick={() => onDelete(params.row)}>
+                    <DeleteIcon />
+                </IconButton>
+            </Stack>
+
+
+
+        {/* <Button size="small" onClick={() => onEdit(params.row)}>
+          Edit
+        </Button>
+        <Button
+          size="small"
+          color="error"
+          onClick={() => onDelete(params.row)}
+        >
+          Delete
+        </Button> */}
+      </>
+    ),
   },
 ];

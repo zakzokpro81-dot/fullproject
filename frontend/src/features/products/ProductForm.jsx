@@ -1,172 +1,250 @@
-// src/features/products/ProductForm.jsx
-import React, { useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { TextField, Button, Checkbox, FormControlLabel, Box, Autocomplete, MenuItem, Select, InputLabel, FormControl, FormGroup } from '@mui/material';
-import { productSchema } from './product.schema';
-import { createProduct, getModelsWithBrandAndFamily, getWarehouses, getVariantsWithValues } from './product.api';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  FormControlLabel,
+  Switch,
+  Autocomplete,
+  MenuItem,
+} from "@mui/material";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { productSchema } from "./product.schema";
+import { useQuery } from "@tanstack/react-query";
+import { getModelsForProduct } from "./product.api";
+import { useEffect, useState } from "react";
+import supabase from "../../config/supabase";
 
-export function ProductForm({ defaultValues = {}, onSuccess }) {
-  const { control, handleSubmit, setValue, register, formState: { errors } } = useForm({
+// normalize Turkish characters
+function normalizeText(text) {
+  const map = { ç: "c", ğ: "g", ı: "i", İ: "i", ö: "o", ş: "s", ü: "u" };
+  return text.toLowerCase().replace(/[çğıİöşü]/g, (m) => map[m]);
+}
+
+export default function ProductForm({ open, onClose, onSubmit, defaultValues }) {
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm({
     resolver: zodResolver(productSchema),
-    defaultValues,
+    defaultValues: {
+      name: "",
+      brand_id: "",
+      family_id: "",
+      model_id: "",
+      sell_price: 0,
+      cost_price: 0,
+      stock: 0,
+      is_active: true,
+      description: "",
+      warehouse_id: "", // مهم
+    },
+  });
+  const [aaa, setaaa] = useState(1)
+
+  const warehouseValue = watch("warehouse_id");
+
+  const { data: models = [] } = useQuery({
+    queryKey: ["models-for-products"],
+    queryFn: getModelsForProduct,
   });
 
-  // جلب البيانات
-  const { data: models = [] } = useQuery({ queryKey: ['modelsWithBrandFamily'], queryFn: getModelsWithBrandAndFamily });
-  const { data: warehouses = [] } = useQuery({ queryKey: ['warehouses'], queryFn: getWarehouses });
-  const { data: variantsData = [] } = useQuery({ queryKey: ['variantsWithValues'], queryFn: getVariantsWithValues });
+  const { data: warehouses = [], isLoading: warehousesLoading } = useQuery({
+    queryKey: ["warehouses"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("warehouses")
+        .select("id, name")
+        .eq("is_active", true)
+        .order("id", { ascending: true });
 
-  const mutation = useMutation({ mutationFn: createProduct });
+      if (error) throw error;
+      return data;
+    },
+  });
 
-  // إعداد خيارات الموديل للـ Autocomplete
-  const modelOptions = models.map((m) => ({
-    label: `${m.brand_name} ${m.family_name} ${m.model_name}`,
-    brand_id: m.brand_id,
+  const [inputValue, setInputValue] = useState("");
+
+  const options = models.map((m) => ({
+    label: `${m.families?.brands?.name} ${m.families?.name} ${m.name}`,
+    brand_id: m.families?.brands?.id,
+    family_id: m.families?.id,
     model_id: m.id,
+    model_name: m.name,
+    brand_name: m.families?.brands?.name,
+    family_name: m.families?.name,
   }));
 
-  // دالة تحويل تركية إلى قياسية للمطابقة
-  function normalizeTurkish(str) {
-    if (!str) return '';
-    return str.toLowerCase('tr')
-      .replace(/ı/g, 'i')
-      .replace(/İ/g, 'i')
-      .replace(/ş/g, 's')
-      .replace(/Ş/g, 's')
-      .replace(/ğ/g, 'g')
-      .replace(/Ğ/g, 'g')
-      .replace(/ü/g, 'u')
-      .replace(/Ü/g, 'u')
-      .replace(/ö/g, 'o')
-      .replace(/Ö/g, 'o')
-      .replace(/ç/g, 'c')
-      .replace(/Ç/g, 'c');
-  }
-
-  const onSubmit = async (data) => {
-    const warehouseId = data.warehouse_id || (warehouses[0]?.id ?? null);
-    if (!warehouseId) return console.error('No warehouse available');
-
-    try {
-      await mutation.mutateAsync({
-        name: data.name,
-        brand_id: data.brand_id,
-        model_id: data.model_id,
-        sku: data.sku || '',
-        cost_price: data.cost_price || 0,
-        sell_price: data.sell_price || 0,
-        stock: data.stock || 0,
-        warehouse_id: warehouseId,
-        variants: data.variants || {}, // هنا القيم المختارة لكل Variant
-        is_active: data.is_active ?? true,
+  // Reset form
+  useEffect(() => {
+    if (defaultValues) {
+      reset({
+        ...defaultValues,
+        warehouse_id: defaultValues.warehouse_id ?? "", // لا تمسحه
       });
-      console.log('Product created successfully');
-      onSuccess?.();
-    } catch (err) {
-      console.error('Error creating product:', err);
+    } else {
+      reset({
+        name: "",
+        brand_id: "",
+        family_id: "",
+        model_id: "",
+        sell_price: 0,
+        cost_price: 0,
+        stock: 0,
+        is_active: true,
+        description: "",
+        warehouse_id: "",
+      });
     }
+  }, [defaultValues, reset]);
+
+  // set default warehouse
+  useEffect(() => {
+    if (warehouses.length > 0 && !warehouseValue) {
+      setValue("warehouse_id", warehouses[0].id, { shouldDirty: true });
+    }
+  }, [warehouses, setValue, warehouseValue]);
+
+  const handleSelectModel = (value) => {
+    if (!value) return;
+
+    const fullName = `${value.brand_name} ${value.family_name} ${value.model_name}`;
+
+    setValue("name", fullName);
+    setValue("brand_id", value.brand_id);
+    setValue("family_id", value.family_id);
+    setValue("model_id", value.model_id);
   };
 
-  useEffect(() => {
-    console.log('Form errors:', errors);
-}, [errors]);
+  const handleFormSubmit = (data) => {
+    const payload = {
+      ...data,
+      sell_price: Number(data.sell_price),
+      cost_price: Number(data.cost_price),
+      stock: Number(data.stock),
+      description: data.description ?? "",
+      warehouse_id: aaa, // ✅ من الفورم الحقيقي
+    };
+
+    console.log("FORM DATA:", payload);
+    console.log("DATA:", data);
+
+    onSubmit(payload);
+    reset();
+  };
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+    <Dialog open={open} onClose={onClose} fullWidth>
+      <DialogTitle>
+        {defaultValues ? "Edit Product" : "Add Product"}
+      </DialogTitle>
+
+      <DialogContent>
+        <Autocomplete
+          options={options}
+          filterOptions={(opts, state) => {
+            const input = normalizeText(state.inputValue);
+            return opts.filter((o) =>
+              normalizeText(o.label).includes(input)
+            );
+          }}
+          onChange={(e, value) => handleSelectModel(value)}
+          inputValue={inputValue}
+          onInputChange={(e, val) => setInputValue(val)}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Search Model (Brand / Family / Model)"
+              margin="normal"
+            />
+          )}
+        />
+
+        <TextField
+          fullWidth
+          margin="normal"
+          label="Sell Price"
+          type="number"
+          {...register("sell_price", { valueAsNumber: true })}
+          error={!!errors.sell_price}
+          helperText={errors.sell_price?.message}
+        />
+
+        <TextField
+          fullWidth
+          margin="normal"
+          label="Cost Price"
+          type="number"
+          {...register("cost_price", { valueAsNumber: true })}
+        />
+
+        <TextField
+          fullWidth
+          margin="normal"
+          label="Stock"
+          type="number"
+          {...register("stock", { valueAsNumber: true })}
+        />
+
+        {/* Warehouse */}
+        <TextField
+          select
+          fullWidth
+          margin="normal"
+          label="Warehouse"
+          value={warehouseValue || ""}
+          // onChange={(e) => setValue("warehouse_id", e.target.value, { shouldDirty: true })}
+          onChange={(e) => {
+            setValue("warehouse_id", e.target.value, { shouldDirty: true });
+            setaaa(Number(e.target.value)); // ← هذا هو المطلوب
+          }}
 
 
-      {/* Product Name Autocomplete */}
-      <Controller
-        name="name"
-        control={control}
-        render={({ field }) => (
-          <Autocomplete
-            options={modelOptions}
-            getOptionLabel={(option) => option.label || ''}
-            filterOptions={(options, { inputValue }) =>
-              options.filter(o => normalizeTurkish(o.label).includes(normalizeTurkish(inputValue)))
-            }
-            onChange={(e, value) => {
-              if (value) {
-                setValue('name', value.label);
-                setValue('brand_id', value.brand_id);
-                setValue('model_id', value.model_id);
-              } else {
-                setValue('name', '');
-                setValue('brand_id', null);
-                setValue('model_id', null);
-              }
-            }}
-            renderInput={(params) => <TextField {...params} label="Product Name" error={!!errors.name} helperText={errors.name?.message} />}
-          />
-        )}
-      />
+          error={!!errors.warehouse_id}
+          helperText={errors.warehouse_id?.message}
+          disabled={warehousesLoading}
+        >
+          {warehouses.map((warehouse) => (
 
-      {/* Warehouse Dropdown */}
-      <Controller
-        name="warehouse_id"
-        control={control}
-        defaultValue={warehouses[0]?.id ?? ''}
-        render={({ field }) => (
-          <FormControl fullWidth>
-            <InputLabel>Warehouse</InputLabel>
-            <Select {...field} label="Warehouse">
-              {warehouses.map(w => <MenuItem key={w.id} value={w.id}>{w.name}</MenuItem>)}
-            </Select>
-          </FormControl>
-        )}
-      />
-
-      {/* Variants Dynamic */}
-     {variantsData.map((variant) => (
-  <Controller
-    key={variant.id}
-    name={`variant_${variant.id}`} // لكل variant اسم مختلف في الفورم
-    control={control}
-    defaultValue=""
-    render={({ field }) => (
-      <Autocomplete
-        options={variant.values.map(v => v.value)}
-        value={field.value}
-        onChange={(e, newValue) => field.onChange(newValue)}
-        renderInput={(params) => <TextField {...params} label={variant.name} />}
-        disableClearable
-      />
-    )}
-  />
-))}
+            <MenuItem key={warehouse.id} value={warehouse.id}>
+              {warehouse.name}
+            </MenuItem>
 
 
- <TextField
-  label="Cost Price"
-  type="number"
-  inputProps={{ step: '0.01' }}
-  {...register('cost_price', { valueAsNumber: true })}
-  fullWidth
-/>
 
-<TextField
-  label="Sell Price"
-  type="number"
-  inputProps={{ step: '0.01' }}
-  {...register('sell_price', { valueAsNumber: true })}
-  fullWidth
-/>
+          ))}
+        </TextField>
 
-<TextField
-  label="Quantity"
-  type="number"
-  inputProps={{ step: '1', min: 0 }}
-  {...register('stock', { valueAsNumber: true })}
-  fullWidth
-/>
+        <TextField
+          fullWidth
+          margin="normal"
+          label="Description"
+          multiline
+          rows={3}
+          {...register("description")}
+          error={!!errors.description}
+          helperText={errors.description?.message}
+        />
 
+        <FormControlLabel
+          control={<Switch defaultChecked {...register("is_active")} />}
+          label="Active"
+        />
+      </DialogContent>
 
-      <FormControlLabel control={<Checkbox {...register('is_active')} />} label="Active" />
-
-      <Button type="submit" variant="contained" color="primary">Save</Button>
-    </Box>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="contained" onClick={handleSubmit(handleFormSubmit)}>
+          Save
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }
