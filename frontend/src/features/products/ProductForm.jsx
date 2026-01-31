@@ -10,14 +10,14 @@ import {
   Autocomplete,
   MenuItem,
 } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema } from "./product.schema";
 import { useQuery } from "@tanstack/react-query";
-import { getModelsForProduct } from "./product.api";
-import { useEffect, useState } from "react";
 import supabase from "../../config/supabase";
+import { useEffect, useState } from "react";
 
+// normalize Turkish characters
 function normalizeText(text) {
   const map = { ç: "c", ğ: "g", ı: "i", İ: "i", ö: "o", ş: "s", ü: "u" };
   return text.toLowerCase().replace(/[çğıİöşü]/g, (m) => map[m]);
@@ -28,37 +28,86 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
     register,
     handleSubmit,
     setValue,
+    control,
     reset,
     watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      name: "",
-      brand_id: "",
-      family_id: "",
+      product_type: "",
+      part_type_id: "",
       model_id: "",
+      name: "",
       sell_price: 0,
       cost_price: 0,
       stock: 0,
       is_active: true,
       description: "",
       warehouse_id: "",
-      part_type_id: 0,
-      part_name: "",
+      attributes: {}, // object ديناميكي لتخزين القيم
     },
   });
 
-  const [aaa, setaaa] = useState(1);
-  const [bbb, setbbb] = useState(1);
-  const [eee, seteee] = useState("");
+  // Watchers
+  const selectedProductType = watch("product_type");
+  const selectedPartTypeId = watch("part_type_id");
+  const selectedModelId = watch("model_id");
 
-  const warehouseValue = watch("warehouse_id");
-  const partValue = watch("part_type_id");
+  // Data States
+  const { data: productTypes = [] } = useQuery({
+    queryKey: ["product-types"],
+    queryFn: async () => {
+      return [
+        { id: "spare_part", name: "Spare Part" },
+        { id: "accessory", name: "Accessory" },
+        { id: "electronics", name: "Electronics" },
+      ];
+    },
+  });
+
+  const { data: partTypes = [] } = useQuery({
+    queryKey: ["part-types", selectedProductType],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("part_types")
+        .select("*")
+        .eq("product_type", selectedProductType)
+        .eq("is_active", true);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedProductType,
+  });
 
   const { data: models = [] } = useQuery({
     queryKey: ["models-for-products"],
-    queryFn: getModelsForProduct,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("models")
+        .select(`
+          id, name,
+          families(id, name, brands(id, name))
+        `)
+        .eq("is_active", true);
+      if (error) throw error;
+      return data;
+    },
+    enabled: selectedProductType === "spare_part",
+  });
+
+  const { data: attributes = [] } = useQuery({
+    queryKey: ["attributes", selectedPartTypeId],
+    queryFn: async () => {
+      if (!selectedPartTypeId) return [];
+      const { data, error } = await supabase
+        .from("product_attributes")
+        .select("id, name")
+        .eq("part_type_id", selectedPartTypeId);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!selectedPartTypeId,
   });
 
   const { data: warehouses = [], isLoading: warehousesLoading } = useQuery({
@@ -69,21 +118,6 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
         .select("id, name")
         .eq("is_active", true)
         .order("id", { ascending: true });
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const { data: parts = [], isLoading: partsLoading } = useQuery({
-    queryKey: ["parts"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("part_types")
-        .select("id, name")
-        .eq("is_active", true)
-        .order("id", { ascending: true });
-
       if (error) throw error;
       return data;
     },
@@ -91,64 +125,42 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
 
   const [inputValue, setInputValue] = useState("");
 
-  const options = models.map((m) => ({
+  const modelOptions = models.map((m) => ({
     label: `${m.families?.brands?.name} ${m.families?.name} ${m.name}`,
     brand_id: m.families?.brands?.id,
     family_id: m.families?.id,
     model_id: m.id,
     model_name: m.name,
-    brand_name: m.families?.brands?.name,
-    family_name: m.families?.name,
   }));
 
+  // Reset form on defaultValues
   useEffect(() => {
     if (defaultValues) {
-      reset({
-        ...defaultValues,
-        warehouse_id: defaultValues.warehouse_id ?? "",
-      });
+      reset({ ...defaultValues });
     } else {
       reset({
-        name: "",
-        brand_id: "",
-        family_id: "",
+        product_type: "",
+        part_type_id: "",
         model_id: "",
+        name: "",
         sell_price: 0,
         cost_price: 0,
         stock: 0,
         is_active: true,
         description: "",
         warehouse_id: "",
-        part_name: "",
-        part_type_id: 0,
+        attributes: {},
       });
     }
   }, [defaultValues, reset]);
 
-  useEffect(() => {
-    if (warehouses.length > 0 && !warehouseValue) {
-      setValue("warehouse_id", warehouses[0].id, { shouldDirty: true });
-      setaaa(Number(warehouses[0].id));
-    }
-  }, [warehouses, setValue, warehouseValue]);
-
-  useEffect(() => {
-    if (parts.length > 0 && !partValue) {
-      setValue("part_type_id", parts[0].id, { shouldDirty: true });
-      setbbb(parts[0].id);
-      seteee(parts[0].name);
-    }
-  }, [parts, setValue, partValue]);
-
   const handleSelectModel = (value) => {
     if (!value) return;
-
     const fullName = `${value.brand_name} ${value.family_name} ${value.model_name}`;
-
     setValue("name", fullName);
+    setValue("model_id", value.model_id);
     setValue("brand_id", value.brand_id);
     setValue("family_id", value.family_id);
-    setValue("model_id", value.model_id);
   };
 
   const handleFormSubmit = (data) => {
@@ -157,68 +169,87 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
       sell_price: Number(data.sell_price),
       cost_price: Number(data.cost_price),
       stock: Number(data.stock),
-      description: data.description ?? "",
-      part_name: eee,
-      warehouse_id: aaa,
-      part_type_id: bbb,
+      attributes: data.attributes,
     };
-
     onSubmit(payload);
     reset();
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth>
-      <DialogTitle>
-        {defaultValues ? "Edit Product" : "Add Product"}
-      </DialogTitle>
-
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+      <DialogTitle>{defaultValues ? "Edit Product" : "Add Product"}</DialogTitle>
       <DialogContent>
-        <Autocomplete
-          options={options}
-          filterOptions={(opts, state) => {
-            const input = normalizeText(state.inputValue);
-            return opts.filter((o) =>
-              normalizeText(o.label).includes(input)
-            );
-          }}
-          onChange={(e, value) => handleSelectModel(value)}
-          inputValue={inputValue}
-          onInputChange={(e, val) => setInputValue(val)}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Search Model (Brand / Family / Model)"
-              margin="normal"
-            />
-          )}
-        />
-
+        {/* Product Type */}
         <TextField
           select
           fullWidth
           margin="normal"
-          label="Parts"
-          value={partValue || ""}
-          onChange={(e) => {
-            const selectedId = Number(e.target.value);
-            const selectedPart = parts.find((p) => p.id === selectedId);
-
-            setValue("part_type_id", selectedId, { shouldDirty: true });
-            setbbb(selectedId);
-            seteee(selectedPart?.name || "");
-          }}
-          error={!!errors.part_type_id}
-          helperText={errors.part_type_id?.message}
-          disabled={partsLoading}
+          label="Product Type"
+          {...register("product_type")}
+          error={!!errors.product_type}
+          helperText={errors.product_type?.message}
         >
-          {parts.map((part) => (
-            <MenuItem key={part.id} value={part.id}>
-              {part.name}
+          {productTypes.map((pt) => (
+            <MenuItem key={pt.id} value={pt.id}>
+              {pt.name}
             </MenuItem>
           ))}
         </TextField>
 
+        {/* Part Type */}
+        {selectedProductType && (
+          <TextField
+            select
+            fullWidth
+            margin="normal"
+            label="Part Type"
+            {...register("part_type_id")}
+            error={!!errors.part_type_id}
+            helperText={errors.part_type_id?.message}
+          >
+            {partTypes.map((pt) => (
+              <MenuItem key={pt.id} value={pt.id}>
+                {pt.name}
+              </MenuItem>
+            ))}
+          </TextField>
+        )}
+
+        {/* Model Autocomplete for Spare Parts */}
+        {selectedProductType === "spare_part" && (
+          <Autocomplete
+            options={modelOptions}
+            filterOptions={(opts, state) => {
+              const input = normalizeText(state.inputValue);
+              return opts.filter((o) =>
+                normalizeText(o.label).includes(input)
+              );
+            }}
+            onChange={(e, value) => handleSelectModel(value)}
+            inputValue={inputValue}
+            onInputChange={(e, val) => setInputValue(val)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Search Model (Brand / Family / Model)"
+                margin="normal"
+              />
+            )}
+          />
+        )}
+
+        {/* Dynamic Attributes */}
+        {attributes.map((attr) => (
+          <TextField
+            key={attr.id}
+            fullWidth
+            margin="normal"
+            label={attr.name}
+            {...register(`attributes.${attr.id}`)}
+          />
+        ))}
+
+        {/* General Fields */}
         <TextField
           fullWidth
           margin="normal"
@@ -228,7 +259,6 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
           error={!!errors.sell_price}
           helperText={errors.sell_price?.message}
         />
-
         <TextField
           fullWidth
           margin="normal"
@@ -236,7 +266,6 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
           type="number"
           {...register("cost_price", { valueAsNumber: true })}
         />
-
         <TextField
           fullWidth
           margin="normal"
@@ -244,28 +273,20 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
           type="number"
           {...register("stock", { valueAsNumber: true })}
         />
-
         <TextField
           select
           fullWidth
           margin="normal"
           label="Warehouse"
-          value={warehouseValue || ""}
-          onChange={(e) => {
-            setValue("warehouse_id", e.target.value, { shouldDirty: true });
-            setaaa(Number(e.target.value));
-          }}
-          error={!!errors.warehouse_id}
-          helperText={errors.warehouse_id?.message}
+          {...register("warehouse_id")}
           disabled={warehousesLoading}
         >
-          {warehouses.map((warehouse) => (
-            <MenuItem key={warehouse.id} value={warehouse.id}>
-              {warehouse.name}
+          {warehouses.map((w) => (
+            <MenuItem key={w.id} value={w.id}>
+              {w.name}
             </MenuItem>
           ))}
         </TextField>
-
         <TextField
           fullWidth
           margin="normal"
@@ -273,16 +294,12 @@ export default function ProductForm({ open, onClose, onSubmit, defaultValues }) 
           multiline
           rows={3}
           {...register("description")}
-          error={!!errors.description}
-          helperText={errors.description?.message}
         />
-
         <FormControlLabel
           control={<Switch defaultChecked {...register("is_active")} />}
           label="Active"
         />
       </DialogContent>
-
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
         <Button variant="contained" onClick={handleSubmit(handleFormSubmit)}>

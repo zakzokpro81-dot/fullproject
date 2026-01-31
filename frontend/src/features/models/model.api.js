@@ -7,7 +7,7 @@
 // لا يحتوي على أي UI
 
 
-import  supabase  from "../../config/supabase";
+import supabase from "../../config/supabase";
 
 // ===============================
 // Get all models with relations
@@ -84,3 +84,16 @@ export const deleteModel = async (id) => {
 
     return data;
 };
+
+
+export async function getAttributesByPart(product_type, part_type_id) {
+    const { data, error } = await supabase
+        .from("attributes")
+        .select("*")
+        .eq("product_type", product_type)
+        .eq("part_type_id", part_type_id)
+        .order("id", { ascending: true });
+
+    if (error) throw error;
+    return data;
+}
