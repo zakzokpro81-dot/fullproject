@@ -1,311 +1,198 @@
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  FormControlLabel,
-  Switch,
-  Autocomplete,
-  MenuItem,
-} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Autocomplete, CircularProgress } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { productSchema } from "./product.schema";
 import { useQuery } from "@tanstack/react-query";
-import supabase from "../../config/supabase";
-import { useEffect, useState } from "react";
+import { getCategories, getProductTypes, getModels, getAttributes, saveProduct, getWarehouses, getProductAttributes } from "./product.api";
+import { ModelAutocomplete } from "./ModelAutocomplete";
 
-// normalize Turkish characters
-function normalizeText(text) {
-  const map = { ç: "c", ğ: "g", ı: "i", İ: "i", ö: "o", ş: "s", ü: "u" };
-  return text.toLowerCase().replace(/[çğıİöşü]/g, (m) => map[m]);
-}
+const ProductForm = ({ open, onClose, defaultValues }) => {
+    const { control, handleSubmit, watch, reset, setValue } = useForm({ defaultValues: defaultValues || {} });
+    const [formReady, setFormReady] = useState(false);
+    const watchedCategory = watch("category");
+    const watchedProductType = watch("productType");
+    const isEditing = !!defaultValues;
 
-export default function ProductForm({ open, onClose, onSubmit, defaultValues }) {
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    control,
-    reset,
-    watch,
-    formState: { errors },
-  } = useForm({
-    resolver: zodResolver(productSchema),
-    defaultValues: {
-      product_type: "",
-      part_type_id: "",
-      model_id: "",
-      name: "",
-      sell_price: 0,
-      cost_price: 0,
-      stock: 0,
-      is_active: true,
-      description: "",
-      warehouse_id: "",
-      attributes: {}, // object ديناميكي لتخزين القيم
-    },
-  });
+    // جلب البيانات الأساسية
+    const { data: categories } = useQuery({ queryKey: ["categories"], queryFn: getCategories });
+    const { data: warehouses } = useQuery({ queryKey: ["warehouses"], queryFn: getWarehouses });
 
-  // Watchers
-  const selectedProductType = watch("product_type");
-  const selectedPartTypeId = watch("part_type_id");
-  const selectedModelId = watch("model_id");
+    // نحدد IDs للـ Edit Mode أو للـ Watch
+    const categoryId = watchedCategory?.id || defaultValues?.category?.id || null;
+    const productTypeId = watchedProductType?.id || defaultValues?.productType?.id || null;
 
-  // Data States
-  const { data: productTypes = [] } = useQuery({
-    queryKey: ["product-types"],
-    queryFn: async () => {
-      return [
-        { id: "spare_part", name: "Spare Part" },
-        { id: "accessory", name: "Accessory" },
-        { id: "electronics", name: "Electronics" },
-      ];
-    },
-  });
+    // Product Types
+    const { data: productTypes } = useQuery({ queryKey: ["productTypes", categoryId], queryFn: () => getProductTypes(categoryId), enabled: !!categoryId });
 
-  const { data: partTypes = [] } = useQuery({
-    queryKey: ["part-types", selectedProductType],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("part_types")
-        .select("*")
-        .eq("product_type", selectedProductType)
-        .eq("is_active", true);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!selectedProductType,
-  });
+    // Models
+    const { data: models } = useQuery({ queryKey: ["models", productTypeId], queryFn: () => getModels(productTypeId), enabled: !!productTypeId });
 
-  const { data: models = [] } = useQuery({
-    queryKey: ["models-for-products"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("models")
-        .select(`
-          id, name,
-          families(id, name, brands(id, name))
-        `)
-        .eq("is_active", true);
-      if (error) throw error;
-      return data;
-    },
-    enabled: selectedProductType === "spare_part",
-  });
+    // Attributes
+    const { data: attributes } = useQuery({ queryKey: ["attributes", productTypeId], queryFn: () => getAttributes(productTypeId), enabled: !!productTypeId });
 
-  const { data: attributes = [] } = useQuery({
-    queryKey: ["attributes", selectedPartTypeId],
-    queryFn: async () => {
-      if (!selectedPartTypeId) return [];
-      const { data, error } = await supabase
-        .from("product_attributes")
-        .select("id, name")
-        .eq("part_type_id", selectedPartTypeId);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!selectedPartTypeId,
-  });
+    // Product Attribute Values عند التحرير
+    const { data: productAttributes } = useQuery({ queryKey: ["productAttributes", defaultValues?.id], queryFn: () => getProductAttributes(defaultValues.id), enabled: isEditing && !!defaultValues?.id });
 
-  const { data: warehouses = [], isLoading: warehousesLoading } = useQuery({
-    queryKey: ["warehouses"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("warehouses")
-        .select("id, name")
-        .eq("is_active", true)
-        .order("id", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
+    // نحدد هل كل البيانات جاهزة للعرض
+    const loadingEditData = isEditing && (!categories || !productTypes || !models || !attributes || !productAttributes || !warehouses);
 
-  const [inputValue, setInputValue] = useState("");
+    // تعبئة الفورم عند إضافة جديد
+    useEffect(() => {
+        if (open && !isEditing && warehouses) {
+            reset({ category: null, productType: null, model: null, attributes: {}, sellPrice: 0, costPrice: 0, stock: 0, description: "", warehouse: warehouses[0] || null });
+            setFormReady(true);
+        }
+    }, [open, isEditing, reset, warehouses]);
 
-  const modelOptions = models.map((m) => ({
-    label: `${m.families?.brands?.name} ${m.families?.name} ${m.name}`,
-    brand_id: m.families?.brands?.id,
-    family_id: m.families?.id,
-    model_id: m.id,
-    model_name: m.name,
-  }));
+    // تعبئة الفورم عند التحرير
+    useEffect(() => {
+        if (open && isEditing && !loadingEditData) {
+            // category
+            setValue("category", categories.find(c => c.id === defaultValues.category?.id) || null);
+            // productType
+            setValue("productType", productTypes.find(pt => pt.id === defaultValues.productType?.id) || null);
+            // model
+            setValue("model", models.find(m => m.model_id === defaultValues.model?.model_id) || null);
+            // attributes
+            const attrValues = {};
+            attributes.forEach(attr => {
+                const prodAttr = productAttributes.find(pa => pa.attribute_slug === attr.slug);
+                attrValues[attr.slug] = prodAttr?.value ?? (attr.has_options ? null : "");
+            });
+            setValue("attributes", attrValues);
+            // قيم اخرى
+            setValue("sellPrice", defaultValues.sellPrice || 0);
+            setValue("costPrice", defaultValues.costPrice || 0);
+            setValue("stock", defaultValues.stock || 0);
+            setValue("description", defaultValues.description || "");
+            setValue("warehouse", defaultValues.warehouse || warehouses[0] || null);
+            setFormReady(true);
+        }
+    }, [ open, isEditing, categories, productTypes, models, attributes, warehouses, productAttributes, defaultValues, setValue, loadingEditData ]);
 
-  // Reset form on defaultValues
-  useEffect(() => {
-    if (defaultValues) {
-      reset({ ...defaultValues });
-    } else {
-      reset({
-        product_type: "",
-        part_type_id: "",
-        model_id: "",
-        name: "",
-        sell_price: 0,
-        cost_price: 0,
-        stock: 0,
-        is_active: true,
-        description: "",
-        warehouse_id: "",
-        attributes: {},
-      });
+    // إعادة البرودكت تايب والموديل عند تغيير الفئة
+    useEffect(() => { setValue("productType", null); setValue("model", null); }, [watchedCategory, setValue]);
+    // إعادة الموديل عند تغيير البرودكت تايب
+    useEffect(() => { setValue("model", null); }, [watchedProductType, setValue]);
+
+    async function onSubmit(formData) {
+        try {
+            const productData = {
+                ...formData,
+                name: formData.model?.label || "",
+                brand_id: formData.model?.brand_id || null,
+                model_id: formData.model?.model_id || null,
+                family_id: formData.model?.family_id || null,
+                product_type_id: formData.productType?.id || null,
+                sell_price: formData.sellPrice || 0,
+                cost_price: formData.costPrice || 0,
+                stock: formData.stock || 0,
+                warehouse_id: formData.warehouse?.id || null
+            };
+            await saveProduct(productData);
+            onClose();
+        } catch (err) {
+            console.error("Failed to save product:", err);
+            alert("Failed to save product");
+        }
     }
-  }, [defaultValues, reset]);
 
-  const handleSelectModel = (value) => {
-    if (!value) return;
-    const fullName = `${value.brand_name} ${value.family_name} ${value.model_name}`;
-    setValue("name", fullName);
-    setValue("model_id", value.model_id);
-    setValue("brand_id", value.brand_id);
-    setValue("family_id", value.family_id);
-  };
+    if (!formReady) {
+        return <CircularProgress size={40} style={{ margin: "40px auto", display: "block" }} />;
+    }
 
-  const handleFormSubmit = (data) => {
-    const payload = {
-      ...data,
-      sell_price: Number(data.sell_price),
-      cost_price: Number(data.cost_price),
-      stock: Number(data.stock),
-      attributes: data.attributes,
-    };
-    onSubmit(payload);
-    reset();
-  };
+    return (
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+            <DialogTitle>{isEditing ? "Edit Product" : "Add Product"}</DialogTitle>
+            <DialogContent>
+                {/* Category */}
+                <Controller
+                    name="category"
+                    control={control}
+                    render={({ field }) => (
+                        <Autocomplete
+                            {...field}
+                            value={field.value ?? null}
+                            options={categories || []}
+                            getOptionLabel={(option) => option?.name || ""}
+                            onChange={(e, value) => field.onChange(value)}
+                            renderInput={(params) => <TextField {...params} label="Category" margin="normal" />}
+                        />
+                    )}
+                />
+                {/* Product Type */}
+                {(watchedCategory || isEditing) && (
+                    <Controller
+                        name="productType"
+                        control={control}
+                        render={({ field }) => (
+                            <Autocomplete
+                                {...field}
+                                value={field.value ?? null}
+                                options={productTypes || []}
+                                getOptionLabel={(option) => option.name}
+                                onChange={(e, value) => field.onChange(value)}
+                                renderInput={(params) => <TextField {...params} label="Product Type" margin="normal" />}
+                            />
+                        )}
+                    />
+                )}
+                {/* Model */}
+                {(watchedProductType || isEditing) && (
+                    <Controller
+                        name="model"
+                        control={control}
+                        render={({ field }) => (
+                            <ModelAutocomplete value={field.value} onChange={field.onChange} label="Model" />
+                        )}
+                    />
+                )}
+                {/* Attributes */}
+                {(watchedProductType || isEditing) && attributes?.map(attr => (
+                    <Controller
+                        key={attr.id}
+                        name={`attributes.${attr.slug}`}
+                        control={control}
+                        render={({ field }) => attr.has_options ? (
+                            <Autocomplete
+                                options={attr.options || []}
+                                getOptionLabel={(option) => option.value}
+                                value={field.value ?? null}
+                                onChange={(e, value) => field.onChange(value)}
+                                renderInput={(params) => <TextField {...params} label={attr.name} margin="normal" fullWidth />}
+                            />
+                        ) : (
+                            <TextField {...field} label={attr.name} margin="normal" fullWidth value={field.value || ""} onChange={field.onChange} />
+                        )}
+                    />
+                ))}
+                {/* Prices, Stock, Warehouse, Description */}
+                <Controller name="sellPrice" control={control} render={({ field }) => <TextField {...field} label="Sell Price" type="number" margin="normal" fullWidth />} />
+                <Controller name="costPrice" control={control} render={({ field }) => <TextField {...field} label="Cost Price" type="number" margin="normal" fullWidth />} />
+                <Controller name="stock" control={control} render={({ field }) => <TextField {...field} label="Stock" type="number" margin="normal" fullWidth />} />
+                {warehouses?.length > 0 && (
+                    <Controller
+                        name="warehouse"
+                        control={control}
+                        render={({ field }) => (
+                            <Autocomplete
+                                {...field}
+                                value={field.value ?? null}
+                                options={warehouses || []}
+                                getOptionLabel={(option) => option.name}
+                                onChange={(e, value) => field.onChange(value)}
+                                renderInput={(params) => <TextField {...params} label="Warehouse" margin="normal" />}
+                            />
+                        )}
+                    />
+                )}
+                <Controller name="description" control={control} render={({ field }) => <TextField {...field} label="Description" multiline rows={3} margin="normal" fullWidth />} />
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={onClose}>Cancel</Button>
+                <Button variant="contained" onClick={handleSubmit(onSubmit)}>Save</Button>
+            </DialogActions>
+        </Dialog>
+    );
+};
 
-  return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>{defaultValues ? "Edit Product" : "Add Product"}</DialogTitle>
-      <DialogContent>
-        {/* Product Type */}
-        <TextField
-          select
-          fullWidth
-          margin="normal"
-          label="Product Type"
-          {...register("product_type")}
-          error={!!errors.product_type}
-          helperText={errors.product_type?.message}
-        >
-          {productTypes.map((pt) => (
-            <MenuItem key={pt.id} value={pt.id}>
-              {pt.name}
-            </MenuItem>
-          ))}
-        </TextField>
-
-        {/* Part Type */}
-        {selectedProductType && (
-          <TextField
-            select
-            fullWidth
-            margin="normal"
-            label="Part Type"
-            {...register("part_type_id")}
-            error={!!errors.part_type_id}
-            helperText={errors.part_type_id?.message}
-          >
-            {partTypes.map((pt) => (
-              <MenuItem key={pt.id} value={pt.id}>
-                {pt.name}
-              </MenuItem>
-            ))}
-          </TextField>
-        )}
-
-        {/* Model Autocomplete for Spare Parts */}
-        {selectedProductType === "spare_part" && (
-          <Autocomplete
-            options={modelOptions}
-            filterOptions={(opts, state) => {
-              const input = normalizeText(state.inputValue);
-              return opts.filter((o) =>
-                normalizeText(o.label).includes(input)
-              );
-            }}
-            onChange={(e, value) => handleSelectModel(value)}
-            inputValue={inputValue}
-            onInputChange={(e, val) => setInputValue(val)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Search Model (Brand / Family / Model)"
-                margin="normal"
-              />
-            )}
-          />
-        )}
-
-        {/* Dynamic Attributes */}
-        {attributes.map((attr) => (
-          <TextField
-            key={attr.id}
-            fullWidth
-            margin="normal"
-            label={attr.name}
-            {...register(`attributes.${attr.id}`)}
-          />
-        ))}
-
-        {/* General Fields */}
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Sell Price"
-          type="number"
-          {...register("sell_price", { valueAsNumber: true })}
-          error={!!errors.sell_price}
-          helperText={errors.sell_price?.message}
-        />
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Cost Price"
-          type="number"
-          {...register("cost_price", { valueAsNumber: true })}
-        />
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Stock"
-          type="number"
-          {...register("stock", { valueAsNumber: true })}
-        />
-        <TextField
-          select
-          fullWidth
-          margin="normal"
-          label="Warehouse"
-          {...register("warehouse_id")}
-          disabled={warehousesLoading}
-        >
-          {warehouses.map((w) => (
-            <MenuItem key={w.id} value={w.id}>
-              {w.name}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Description"
-          multiline
-          rows={3}
-          {...register("description")}
-        />
-        <FormControlLabel
-          control={<Switch defaultChecked {...register("is_active")} />}
-          label="Active"
-        />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSubmit(handleFormSubmit)}>
-          Save
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-}
+export default ProductForm;

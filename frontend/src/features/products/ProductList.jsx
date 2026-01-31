@@ -1,67 +1,67 @@
-import { useState } from "react";
-import {
-    Box,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Typography,
-    Stack,
-} from "@mui/material";
-import {
-    DataGrid, GridToolbar, GridToolbarContainer,
-    GridToolbarQuickFilter,
-    GridToolbarColumnsButton,
-    GridToolbarFilterButton,
-    GridToolbarExport,
-} from "@mui/x-data-grid";
+import * as React from 'react';
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Collapse, IconButton, Checkbox, Stack, TextField } from "@mui/material";
+import { KeyboardArrowDown as KeyboardArrowDownIcon, KeyboardArrowUp as KeyboardArrowUpIcon } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-import {
-    getProducts,
-    updateProduct,
-    deleteProduct,
-    deleteProducts,
-    createProductWithStock, // ✅ بدل createProduct
-} from "./product.api";
-
-import { productColumns } from "./product.columns";
 import ProductForm from "./ProductForm";
+import { getProducts, deleteProducts, deleteProduct, createProductWithStock, updateProduct, } from "./product.api";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+
+// دالة لتحويل الحروف التركية للإنجليزية لتسهيل البحث
+function normalizeTurkish(str = "") {
+    return str
+        .replace(/İ/g, "I")
+        .replace(/I/g, "I")
+        .replace(/ı/g, "i")
+        .replace(/Ş/g, "S")
+        .replace(/ş/g, "s")
+        .replace(/Ğ/g, "G")
+        .replace(/ğ/g, "g")
+        .replace(/Ü/g, "U")
+        .replace(/ü/g, "u")
+        .replace(/Ö/g, "O")
+        .replace(/ö/g, "o")
+        .replace(/Ç/g, "C")
+        .replace(/ç/g, "c")
+        .toLowerCase();
+}
 
 export function ProductsList() {
     const queryClient = useQueryClient();
-    const [selectedIds, setSelectedIds] = useState([]);
+    const [selectedIds, setSelectedIds] = React.useState(new Set());
+    const [expandedRows, setExpandedRows] = React.useState(new Set());
+    const [openFormDialog, setOpenFormDialog] = React.useState(false);
+    const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
+    const [selectedProduct, setSelectedProduct] = React.useState(null);
 
-    const [openFormDialog, setOpenFormDialog] = useState(false);
-    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [searchText, setSearchText] = React.useState("");
+    const [sortConfig, setSortConfig] = React.useState({ key: null, direction: "asc" });
 
     const { data: products = [], isLoading } = useQuery({
         queryKey: ["products"],
         queryFn: getProducts,
     });
 
-    // CREATE
+    // Mutations
     const createMutation = useMutation({
-        mutationFn: createProductWithStock, // ✅ هنا التعديل المهم
-        onSuccess: () => {
-            queryClient.invalidateQueries(["products"]);
+        mutationFn: createProductWithStock,
+        onSuccess: (newProduct) => {
+            queryClient.setQueryData(["products"], (oldData = []) => [newProduct, ...oldData]);
             setOpenFormDialog(false);
         },
     });
 
-    // UPDATE
     const updateMutation = useMutation({
         mutationFn: ({ id, data }) => updateProduct(id, data),
-        onSuccess: () => {
-            queryClient.invalidateQueries(["products"]);
+        onSuccess: (updatedProduct) => {
+            queryClient.setQueryData(["products"], (oldData = []) =>
+                oldData.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+            );
             setOpenFormDialog(false);
             setSelectedProduct(null);
         },
     });
 
-    // DELETE
     const deleteMutation = useMutation({
         mutationFn: deleteProduct,
         onSuccess: () => {
@@ -71,134 +71,155 @@ export function ProductsList() {
         },
     });
 
-    const handleAddClick = () => {
-        setSelectedProduct(null);
-        setOpenFormDialog(true);
-    };
+    const handleAddClick = () => { setSelectedProduct(null); setOpenFormDialog(true); };
+    const handleEditClick = (product) => { setSelectedProduct(product); setOpenFormDialog(true); };
+    const handleDeleteClick = (product) => { setSelectedProduct(product); setOpenDeleteDialog(true); };
+    const handleDeleteConfirm = () => { deleteMutation.mutate(selectedProduct.id); };
+    const handleFormSubmit = (data) => { selectedProduct ? updateMutation.mutate({ id: selectedProduct.id, data }) : createMutation.mutate(data); };
 
-    const handleEditClick = (product) => {
-        setSelectedProduct(product);
-        setOpenFormDialog(true);
+    const toggleExpand = (id) => {
+        const newSet = new Set(expandedRows);
+        newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+        setExpandedRows(newSet);
     };
-
-    const handleDeleteClick = (product) => {
-        setSelectedProduct(product);
-        setOpenDeleteDialog(true);
+    const toggleSelect = (id) => {
+        const newSet = new Set(selectedIds);
+        newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+        setSelectedIds(newSet);
     };
+    const handleDeleteSelected = async () => { await deleteProducts(Array.from(selectedIds)); queryClient.invalidateQueries(["products"]); setSelectedIds(new Set()); };
 
-    const handleDeleteConfirm = () => {
-        deleteMutation.mutate(selectedProduct.id);
-    };
+    // معالجة البحث مع الحروف التركية
+    const filteredProducts = products.filter(p =>
+        normalizeTurkish(p.name).includes(normalizeTurkish(searchText)) ||
+        normalizeTurkish(p.product_type?.name).includes(normalizeTurkish(searchText))
+    );
 
-    const handleFormSubmit = (data) => {
-        if (selectedProduct) {
-            //  console.log("data is ", data)
-            updateMutation.mutate({ id: selectedProduct.id, data });
+   // معالجة الفرز
+const sortedProducts = React.useMemo(() => {
+    if (!sortConfig.key) return filteredProducts;
+    return [...filteredProducts].sort((a, b) => {
+        let valA = a[sortConfig.key];
+        let valB = b[sortConfig.key];
+
+        // إذا كان الحقل كائن مثل product_type نأخذ الاسم
+        if (sortConfig.key === "product_type") {
+            valA = valA?.name ?? "";
+            valB = valB?.name ?? "";
+        }
+
+        // تحويل الحروف التركية إلى إنجليزية لتفادي مشاكل الفرز
+        valA = normalizeTurkish(String(valA));
+        valB = normalizeTurkish(String(valB));
+
+        if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+    });
+}, [filteredProducts, sortConfig]);
+
+
+    const handleSort = (key) => {
+        if (sortConfig.key === key) {
+            setSortConfig({ key, direction: sortConfig.direction === "asc" ? "desc" : "asc" });
         } else {
-            createMutation.mutate(data); // ✅ الآن يدخل product + warehouse_stock
+            setSortConfig({ key, direction: "asc" });
         }
     };
 
-    function ToolbarWithDelete({ selectedIds = [], onDeleteSelected }) {
-        return (
-            <GridToolbarContainer
-                sx={{
-                    justifyContent: "space-between",
-                    width: "100%",
-                    alignItems: "center",
-                }}
-            >
-
-                <Stack direction="row" spacing={1} alignItems="center">
-                    <Button
-                        color="error"
-                        variant="contained"
-                        size="small"
-                        disabled={selectedIds.length === 0}
-                        onClick={onDeleteSelected}
-                    >
-                        Delete Selected ({selectedIds.length})
-                    </Button>
-                    <GridToolbarColumnsButton />
-                    <GridToolbarFilterButton />
-                    <GridToolbarExport />
-                    <GridToolbarQuickFilter />
-
-
-                </Stack>
-            </GridToolbarContainer>
-        );
-    }
-const handleDeleteSelected = async () => {
-  try {
-    const idsArray = Array.from(selectedIds.ids);
-
-    console.log("Deleting IDs:", idsArray);
-
-    await deleteProducts(idsArray);
-
-    queryClient.invalidateQueries(["products"]);
-    setSelectedIds({ type: "include", ids: new Set() });
-  } catch (err) {
-    console.error("DELETE ERROR:", err);
-  }
-};
-
-
-
+    if (isLoading) return <Typography>Loading...</Typography>;
 
     return (
         <Box>
-            <Box display="flex" justifyContent="space-between" mb={2}>
+            {/* Toolbar */}
+            <Box display="flex" justifyContent="space-between" mb={2} alignItems="center" p={1}>
                 <Typography variant="h5">Products</Typography>
-                <Button variant="contained" onClick={handleAddClick}>
-                    Add Product
-                </Button>
+                 <TextField label="Search" value={searchText} onChange={(e) => setSearchText(e.target.value)} size="small" />
+                <Stack direction="row" spacing={1}>
+                   
+                    <Button color="error" variant="contained" disabled={selectedIds.size === 0} onClick={handleDeleteSelected}>
+                        Delete Selected ({selectedIds.size})
+                    </Button>
+                    <Button variant="contained" onClick={handleAddClick}>Add Product</Button>
+                </Stack>
             </Box>
-
-            <DataGrid
-                rows={products}
-                columns={productColumns(handleEditClick, handleDeleteClick)}
-                loading={isLoading}
-                autoHeight
-                //   pagelength={10}
-                disableRowSelectionOnClick
-                sx={{ width: "100%" }}
-                checkboxSelection
-                showToolbar
-                onRowSelectionModelChange={(newSelection) => {
-                    setSelectedIds(newSelection);
-                }}
-
-                slots={{ toolbar: ToolbarWithDelete }}
-                slotProps={{
-                    toolbar: {
-                        selectedIds,
-                        onDeleteSelected: handleDeleteSelected,
-                    },
-                }}
-
-
-            />
-
-            <ProductForm
-                open={openFormDialog}
-                onClose={() => setOpenFormDialog(false)}
-                onSubmit={handleFormSubmit}
-                defaultValues={selectedProduct}
-            />
-
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell padding="checkbox">
+                                <Checkbox checked={selectedIds.size > 0 && selectedIds.size === sortedProducts.length} indeterminate={selectedIds.size > 0 && selectedIds.size < sortedProducts.length} onChange={(e) => e.target.checked ? setSelectedIds(new Set(sortedProducts.map(p => p.id))) : setSelectedIds(new Set())} />
+                            </TableCell>
+                            {[
+                                { key: "name", label: "Name" },
+                                { key: "product_type", label: "Product Type", isObject: true, objKey: "name" },
+                                { key: "sell_price", label: "Sell Price" },
+                                { key: "cost_price", label: "Cost Price" },
+                                { key: "stock", label: "Stock" }
+                            ].map((col) => (
+                                <TableCell key={col.key} onClick={() => handleSort(col.key)} style={{ cursor: "pointer", userSelect: "none" }}>
+                                    {col.label}{" "}
+                                    {sortConfig.key === col.key ? (sortConfig.direction === "asc" ? "▲" : "▼") : "↕"}
+                                </TableCell>
+                            ))}
+                            <TableCell>Actions</TableCell>
+                            <TableCell>Details</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {sortedProducts.map((row) => (
+                            <React.Fragment key={row.id}>
+                                <TableRow>
+                                    <TableCell padding="checkbox">
+                                        <Checkbox checked={selectedIds.has(row.id)} onChange={() => toggleSelect(row.id)} />
+                                    </TableCell>
+                                    <TableCell>{row.name}</TableCell>
+                                    <TableCell>{row.product_type?.name}</TableCell>
+                                    <TableCell>{row.sell_price}</TableCell>
+                                    <TableCell>{row.cost_price}</TableCell>
+                                    <TableCell>{row.stock}</TableCell>
+                                    <TableCell>
+                                        <IconButton onClick={() => handleEditClick(row)}>
+                                            <EditIcon />
+                                        </IconButton>
+                                        <IconButton onClick={() => handleDeleteClick(row)}>
+                                            <DeleteIcon />
+                                        </IconButton>
+                                    </TableCell>
+                                    <TableCell>
+                                        <IconButton size="small" onClick={() => toggleExpand(row.id)}>
+                                            {expandedRows.has(row.id) ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+                                        </IconButton>
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell colSpan={11} style={{ paddingBottom: 0, paddingTop: 0 }}>
+                                        <Collapse in={expandedRows.has(row.id)} timeout="auto" unmountOnExit>
+                                            <Box margin={2}>
+                                                <Typography variant="subtitle1" gutterBottom>Attributes:</Typography>
+                                                <Box display="grid" gridTemplateColumns="repeat(auto-fit,minmax(150px,1fr))" gap={1}>
+                                                    {row.attributes?.length === 0 ? <Typography>No attributes</Typography> : row.attributes.map((attr, idx) => (
+                                                        <Paper key={idx} sx={{ p: 1, bgcolor: "#f9f9f9" }}>
+                                                            <Typography variant="body2"><strong>{attr.attribute?.name}:</strong> {attr.value}</Typography>
+                                                        </Paper>
+                                                    ))}
+                                                </Box>
+                                            </Box>
+                                        </Collapse>
+                                    </TableCell>
+                                </TableRow>
+                            </React.Fragment>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+            <ProductForm open={openFormDialog} onClose={() => setOpenFormDialog(false)} defaultValues={selectedProduct} onSubmit={handleFormSubmit} />
             <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
                 <DialogTitle>Delete Confirm</DialogTitle>
-                <DialogContent>
-                    Are you sure you want to delete this product?{" "}
-                    <strong>{selectedProduct?.name}</strong>
-                </DialogContent>
+                <DialogContent>Are you sure you want to delete <strong>{selectedProduct?.name}</strong>?</DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
-                    <Button variant="contained" onClick={handleDeleteConfirm}>
-                        Delete
-                    </Button>
+                    <Button variant="contained" color="error" onClick={handleDeleteConfirm}>Delete</Button>
                 </DialogActions>
             </Dialog>
         </Box>
