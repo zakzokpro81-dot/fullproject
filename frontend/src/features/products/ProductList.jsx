@@ -1,13 +1,20 @@
 import * as React from 'react';
-import { Box, Button, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Collapse, IconButton, Checkbox, Stack, TextField } from "@mui/material";
-import { KeyboardArrowDown as KeyboardArrowDownIcon, KeyboardArrowUp as KeyboardArrowUpIcon } from '@mui/icons-material';
+import {
+    Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
+    Typography, Paper, Drawer, Divider, Stack, TextField, IconButton,
+    List, ListItem, ListItemText
+} from "@mui/material";
+import { DataGrid } from '@mui/x-data-grid';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import ProductForm from "./ProductForm";
-import { getProducts, deleteProducts, deleteProduct, createProductWithStock, updateProduct, } from "./product.api";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import CloseIcon from "@mui/icons-material/Close";
 
-// دالة لتحويل الحروف التركية للإنجليزية لتسهيل البحث
+// استيراد الملفات الخاصة بك
+import { getProducts, deleteProduct } from "./product.api";
+import { productColumns } from "./product.columns";
+import AddProductForm from "./AddProductForm";
+import EditProductForm from "./EditProductForm";
+
+// --- إعادة الدالة التي تم حذفها خطأً ---
 function normalizeTurkish(str = "") {
     return str
         .replace(/İ/g, "I")
@@ -28,38 +35,38 @@ function normalizeTurkish(str = "") {
 
 export function ProductsList() {
     const queryClient = useQueryClient();
-    const [selectedIds, setSelectedIds] = React.useState(new Set());
-    const [expandedRows, setExpandedRows] = React.useState(new Set());
-    const [openFormDialog, setOpenFormDialog] = React.useState(false);
-    const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
+
+    // حالات التحكم
+    const [openAddDialog, setOpenAddDialog] = React.useState(false);
+    const [openEditDialog, setOpenEditDialog] = React.useState(false);
+    const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false); // إعادة الحالة
+    const [detailDrawerOpen, setDetailDrawerOpen] = React.useState(false);
+
     const [selectedProduct, setSelectedProduct] = React.useState(null);
-
     const [searchText, setSearchText] = React.useState("");
-    const [sortConfig, setSortConfig] = React.useState({ key: null, direction: "asc" });
+    const [debouncedSearch, setDebouncedSearch] = React.useState("");
 
-    const { data: products = [], isLoading } = useQuery({
-        queryKey: ["products"],
-        queryFn: getProducts,
+    // الترقيم (Pagination)
+    const [paginationModel, setPaginationModel] = React.useState({
+        page: 0,
+        pageSize: 10,
     });
 
-    // Mutations
-    const createMutation = useMutation({
-        mutationFn: createProductWithStock,
-        onSuccess: (newProduct) => {
-            queryClient.setQueryData(["products"], (oldData = []) => [newProduct, ...oldData]);
-            setOpenFormDialog(false);
-        },
-    });
+    // البحث المتأخر
+    React.useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearch(searchText), 500);
+        return () => clearTimeout(timer);
+    }, [searchText]);
 
-    const updateMutation = useMutation({
-        mutationFn: ({ id, data }) => updateProduct(id, data),
-        onSuccess: (updatedProduct) => {
-            queryClient.setQueryData(["products"], (oldData = []) =>
-                oldData.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
-            );
-            setOpenFormDialog(false);
-            setSelectedProduct(null);
-        },
+    // جلب البيانات
+    const { data, isLoading, isFetching } = useQuery({
+        queryKey: ["products", paginationModel, debouncedSearch],
+        queryFn: () => getProducts({
+            page: paginationModel.page,
+            pageSize: paginationModel.pageSize,
+            searchText: normalizeTurkish(debouncedSearch) // استخدام دالة التحويل هنا
+        }),
+        keepPreviousData: true,
     });
 
     const deleteMutation = useMutation({
@@ -71,157 +78,216 @@ export function ProductsList() {
         },
     });
 
-    const handleAddClick = () => { setSelectedProduct(null); setOpenFormDialog(true); };
-    const handleEditClick = (product) => { setSelectedProduct(product); setOpenFormDialog(true); };
-    const handleDeleteClick = (product) => { setSelectedProduct(product); setOpenDeleteDialog(true); };
-    const handleDeleteConfirm = () => { deleteMutation.mutate(selectedProduct.id); };
-    const handleFormSubmit = (data) => { selectedProduct ? updateMutation.mutate({ id: selectedProduct.id, data }) : createMutation.mutate(data); };
-
-    const toggleExpand = (id) => {
-        const newSet = new Set(expandedRows);
-        newSet.has(id) ? newSet.delete(id) : newSet.add(id);
-        setExpandedRows(newSet);
+    // --- معالجات الأحداث المعدلة لمنع التداخل ---
+    const handleEditAction = (product) => {
+        setSelectedProduct(product);
+        setOpenEditDialog(true);
     };
-    const toggleSelect = (id) => {
-        const newSet = new Set(selectedIds);
-        newSet.has(id) ? newSet.delete(id) : newSet.add(id);
-        setSelectedIds(newSet);
+
+    const handleDeleteAction = (product) => {
+        setSelectedProduct(product);
+        setOpenDeleteDialog(true); // فتح الدايلوج بدلاً من confirm المتصفح
     };
-    const handleDeleteSelected = async () => { await deleteProducts(Array.from(selectedIds)); queryClient.invalidateQueries(["products"]); setSelectedIds(new Set()); };
 
-    // معالجة البحث مع الحروف التركية
-    const filteredProducts = products.filter(p =>
-        normalizeTurkish(p.name).includes(normalizeTurkish(searchText)) ||
-        normalizeTurkish(p.product_type?.name).includes(normalizeTurkish(searchText))
-    );
+    const handleDeleteConfirm = () => {
+        if (selectedProduct) deleteMutation.mutate(selectedProduct.id);
+    };
 
-   // معالجة الفرز
-const sortedProducts = React.useMemo(() => {
-    if (!sortConfig.key) return filteredProducts;
-    return [...filteredProducts].sort((a, b) => {
-        let valA = a[sortConfig.key];
-        let valB = b[sortConfig.key];
-
-        // إذا كان الحقل كائن مثل product_type نأخذ الاسم
-        if (sortConfig.key === "product_type") {
-            valA = valA?.name ?? "";
-            valB = valB?.name ?? "";
+    const handleRowClick = (params, event) => {
+        // منع فتح الدراور إذا كان الضغط على منطقة الأزرار
+        if (event.target.closest('.MuiDataGrid-actionsCell') || event.target.closest('button')) {
+            return;
         }
-
-        // تحويل الحروف التركية إلى إنجليزية لتفادي مشاكل الفرز
-        valA = normalizeTurkish(String(valA));
-        valB = normalizeTurkish(String(valB));
-
-        if (valA < valB) return sortConfig.direction === "asc" ? -1 : 1;
-        if (valA > valB) return sortConfig.direction === "asc" ? 1 : -1;
-        return 0;
-    });
-}, [filteredProducts, sortConfig]);
-
-
-    const handleSort = (key) => {
-        if (sortConfig.key === key) {
-            setSortConfig({ key, direction: sortConfig.direction === "asc" ? "desc" : "asc" });
-        } else {
-            setSortConfig({ key, direction: "asc" });
-        }
+        setSelectedProduct(params.row);
+        setDetailDrawerOpen(true);
     };
 
-    if (isLoading) return <Typography>Loading...</Typography>;
+    const columns = productColumns(handleEditAction, handleDeleteAction);
 
     return (
-        <Box>
-            {/* Toolbar */}
-            <Box display="flex" justifyContent="space-between" mb={2} alignItems="center" p={1}>
-                <Typography variant="h5">Products</Typography>
-                 <TextField label="Search" value={searchText} onChange={(e) => setSearchText(e.target.value)} size="small" />
-                <Stack direction="row" spacing={1}>
-                   
-                    <Button color="error" variant="contained" disabled={selectedIds.size === 0} onClick={handleDeleteSelected}>
-                        Delete Selected ({selectedIds.size})
-                    </Button>
-                    <Button variant="contained" onClick={handleAddClick}>Add Product</Button>
+        <Box sx={{ width: '100%', p: 3 }}>
+
+            <Paper sx={{ p: 2, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>Products</Typography>
+                <Stack direction="row" spacing={2}>
+                    <TextField
+                        size="small"
+                        placeholder="Search..."
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                    />
+                    <Button variant="contained" onClick={() => setOpenAddDialog(true)}>Add Product</Button>
                 </Stack>
-            </Box>
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell padding="checkbox">
-                                <Checkbox checked={selectedIds.size > 0 && selectedIds.size === sortedProducts.length} indeterminate={selectedIds.size > 0 && selectedIds.size < sortedProducts.length} onChange={(e) => e.target.checked ? setSelectedIds(new Set(sortedProducts.map(p => p.id))) : setSelectedIds(new Set())} />
-                            </TableCell>
-                            {[
-                                { key: "name", label: "Name" },
-                                { key: "product_type", label: "Product Type", isObject: true, objKey: "name" },
-                                { key: "sell_price", label: "Sell Price" },
-                                { key: "cost_price", label: "Cost Price" },
-                                { key: "stock", label: "Stock" }
-                            ].map((col) => (
-                                <TableCell key={col.key} onClick={() => handleSort(col.key)} style={{ cursor: "pointer", userSelect: "none" }}>
-                                    {col.label}{" "}
-                                    {sortConfig.key === col.key ? (sortConfig.direction === "asc" ? "▲" : "▼") : "↕"}
-                                </TableCell>
-                            ))}
-                            <TableCell>Actions</TableCell>
-                            <TableCell>Details</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {sortedProducts.map((row) => (
-                            <React.Fragment key={row.id}>
-                                <TableRow>
-                                    <TableCell padding="checkbox">
-                                        <Checkbox checked={selectedIds.has(row.id)} onChange={() => toggleSelect(row.id)} />
-                                    </TableCell>
-                                    <TableCell>{row.name}</TableCell>
-                                    <TableCell>{row.product_type?.name}</TableCell>
-                                    <TableCell>{row.sell_price}</TableCell>
-                                    <TableCell>{row.cost_price}</TableCell>
-                                    <TableCell>{row.stock}</TableCell>
-                                    <TableCell>
-                                        <IconButton onClick={() => handleEditClick(row)}>
-                                            <EditIcon />
-                                        </IconButton>
-                                        <IconButton onClick={() => handleDeleteClick(row)}>
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    </TableCell>
-                                    <TableCell>
-                                        <IconButton size="small" onClick={() => toggleExpand(row.id)}>
-                                            {expandedRows.has(row.id) ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
-                                        </IconButton>
-                                    </TableCell>
-                                </TableRow>
-                                <TableRow>
-                                    <TableCell colSpan={11} style={{ paddingBottom: 0, paddingTop: 0 }}>
-                                        <Collapse in={expandedRows.has(row.id)} timeout="auto" unmountOnExit>
-                                            <Box margin={2}>
-                                                <Typography variant="subtitle1" gutterBottom>Attributes:</Typography>
-                                                <Box display="grid" gridTemplateColumns="repeat(auto-fit,minmax(150px,1fr))" gap={1}>
-                                                    {row.attributes?.length === 0 ? <Typography>No attributes</Typography> : row.attributes.map((attr, idx) => (
-                                                        <Paper key={idx} sx={{ p: 1, bgcolor: "#f9f9f9" }}>
-                                                            <Typography variant="body2"><strong>{attr.attribute?.name}:</strong> {attr.value}</Typography>
-                                                        </Paper>
-                                                    ))}
-                                                </Box>
-                                            </Box>
-                                        </Collapse>
-                                    </TableCell>
-                                </TableRow>
-                            </React.Fragment>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-            <ProductForm open={openFormDialog} onClose={() => setOpenFormDialog(false)} defaultValues={selectedProduct} onSubmit={handleFormSubmit} />
+            </Paper>
+
+            <Paper sx={{ height: 650, width: '100%' }}>
+                <DataGrid
+                    rows={data?.data || []}
+                    rowCount={data?.count || 0}
+                    loading={isLoading || isFetching}
+                    columns={columns}
+                    paginationMode="server"
+                    paginationModel={paginationModel}
+                    onPaginationModelChange={setPaginationModel}
+                    disableSelectionOnClick
+                    onRowClick={handleRowClick}
+                    sx={{
+                        '& .MuiDataGrid-columnHeaderTitle': {
+                            fontWeight: 'bold',
+                            fontSize: { xs: '0.8rem', sm: '1rem' } // تصغير الخط للموبايل
+                        },
+                        '& .MuiDataGrid-cell': {
+                            fontSize: { xs: '0.75rem', sm: '0.9rem' }
+                        },
+                        // منع التمرير الأفقي المزعج وجعل الجدول يمتد
+                        width: '100%',
+                    }}
+
+                    sx={{
+                        '& .MuiDataGrid-row:hover': { cursor: 'pointer' },
+                    }}
+                    columnVisibilityModel={{
+                        description: false, // إخفاء الوصف في الموبايل
+                        cost_price: false,  // إخفاء سعر التكلفة في الموبايل لزيادة المساحة
+                    }}
+
+                />
+            </Paper>
+
+            {/* الدراور الجانبي للتفاصيل */}
+            <Drawer
+                anchor="right"
+                open={detailDrawerOpen}
+                onClose={() => setDetailDrawerOpen(false)}
+                // التعديل 1: العرض يصبح مرناً (100% للموبايل و 400px للشاشات الأكبر)
+                PaperProps={{
+                    sx: {
+                        width: { xs: '100%', sm: 400 },
+                        // إضافة حواف ناعمة في الشاشات الكبيرة فقط
+                        borderRadius: { xs: 0, sm: '16px 0 0 16px' }
+                    }
+                }}
+            >
+                <Box sx={{ p: 3 }}>
+
+                    <Divider />
+
+                    {selectedProduct && (
+                        <Box sx={{ mt: 6 }}>
+                            <Box sx={{ mb: 4 }}>
+
+
+                                <Stack
+                                    direction="row"
+                                    justifyContent="right"
+                                    alignItems="center"
+                                    mb={2}
+                                    sx={{
+                                        position: 'sticky', // يجعله ثابتاً في الأعلى حتى لو نزلت للأسفل في الوصف
+                                        top: 0,
+                                        bgcolor: 'white',
+                                        zIndex: 1,
+                                        pb: 1
+                                    }}
+                                >
+                                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Close</Typography>
+
+                                    {/* هذا هو زر الإغلاق - قمت بإضافة خلفية ملونة له ليظهر بوضوح */}
+                                    <IconButton
+                                        onClick={() => setDetailDrawerOpen(false)}
+                                        aria-label="close"
+                                        sx={{
+                                           // color: (theme) => theme.palette.grey[500],
+                                            backgroundColor: '#f5f5f5', // لون خلفية رمادي فاتح لتمييزه
+                                            '&:hover': {
+                                                backgroundColor: '#e0e0e0',
+                                            },
+                                            
+                                        }}
+                                        color="error"
+                                    >
+                                        <CloseIcon />
+                                    </IconButton>
+                                </Stack>
+
+                                <Typography variant="caption" color="textSecondary">Product Name</Typography>
+                                {/* التعديل 3: تصغير حجم الخط قليلاً على الموبايل لكي لا ينكسر السطر */}
+                                <Typography
+                                    variant="h5"
+                                    sx={{
+                                        fontWeight: 500,
+                                        fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                                    }}
+                                >
+                                    {selectedProduct.name}
+                                </Typography>
+                            </Box>
+
+                            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', color: '#666' }}>Attributes</Typography>
+                            <Paper variant="outlined" sx={{ borderRadius: 2, bgcolor: '#fafafa' }}>
+                                <List disablePadding>
+                                    {selectedProduct.attributes?.length > 0 ? (
+                                        selectedProduct.attributes.map((attr, index) => (
+                                            <ListItem key={index} divider={index !== selectedProduct.attributes.length - 1}>
+                                                <ListItemText
+                                                    primary={attr.attribute?.name || "Attribute"}
+                                                    secondary={attr.value}
+                                                    primaryTypographyProps={{ variant: 'caption', color: 'primary' }}
+                                                    secondaryTypographyProps={{
+                                                        variant: 'body1',
+                                                        sx: { fontWeight: 500, fontSize: { xs: '0.9rem', sm: '1rem' } }
+                                                    }}
+                                                />
+                                            </ListItem>
+                                        ))
+                                    ) : (
+                                        <ListItem><ListItemText primary="No technical attributes defined." /></ListItem>
+                                    )}
+                                </List>
+                            </Paper>
+
+                            <Box sx={{ mt: 4 }}>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Description</Typography>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        mt: 1,
+                                        p: 2,
+                                        bgcolor: '#f0f4f8',
+                                        borderRadius: 2,
+                                        // التعديل 4: التأكد من أن النص الطويل لا يخرج عن الإطار في الموبايل
+                                        wordBreak: 'break-word'
+                                    }}
+                                >
+                                    {selectedProduct.description || "No description provided for this item."}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    )}
+                </Box>
+            </Drawer>
+
+            {/* --- إعادة دايلوج التأكيد الذي حُذف --- */}
             <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
                 <DialogTitle>Delete Confirm</DialogTitle>
-                <DialogContent>Are you sure you want to delete <strong>{selectedProduct?.name}</strong>?</DialogContent>
+                <DialogContent>
+                    Are you sure you want to delete <strong>{selectedProduct?.name}</strong>?
+                </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
                     <Button variant="contained" color="error" onClick={handleDeleteConfirm}>Delete</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* نوافذ الإضافة والتعديل */}
+            {openAddDialog && <AddProductForm open={openAddDialog} onClose={() => setOpenAddDialog(false)} />}
+            {openEditDialog && selectedProduct && (
+                <EditProductForm
+                    open={openEditDialog}
+                    onClose={() => { setOpenEditDialog(false); setSelectedProduct(null); }}
+                    product={selectedProduct}
+                />
+            )}
         </Box>
     );
 }

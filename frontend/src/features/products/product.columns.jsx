@@ -9,50 +9,31 @@ export const productColumns = (onEdit, onDelete) => [
     field: "name",
     headerName: "Name",
     flex: 1,
+    minWidth: 150
   },
 
-  // {
-  //   field: "brand",
-  //   headerName: "Brand",
-  //   flex: 1,
-  //   valueGetter: (value, row) => row?.brands?.name || "",
-  // },
-
-  // {
-  //   field: "family",
-  //   headerName: "Family",
-  //   flex: 1,
-  //   valueGetter: (value, row) => row?.families?.name || "",
-  // },
-
-  // {
-  //   field: "model",
-  //   headerName: "Model",
-  //   flex: 1,
-  //   valueGetter: (value, row) => row?.models?.name || "",
-  // },
-
   {
-    field: "part_name",
-    headerName: "part_name",
+    field:"product_type" ,
+    headerName: "product_type",
     width: 120,
+    valueGetter: (value, row) => row?.product_type?.name || "N/A",
   },
   {
     field: "sell_price",
     headerName: "sell_price",
-    width: 120,
+    width: 80,
   },
    {
     field: "cost_price",
     headerName: "cost_price",
-    width: 120,
+    width: 80,
   },
 
 
   {
     field: "stock",
     headerName: "Stock",
-    width: 100,
+    width: 70,
   },
   {
     field: "description",
@@ -60,38 +41,33 @@ export const productColumns = (onEdit, onDelete) => [
     width: 100,
   },
 
-  {
+{
     field: "actions",
     headerName: "Actions",
     width: 160,
     renderCell: (params) => (
-      <>
-
-
-
-      
-                <Stack direction="row" spacing={1}>
-                <IconButton onClick={() => onEdit(params.row)}>
-                    <EditIcon />
-                </IconButton>
-                <IconButton onClick={() => onDelete(params.row)}>
-                    <DeleteIcon />
-                </IconButton>
-            </Stack>
-
-
-
-        {/* <Button size="small" onClick={() => onEdit(params.row)}>
-          Edit
-        </Button>
-        <Button
-          size="small"
-          color="error"
-          onClick={() => onDelete(params.row)}
-        >
-          Delete
-        </Button> */}
-      </>
+        <Stack direction="row" spacing={1}>
+            <IconButton 
+                onClick={(e) => {
+                    e.stopPropagation(); // يمنع فتح الـ Drawer
+                    onEdit(params.row);
+                    
+                }}
+                color="error"
+            >
+                <EditIcon  />
+            </IconButton>
+            
+            <IconButton 
+                onClick={(e) => {
+                    e.stopPropagation(); // يمنع فتح الـ Drawer
+                    onDelete(params.row);
+                }}
+                 color="primary"
+            >
+                <DeleteIcon />
+            </IconButton>
+        </Stack>
     ),
-  },
+},
 ];

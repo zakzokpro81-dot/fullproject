@@ -1,42 +1,84 @@
 import supabase from "../../config/supabase";
 import axios from "axios";
 
-// export async function getProducts() {
-//   const { data, error } = await supabase
-//     .from("products")
-//     .select(`
-//       *
-     
-//     `)
-//     .order("id", { ascending: false });
 
-//   if (error) console.log("my error is ", error);
-//   return data;
-// }
-
-export async function getProducts() {
-  const { data, error } = await supabase
-    .from("products")
-    .select(`
-      *,
-       product_type:product_types(id, name),
+// تعديل دالة جلب المنتجات لتدعم الترقيم والبحث من السيرفر
+export const getProducts = async ({ page, pageSize, searchText }) => {
+    let query = supabase
+        .from("products")
+        .select(`
+            *,
+      family:families(id, name),
+      brand:brands(id, name),
+      product_type:product_types(id, name),
       attributes:product_attribute_values(
         id,
         attribute_id,
         value,
-        attribute:attributes(name)
+        attribute:attributes(name, slug)
+      )
+            
+        `, { count: 'exact' }); // نطلب من سوبابيز إعطاءنا العدد الإجمالي
+
+    // البحث في السيرفر (إذا وجد نص بحث)
+    if (searchText) {
+        query = query.ilike('name', `%${searchText}%`);
+    }
+
+    // حساب النطاق (Range) المطلوب
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await query
+        .range(from, to)
+        .order('id', { ascending: false });
+
+    if (error) throw error;
+    return { data, count }; // نعيد البيانات والعدد الإجمالي
+};
+
+export async function getProducts__for__all__data() {
+  const { data, error } = await supabase
+    .from("products")
+    .select(`
+      *,
+      family:families(id, name),
+      brand:brands(id, name),
+      product_type:product_types(id, name),
+      attributes:product_attribute_values(
+        id,
+        attribute_id,
+        value,
+        attribute:attributes(name, slug)
       )
     `)
     .order("id", { ascending: false });
 
   if (error) {
-    console.log("my error is ", error);
+    console.error("Fetch error:", error);
+    throw error;
   }
-
   return data;
 }
 
 
+
+export async function getCategoryByType(typeId) {
+  if (!typeId) return null;
+  const { data, error } = await supabase
+    .from("product_types")
+    .select(`
+      category:families(id, name) 
+    `)
+    .eq("id", typeId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching linked category:", error);
+    return null;
+  }
+  return data?.category;
+}
 
 
 export async function getModelsForProduct() {
@@ -96,45 +138,104 @@ export async function createProduct(formData) {
   return product;
 }
 
+
 export async function updateProduct(id, data) {
-  const {
-    warehouse_id,
-    stock,
-    ...productData
-  } = data;
+  try {
+    console.log("Starting update for ID:", id, "with data:", data);
 
-  const { error: productError } = await supabase
-    .from("products")
-    .update({
-      ...productData,
-      stock: stock,
-    })
+    // 1. تحديث بيانات المنتج الأساسية (الأسعار، الوصف، النوع، الخ)
+    const { error: productError } = await supabase
+      .from("products")
+      .update({
+        name: data.name,
+        brand_id: data.brand_id,
+        model_id: data.model_id,
+        product_type_id: data.product_type_id,
+        family_id: data.family_id,
+        cost_price: data.cost_price,
+        sell_price: data.sell_price,
+        stock: Number(data.stock), // تحديث إجمالي المخزن في جدول المنتجات
+        description: data.description,
+        updated_at: new Date(),
+      })
+      .eq("id", id);
 
-    .eq("id", id);
+    if (productError) throw productError;
 
-  if (productError) throw productError;
+    // 2. تحديث الـ Attributes (حذف القديم وإضافة الجديد لضمان التطابق)
+    await supabase.from("product_attribute_values").delete().eq("product_id", id);
 
-  const { error: stockError } = await supabase
-    .from("warehouse_stock")
-    .update({
-      warehouse_id: warehouse_id,
-      quantity: stock,
-    })
-    .eq("product_id", id);
+    const attributes = data.attributes || {};
+    const attrInserts = [];
 
-  if (stockError) throw stockError;
+    for (let slug in attributes) {
+      let val = attributes[slug];
+      const finalValue = typeof val === "object" && val !== null ? val.value : val;
 
-  return true;
+      if (finalValue !== undefined && finalValue !== null) {
+        const { data: attrInfo } = await supabase
+          .from("attributes")
+          .select("id")
+          .eq("slug", slug)
+          .single();
+
+        if (attrInfo) {
+          attrInserts.push({
+            product_id: id,
+            attribute_id: attrInfo.id,
+            value: String(finalValue),
+          });
+        }
+      }
+    }
+
+    if (attrInserts.length > 0) {
+      const { error: insertAttrError } = await supabase
+        .from("product_attribute_values")
+        .insert(attrInserts);
+      if (insertAttrError) throw insertAttrError;
+    }
+
+    // 3. تحديث المخزن (تصحيح منطق التكرار)
+    // نحدث السجل بناءً على product_id فقط لنغير المستودع (Warehouse_id) والكمية (quantity) معاً
+    const { data: updateResult, error: updateError } = await supabase
+      .from("warehouse_stock")
+      .update({ 
+        warehouse_id: data.warehouse_id, // تغيير المستودع هنا يمنع التكرار ويقوم بالنقل
+        quantity: Number(data.stock) 
+      })
+      .eq("product_id", id) // الشرط على المنتج فقط وليس المستودع القديم
+      .select();
+
+    if (updateError) {
+      console.error("Supabase Warehouse Update Error:", updateError);
+      throw updateError;
+    }
+
+    // إذا لم يكن للمنتج أي سجل سابق في جدول المخزن (حالة استثنائية)
+    if (!updateResult || updateResult.length === 0) {
+      console.log("No existing stock record found. Creating new entry...");
+      const { error: insertStockError } = await supabase
+        .from("warehouse_stock")
+        .insert({
+          product_id: id,
+          warehouse_id: data.warehouse_id,
+          quantity: Number(data.stock),
+          product_variant_id: null,
+        });
+      
+      if (insertStockError) throw insertStockError;
+    }
+
+    console.log("Product and Warehouse transfer completed successfully");
+    return true;
+  } catch (err) {
+    console.error("Final catch Update error:", err);
+    throw err;
+  }
 }
 
-// export async function deleteProduct(id) {
-//   const { error } = await supabase
-//     .from("products")
-//     .delete()
-//     .eq("id", id);
 
-//   if (error) throw error;
-// }
 export async function deleteProduct(id) {
   // 1️⃣ حذف المخزون أولاً
   const { error: stockError } = await supabase
@@ -408,6 +509,7 @@ export async function saveProduct(data) {
         cost_price: data.cost_price,
         sell_price: data.sell_price,
         stock: data.stock,
+        category_id:data.category_id,
         description: data.description,
         family_id: data.family_id,
         is_active: true,
@@ -507,3 +609,30 @@ export async function getProductAttributes(productId) {
 }
 
 
+
+/**
+ * جلب سجل المخزن لمنتج معين مع بيانات المستودع المرتبط
+ * @param {number} productId - معرف المنتج
+ */
+export const getProductStockLocation = async (productId) => {
+  const { data, error } = await supabase
+    .from("warehouse_stock")
+    .select(`
+      id,
+      quantity,
+      warehouse_id,
+      product_id,
+      warehouse:warehouses (
+        id,
+        name
+      )
+    `)
+    .eq("product_id", productId)
+    .maybeSingle(); // نستخدم maybeSingle لأن المنتج قد لا يكون له سجل مخزني بعد
+
+  if (error) {
+    console.error("Error fetching stock location:", error);
+    throw error;
+  }
+  return data;
+};
