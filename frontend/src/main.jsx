@@ -22,7 +22,6 @@ import {ProductsList} from "../src/features/products/ProductList";
 import {WarehousesList} from "../src/features/warehouses/WarehousesList";
 import {WarehouseStockList} from "../src/features/WarehouseStock/WarehouseStockList";
 import {BulkProductCreate} from "../src/features/products/BulkProductCreate"
-import {ProductTestPage} from "../src/features/products/ProductTestPage"
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter(
@@ -38,7 +37,6 @@ const router = createBrowserRouter(
       <Route path="/WarehousesList" element={<WarehousesList  />} />
       <Route path="/WarehouseStockList" element={<WarehouseStockList  />} />
       <Route path="/BulkProductCreate" element={<BulkProductCreate  />} />
-      <Route path="/ProductTestPage" element={<ProductTestPage  />} />
     </Route>,
   ),
 );

@@ -1,293 +1,215 @@
-import * as React from 'react';
+import { useState } from "react";
 import {
-    Box, Button, Dialog, DialogTitle, DialogContent, DialogActions,
-    Typography, Paper, Drawer, Divider, Stack, TextField, IconButton,
-    List, ListItem, ListItemText
+  Box,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
+  Stack,
 } from "@mui/material";
-import { DataGrid } from '@mui/x-data-grid';
+import {
+  DataGrid,
+  GridToolbarContainer,
+  GridToolbarColumnsButton,
+  GridToolbarFilterButton,
+  GridToolbarExport,
+  GridToolbarQuickFilter,
+} from "@mui/x-data-grid";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import CloseIcon from "@mui/icons-material/Close";
 
-// استيراد الملفات الخاصة بك
-import { getProducts, deleteProduct } from "./product.api";
+import {
+  getProducts,
+  updateProduct,
+  deleteProduct,
+  deleteProducts,
+  createProductWithStock,
+} from "./product.api";
+
 import { productColumns } from "./product.columns";
-import AddProductForm from "./AddProductForm";
-import EditProductForm from "./EditProductForm";
-
-// --- إعادة الدالة التي تم حذفها خطأً ---
-function normalizeTurkish(str = "") {
-    return str
-        .replace(/İ/g, "I")
-        .replace(/I/g, "I")
-        .replace(/ı/g, "i")
-        .replace(/Ş/g, "S")
-        .replace(/ş/g, "s")
-        .replace(/Ğ/g, "G")
-        .replace(/ğ/g, "g")
-        .replace(/Ü/g, "U")
-        .replace(/ü/g, "u")
-        .replace(/Ö/g, "O")
-        .replace(/ö/g, "o")
-        .replace(/Ç/g, "C")
-        .replace(/ç/g, "c")
-        .toLowerCase();
-}
+import ProductForm from "./ProductForm";
 
 export function ProductsList() {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [openFormDialog, setOpenFormDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
-    // حالات التحكم
-    const [openAddDialog, setOpenAddDialog] = React.useState(false);
-    const [openEditDialog, setOpenEditDialog] = React.useState(false);
-    const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false); // إعادة الحالة
-    const [detailDrawerOpen, setDetailDrawerOpen] = React.useState(false);
+  const { data: products = [], isLoading } = useQuery({
+    queryKey: ["products"],
+    queryFn: getProducts,
+  });
 
-    const [selectedProduct, setSelectedProduct] = React.useState(null);
-    const [searchText, setSearchText] = React.useState("");
-    const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  // CREATE
+  const createMutation = useMutation({
+    mutationFn: createProductWithStock,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["products"]);
+      setOpenFormDialog(false);
+    },
+  });
 
-    // الترقيم (Pagination)
-    const [paginationModel, setPaginationModel] = React.useState({
-        page: 0,
-        pageSize: 10,
-    });
+  // UPDATE
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => updateProduct(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["products"]);
+      setOpenFormDialog(false);
+      setSelectedProduct(null);
+    },
+  });
 
-    // البحث المتأخر
-    React.useEffect(() => {
-        const timer = setTimeout(() => setDebouncedSearch(searchText), 500);
-        return () => clearTimeout(timer);
-    }, [searchText]);
+  // DELETE
+  const deleteMutation = useMutation({
+    mutationFn: deleteProduct,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["products"]);
+      setOpenDeleteDialog(false);
+      setSelectedProduct(null);
+    },
+  });
 
-    // جلب البيانات
-    const { data, isLoading, isFetching } = useQuery({
-        queryKey: ["products", paginationModel, debouncedSearch],
-        queryFn: () => getProducts({
-            page: paginationModel.page,
-            pageSize: paginationModel.pageSize,
-            searchText: normalizeTurkish(debouncedSearch) // استخدام دالة التحويل هنا
-        }),
-        keepPreviousData: true,
-    });
+  const handleAddClick = () => {
+    setSelectedProduct(null);
+    setOpenFormDialog(true);
+  };
 
-    const deleteMutation = useMutation({
-        mutationFn: deleteProduct,
-        onSuccess: () => {
-            queryClient.invalidateQueries(["products"]);
-            setOpenDeleteDialog(false);
-            setSelectedProduct(null);
-        },
-    });
+  const handleEditClick = (product) => {
+    setSelectedProduct(product);
+    setOpenFormDialog(true);
+  };
 
-    // --- معالجات الأحداث المعدلة لمنع التداخل ---
-    const handleEditAction = (product) => {
-        setSelectedProduct(product);
-        setOpenEditDialog(true);
-    };
+  const handleDeleteClick = (product) => {
+    setSelectedProduct(product);
+    setOpenDeleteDialog(true);
+  };
 
-    const handleDeleteAction = (product) => {
-        setSelectedProduct(product);
-        setOpenDeleteDialog(true); // فتح الدايلوج بدلاً من confirm المتصفح
-    };
+  const handleDeleteConfirm = () => {
+    deleteMutation.mutate(selectedProduct.id);
+  };
 
-    const handleDeleteConfirm = () => {
-        if (selectedProduct) deleteMutation.mutate(selectedProduct.id);
-    };
+  const handleFormSubmit = (data) => {
+    if (selectedProduct) {
+      updateMutation.mutate({ id: selectedProduct.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
 
-    const handleRowClick = (params, event) => {
-        // منع فتح الدراور إذا كان الضغط على منطقة الأزرار
-        if (event.target.closest('.MuiDataGrid-actionsCell') || event.target.closest('button')) {
-            return;
-        }
-        setSelectedProduct(params.row);
-        setDetailDrawerOpen(true);
-    };
-
-    const columns = productColumns(handleEditAction, handleDeleteAction);
-
+  function ToolbarWithDelete({ selectedIds = [], onDeleteSelected }) {
     return (
-        <Box sx={{ width: '100%', p: 3 }}>
-
-            <Paper sx={{ p: 2, mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>Products</Typography>
-                <Stack direction="row" spacing={2}>
-                    <TextField
-                        size="small"
-                        placeholder="Search..."
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                    />
-                    <Button variant="contained" onClick={() => setOpenAddDialog(true)}>Add Product</Button>
-                </Stack>
-            </Paper>
-
-            <Paper sx={{ height: 650, width: '100%' }}>
-                <DataGrid
-                    rows={data?.data || []}
-                    rowCount={data?.count || 0}
-                    loading={isLoading || isFetching}
-                    columns={columns}
-                    paginationMode="server"
-                    paginationModel={paginationModel}
-                    onPaginationModelChange={setPaginationModel}
-                    disableSelectionOnClick
-                    onRowClick={handleRowClick}
-                    sx={{
-                        '& .MuiDataGrid-columnHeaderTitle': {
-                            fontWeight: 'bold',
-                            fontSize: { xs: '0.8rem', sm: '1rem' } // تصغير الخط للموبايل
-                        },
-                        '& .MuiDataGrid-cell': {
-                            fontSize: { xs: '0.75rem', sm: '0.9rem' }
-                        },
-                        // منع التمرير الأفقي المزعج وجعل الجدول يمتد
-                        width: '100%',
-                    }}
-
-                    sx={{
-                        '& .MuiDataGrid-row:hover': { cursor: 'pointer' },
-                    }}
-                    columnVisibilityModel={{
-                        description: false, // إخفاء الوصف في الموبايل
-                        cost_price: false,  // إخفاء سعر التكلفة في الموبايل لزيادة المساحة
-                    }}
-
-                />
-            </Paper>
-
-            {/* الدراور الجانبي للتفاصيل */}
-            <Drawer
-                anchor="right"
-                open={detailDrawerOpen}
-                onClose={() => setDetailDrawerOpen(false)}
-                // التعديل 1: العرض يصبح مرناً (100% للموبايل و 400px للشاشات الأكبر)
-                PaperProps={{
-                    sx: {
-                        width: { xs: '100%', sm: 400 },
-                        // إضافة حواف ناعمة في الشاشات الكبيرة فقط
-                        borderRadius: { xs: 0, sm: '16px 0 0 16px' }
-                    }
-                }}
-            >
-                <Box sx={{ p: 3 }}>
-
-                    <Divider />
-
-                    {selectedProduct && (
-                        <Box sx={{ mt: 6 }}>
-                            <Box sx={{ mb: 4 }}>
-
-
-                                <Stack
-                                    direction="row"
-                                    justifyContent="right"
-                                    alignItems="center"
-                                    mb={2}
-                                    sx={{
-                                        position: 'sticky', // يجعله ثابتاً في الأعلى حتى لو نزلت للأسفل في الوصف
-                                        top: 0,
-                                        bgcolor: 'white',
-                                        zIndex: 1,
-                                        pb: 1
-                                    }}
-                                >
-                                    <Typography variant="h6" sx={{ fontWeight: 'bold' }}>Close</Typography>
-
-                                    {/* هذا هو زر الإغلاق - قمت بإضافة خلفية ملونة له ليظهر بوضوح */}
-                                    <IconButton
-                                        onClick={() => setDetailDrawerOpen(false)}
-                                        aria-label="close"
-                                        sx={{
-                                           // color: (theme) => theme.palette.grey[500],
-                                            backgroundColor: '#f5f5f5', // لون خلفية رمادي فاتح لتمييزه
-                                            '&:hover': {
-                                                backgroundColor: '#e0e0e0',
-                                            },
-                                            
-                                        }}
-                                        color="error"
-                                    >
-                                        <CloseIcon />
-                                    </IconButton>
-                                </Stack>
-
-                                <Typography variant="caption" color="textSecondary">Product Name</Typography>
-                                {/* التعديل 3: تصغير حجم الخط قليلاً على الموبايل لكي لا ينكسر السطر */}
-                                <Typography
-                                    variant="h5"
-                                    sx={{
-                                        fontWeight: 500,
-                                        fontSize: { xs: '1.25rem', sm: '1.5rem' }
-                                    }}
-                                >
-                                    {selectedProduct.name}
-                                </Typography>
-                            </Box>
-
-                            <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold', color: '#666' }}>Attributes</Typography>
-                            <Paper variant="outlined" sx={{ borderRadius: 2, bgcolor: '#fafafa' }}>
-                                <List disablePadding>
-                                    {selectedProduct.attributes?.length > 0 ? (
-                                        selectedProduct.attributes.map((attr, index) => (
-                                            <ListItem key={index} divider={index !== selectedProduct.attributes.length - 1}>
-                                                <ListItemText
-                                                    primary={attr.attribute?.name || "Attribute"}
-                                                    secondary={attr.value}
-                                                    primaryTypographyProps={{ variant: 'caption', color: 'primary' }}
-                                                    secondaryTypographyProps={{
-                                                        variant: 'body1',
-                                                        sx: { fontWeight: 500, fontSize: { xs: '0.9rem', sm: '1rem' } }
-                                                    }}
-                                                />
-                                            </ListItem>
-                                        ))
-                                    ) : (
-                                        <ListItem><ListItemText primary="No technical attributes defined." /></ListItem>
-                                    )}
-                                </List>
-                            </Paper>
-
-                            <Box sx={{ mt: 4 }}>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Description</Typography>
-                                <Typography
-                                    variant="body2"
-                                    sx={{
-                                        mt: 1,
-                                        p: 2,
-                                        bgcolor: '#f0f4f8',
-                                        borderRadius: 2,
-                                        // التعديل 4: التأكد من أن النص الطويل لا يخرج عن الإطار في الموبايل
-                                        wordBreak: 'break-word'
-                                    }}
-                                >
-                                    {selectedProduct.description || "No description provided for this item."}
-                                </Typography>
-                            </Box>
-                        </Box>
-                    )}
-                </Box>
-            </Drawer>
-
-            {/* --- إعادة دايلوج التأكيد الذي حُذف --- */}
-            <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-                <DialogTitle>Delete Confirm</DialogTitle>
-                <DialogContent>
-                    Are you sure you want to delete <strong>{selectedProduct?.name}</strong>?
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
-                    <Button variant="contained" color="error" onClick={handleDeleteConfirm}>Delete</Button>
-                </DialogActions>
-            </Dialog>
-
-            {/* نوافذ الإضافة والتعديل */}
-            {openAddDialog && <AddProductForm open={openAddDialog} onClose={() => setOpenAddDialog(false)} />}
-            {openEditDialog && selectedProduct && (
-                <EditProductForm
-                    open={openEditDialog}
-                    onClose={() => { setOpenEditDialog(false); setSelectedProduct(null); }}
-                    product={selectedProduct}
-                />
-            )}
-        </Box>
+      <GridToolbarContainer
+        sx={{
+          justifyContent: "space-between",
+          width: "100%",
+          alignItems: "center",
+        }}
+      >
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Button
+            color="error"
+            variant="contained"
+            size="small"
+            disabled={selectedIds.length === 0}
+            onClick={onDeleteSelected}
+          >
+            Delete Selected ({selectedIds.length})
+          </Button>
+          <GridToolbarColumnsButton />
+          <GridToolbarFilterButton />
+          <GridToolbarExport />
+          <GridToolbarQuickFilter />
+        </Stack>
+      </GridToolbarContainer>
     );
+  }
+
+  const handleDeleteSelected = async () => {
+    try {
+      const idsArray = Array.from(selectedIds);
+      await deleteProducts(idsArray);
+      queryClient.invalidateQueries(["products"]);
+      setSelectedIds([]);
+    } catch (err) {
+      console.error("DELETE ERROR:", err);
+    }
+  };
+
+  return (
+    <Box>
+      <Box display="flex" justifyContent="space-between" mb={2}>
+        <Typography variant="h5">Products</Typography>
+        <Button variant="contained" onClick={handleAddClick}>
+          Add Product
+        </Button>
+      </Box>
+
+      <DataGrid
+        rows={products}
+        columns={productColumns(handleEditClick, handleDeleteClick)}
+        loading={isLoading}
+        autoHeight
+        checkboxSelection
+        disableRowSelectionOnClick
+        onRowSelectionModelChange={(newSelection) => setSelectedIds(newSelection)}
+        slots={{ toolbar: ToolbarWithDelete }}
+        slotProps={{
+          toolbar: {
+            selectedIds,
+            onDeleteSelected: handleDeleteSelected,
+          },
+        }}
+        // Detail Panel لإظهار Attributes
+        getDetailPanelContent={({ row }) => {
+          const attributesArray = (row.attributes || []).map((attr, idx) => ({
+            id: idx,
+            name: attr.attribute?.name || `Attribute ${idx}`,
+            value: attr.value || "",
+          }));
+
+          return (
+            <Box sx={{ padding: 2, backgroundColor: "#f9f9f9" }}>
+              <Typography variant="subtitle2">Attributes:</Typography>
+              {attributesArray.length === 0 ? (
+                <Typography variant="body2">No attributes</Typography>
+              ) : (
+                <DataGrid
+                  autoHeight
+                  hideFooter
+                  rows={attributesArray}
+                  columns={[
+                    { field: "name", headerName: "Attribute", flex: 1 },
+                    { field: "value", headerName: "Value", flex: 1 },
+                  ]}
+                />
+              )}
+            </Box>
+          );
+        }}
+        getDetailPanelHeight={() => "auto"}
+      />
+
+      <ProductForm
+        open={openFormDialog}
+        onClose={() => setOpenFormDialog(false)}
+        onSubmit={handleFormSubmit}
+        defaultValues={selectedProduct}
+      />
+
+      <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+        <DialogTitle>Delete Confirm</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete this product? <strong>{selectedProduct?.name}</strong>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleDeleteConfirm}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
 }

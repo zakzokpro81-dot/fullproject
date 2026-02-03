@@ -2,8 +2,65 @@ import supabase from "../../config/supabase";
 import axios from "axios";
 
 
+
+
+export const getProducts = async ({ page, pageSize, searchText, warehouseId, typeId }) => {
+    // 1. استعلام المنتجات الأساسي (مستقر ويعمل دائماً)
+    let query = supabase
+        .from("products")
+        .select(`
+            *,
+            family:families(id, name),
+            brand:brands(id, name),
+            product_type:product_types(id, name),
+            attributes:product_attribute_values(
+                id, attribute_id, value,
+                attribute:attributes(name, slug)
+            )
+        `, { count: 'exact' });
+
+    if (searchText) query = query.ilike('name', `%${searchText}%`);
+    if (typeId && typeId !== "") query = query.eq('product_type_id', typeId);
+
+    // 2. الفلترة باستخدام الجدول الصحيح warehouse_stock
+    if (warehouseId && warehouseId !== "") {
+    // التحويل لـ Number يضمن أن المقارنة في سوبابيز تتم بشكل صحيح
+    const cleanId = Number(warehouseId); 
+
+    const { data: stockData, error: stockError } = await supabase
+        .from('warehouse_stock')
+        .select('product_id')
+        .eq('warehouse_id', cleanId); // تأكد أن warehouse_id في القاعدة نوعه int8 أو integer
+
+        if (stockError) {
+            console.error("Stock API Error:", stockError.message);
+        }
+
+        if (stockData && stockData.length > 0) {
+            const productIds = stockData.map(item => item.product_id);
+            query = query.in('id', productIds);
+        } else {
+            // إذا كان المستودع فارغاً، نرجع نتيجة فارغة فوراً
+            return { data: [], count: 0 };
+        }
+    }
+
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+
+    const { data, error, count } = await query
+        .range(from, to)
+        .order('id', { ascending: false });
+
+    if (error) throw error;
+    return { data, count };
+};
+
+
+
+
 // تعديل دالة جلب المنتجات لتدعم الترقيم والبحث من السيرفر
-export const getProducts = async ({ page, pageSize, searchText }) => {
+export const getProducts__without_filtring = async ({ page, pageSize, searchText }) => {
     let query = supabase
         .from("products")
         .select(`
@@ -332,18 +389,6 @@ export const getCategories = async () => {
   return data;
 };
 
-// Product Types حسب Category
-export const getProductTypes = async (categoryId) => {
-  if (!categoryId) return [];
-  const { data, error } = await supabase
-    .from("product_types")
-    .select("*")
-    .eq("category_id", categoryId)
-    .eq("is_active", true)
-    .order("name");
-  if (error) throw error;
-  return data;
-};
 
 // Brands
 export const getBrands = async () => {
@@ -381,17 +426,6 @@ export const getModels = async (familyId) => {
   if (error) throw error;
   return data;
 };
-
-// Attributes حسب Product Type
-// export const getAttributes = async (productTypeId) => {
-//   if (!productTypeId) return [];
-//   const { data, error } = await supabase
-//     .from("product_type_attributes")
-//     .select(`attribute:id,name`)
-//     .eq("product_type_id", productTypeId);
-//   if (error) throw error;
-//   return data.map(item => item.attribute);
-// };
 
 
 
@@ -440,60 +474,6 @@ export async function getAttributes(productTypeId) {
 
 
 
-// product.api.js
-
-// export async function saveProduct(data) {
-//   try {
-//     // 1. إدراج المنتج العام
-//     const { data: product, error: productError } = await supabase
-//       .from("products")
-//       .insert({
-//         name: data.name,
-//         brand_id: data.brand_id,
-//         model_id: data.model_id,
-//         product_type_id: data.product_type_id,
-//         cost_price: data.cost_price,
-//         sell_price: data.sell_price,
-//         stock: data.stock,
-//         description: data.description,
-//         family_id: data.family_id,
-//         is_active: true,
-//       })
-//       .select()
-//       .single();
-
-//     if (productError) throw productError;
-
-//     const productId = product.id;
-
-//     // 2. إدراج Attributes
-//     const attributes = data.attributes || {};
-
-//     for (let slug in attributes) {
-//       const value = attributes[slug];
-
-//       // جلب الـ attribute_id من جدول attributes
-//       const { data: attrData, error: attrError } = await supabase
-//         .from("attributes")
-//         .select("id")
-//         .eq("slug", slug)
-//         .single();
-
-//       if (attrError) throw attrError;
-
-//       await supabase.from("product_attribute_values").insert({
-//         product_id: productId,
-//         attribute_id: attrData.id,
-//         value: value,
-//       });
-//     }
-
-//     return product;
-//   } catch (err) {
-//     console.error("Error saving product:", err);
-//     throw err;
-//   }
-// }
 
 
 export async function saveProduct(data) {
@@ -580,21 +560,6 @@ export async function saveProduct(data) {
 
 
 
-// product.api.js
-export async function getWarehouses() {
-  const { data, error } = await supabase
-    .from("warehouses")   // اسم جدول المستودعات
-    .select("id, name")   // فقط نحتاج id و name للعرض
-    .order("id", { ascending: true });
-
-  if (error) {
-    console.error("Failed to fetch warehouses:", error);
-    return [];
-  }
-
-  return data;
-}
-
 
 
 export async function getProductAttributes(productId) {
@@ -636,3 +601,72 @@ export const getProductStockLocation = async (productId) => {
   }
   return data;
 };
+
+
+
+
+// product.api.js
+export async function getWarehouses() {
+  const { data, error } = await supabase
+    .from("warehouses")   // اسم جدول المستودعات
+    .select("id, name")   // فقط نحتاج id و name للعرض
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error("Failed to fetch warehouses:", error);
+    return [];
+  }
+
+  return data;
+}
+
+
+
+// Product Types حسب Category
+// export const getProductTypes = async (categoryId) => {
+//   if (!categoryId) return [];
+//   const { data, error } = await supabase
+//     .from("product_types")
+//     .select("*")
+//     .eq("category_id", categoryId)
+//     .eq("is_active", true)
+//     .order("name");
+//   if (error) throw error;
+//   return data;
+// };
+
+
+export const getProductTypes = async (categoryId = null, fetchAll = false) => {
+  // 1. إذا لم نطلب "جلب الكل" ولم نرسل "رقم تصنيف"، نرجع مصفوفة فارغة (السلوك القديم)
+  if (!fetchAll && !categoryId) return [];
+
+  let query = supabase
+    .from("product_types")
+    .select("*")
+    .order("name");
+
+  // 2. الفلترة حسب التصنيف إذا وُجد
+  if (categoryId && typeof categoryId !== 'object') {
+    query = query.eq("category_id", categoryId);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+};
+
+// // جلب كافة أنواع المنتجات (مثل: قطع غيار، إكسسوارات، إلخ)
+// export const getProductTypes = async () => {
+//     const { data, error } = await supabase
+//         .from("product_types")
+//         .select("id, name")
+//         .order("name", { ascending: true });
+
+//     if (error) {
+//         console.error("Error fetching product types:", error.message);
+//         throw error;
+//     }
+//     return data;
+// };
+
+

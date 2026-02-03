@@ -16,6 +16,7 @@ export const productColumns = (onEdit, onDelete) => [
     field:"product_type" ,
     headerName: "product_type",
     width: 120,
+    
     valueGetter: (value, row) => row?.product_type?.name || "N/A",
   },
   {
