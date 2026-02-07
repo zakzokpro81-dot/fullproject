@@ -354,9 +354,12 @@ export function ProductsList() {
                     disabled
                   />
                 }
-                label="Active"
+                label={
+                  Boolean(selectedProduct?.is_active) === true
+                    ? "Active"
+                    : "Not Active"
+                }
               />
-              {console.log(selectedProduct)}
               <Box sx={{ mt: 3 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
                   stock

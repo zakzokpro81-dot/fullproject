@@ -219,6 +219,7 @@ export async function updateProduct(id, data) {
         stock: Number(data.stock), // تحديث إجمالي المخزن في جدول المنتجات
         description: data.description,
         updated_at: new Date(),
+        is_active:data.is_active,
       })
       .eq("id", id);
 
