@@ -1,5 +1,5 @@
 import { IconButton, Stack, Checkbox } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 export const productColumns = (
@@ -84,7 +84,7 @@ export const productColumns = (
           }}
           color="error"
         >
-          <EditIcon />
+          <EditNoteIcon />
         </IconButton>
 
         <IconButton

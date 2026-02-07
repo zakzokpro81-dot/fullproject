@@ -20,6 +20,8 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -345,6 +347,16 @@ export function ProductsList() {
                 </List>
               </Paper>
 
+              <FormControlLabel
+                control={
+                  <Switch
+                    defaultChecked={Boolean(selectedProduct?.is_active)}
+                    disabled
+                  />
+                }
+                label="Active"
+              />
+              {console.log(selectedProduct)}
               <Box sx={{ mt: 3 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
                   stock
