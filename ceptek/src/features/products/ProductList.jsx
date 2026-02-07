@@ -188,11 +188,13 @@ export function ProductsList() {
   return (
     <Box sx={{ width: "100%", p: 3 }}>
       <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-        <Typography variant="h5" sx={{ mb: 2, fontWeight: "bold" }}>
-          Inventory Management
-        </Typography>
-
-        <Stack direction="row" spacing={1}>
+        <Stack
+          spacing={1}
+          sx={{ mb: 3, flexDirection: { xs: "clumon", sm: "row" } }}
+        >
+          <Typography variant="h5" sx={{ mb: 2, flex: 1, fontWeight: "bold" }}>
+            Inventory Management
+          </Typography>
           <Button
             color="error"
             variant="contained"
