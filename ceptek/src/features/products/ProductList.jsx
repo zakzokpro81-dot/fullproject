@@ -291,7 +291,7 @@ export function ProductsList() {
         <Box sx={{ width: 400, p: 10 }}>
           <Stack
             direction="row"
-            justifyContent="space-between"
+            justifyContent="right"
             alignItems="center"
             mb={2}
           >
@@ -338,6 +338,18 @@ export function ProductsList() {
                   ))}
                 </List>
               </Paper>
+
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
+                  stock
+                </Typography>
+                <Typography
+                  variant="body2"
+                  sx={{ mt: 1, p: 2, bgcolor: "#f5f5f5", borderRadius: 2 }}
+                >
+                  {selectedProduct.stock || "No stock."}
+                </Typography>
+              </Box>
 
               <Box sx={{ mt: 3 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>

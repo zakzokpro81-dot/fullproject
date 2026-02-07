@@ -2,7 +2,14 @@ import { IconButton, Stack, Checkbox } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-export const productColumns = (onEdit, onDelete, selectedIds, toggleSelect,rows = [],toggleSelectAll) => [
+export const productColumns = (
+  onEdit,
+  onDelete,
+  selectedIds,
+  toggleSelect,
+  rows = [],
+  toggleSelectAll,
+) => [
   {
     field: "select",
     headerName: "",
@@ -12,7 +19,7 @@ export const productColumns = (onEdit, onDelete, selectedIds, toggleSelect,rows 
 
     renderHeader: () => {
       const allSelected =
-        rows.length > 0 && rows.every(r => selectedIds.has(r.id));
+        rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
 
       return (
         <Checkbox
@@ -30,28 +37,28 @@ export const productColumns = (onEdit, onDelete, selectedIds, toggleSelect,rows 
         onClick={(e) => e.stopPropagation()}
         onChange={() => toggleSelect(params.row.id)}
       />
-    )
+    ),
   },
   {
     field: "name",
-    headerName: "Name",
+    headerName: "Product Name",
     flex: 1,
-    minWidth: 150
+    minWidth: 150,
   },
   {
     field: "product_type",
-    headerName: "product_type",
+    headerName: "Spear Part",
     width: 120,
     valueGetter: (value, row) => row?.product_type?.name || "N/A",
   },
   {
     field: "sell_price",
-    headerName: "sell_price",
+    headerName: "sell price",
     width: 80,
   },
   {
     field: "cost_price",
-    headerName: "cost_price",
+    headerName: "cost price",
     width: 80,
   },
   {
