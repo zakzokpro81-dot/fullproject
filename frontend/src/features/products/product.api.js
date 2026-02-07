@@ -74,6 +74,7 @@ export const getProducts__without_filtring = async ({ page, pageSize, searchText
         value,
         attribute:attributes(name, slug)
       )
+        
             
         `, { count: 'exact' }); // نطلب من سوبابيز إعطاءنا العدد الإجمالي
 
