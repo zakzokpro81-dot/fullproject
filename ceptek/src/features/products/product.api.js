@@ -481,36 +481,37 @@ export async function getAttributes(productTypeId) {
 
 export async function saveBulkProducts(productsData) {
   try {
-    // 1. إدراج جميع المنتجات دفعة واحدة في جدول products
-    // نقوم بتجهيز المصفوفة لتناسب أعمدة الجدول
-    const productsToInsert = productsData.map(item => ({
-      name: item.name,
-      brand_id: item.brand_id,
-      model_id: item.model_id,
-      product_type_id: item.product_type_id,
-      category_id: item.category_id,
-      cost_price: item.cost_price,
-      sell_price: item.sell_price,
-      stock: item.stock,
-      description: item.description,
+    // 1. تجهيز بيانات المنتجات الأساسية
+    const productsToInsert = productsData.map((item) => ({
+      name: String(item.name || "Unnamed Product"),
+      brand_id: item.brand_id || null,
+      model_id: item.model_id || null,
+      product_type_id: item.product_type_id || null,
+      category_id: item.category_id || null,
+      cost_price: Number(item.cost_price) || 0,
+      sell_price: Number(item.sell_price) || 0,
+      stock: Number(item.stock) || 0,
+      description: item.description || "",
+      family_id: item.family_id || null,
       is_active: true,
-      // أضف أي حقول أخرى مثل family_id إذا كانت متوفرة
     }));
 
+    // إدراج المنتجات في جدول products
     const { data: insertedProducts, error: productsError } = await supabase
       .from("products")
       .insert(productsToInsert)
-      .select(); // نستخدم select لجلب الـ IDs الجديدة
+      .select();
 
     if (productsError) throw productsError;
 
-    // 2. تجهيز بيانات الخصائص والمخزون بناءً على المنتجات التي تم إدراجها
     const attributeValuesToInsert = [];
     const stockEntriesToInsert = [];
 
-    // سنحتاج لجلب الـ IDs الخاصة بالـ attributes بناءً على الـ slugs
-    // لتجنب جلبها داخل حلقة تكرارية، نجمع كل الـ slugs الفريدة أولاً
-    const allSlugs = [...new Set(productsData.flatMap(p => Object.keys(p.attributes || {})))];
+    // جلب الـ IDs للخصائص (Attributes) بناءً على الـ Slugs
+    const allSlugs = [
+      ...new Set(productsData.flatMap((p) => Object.keys(p.attributes || {}))),
+    ];
+    
     const { data: attributesList, error: attrFetchError } = await supabase
       .from("attributes")
       .select("id, slug")
@@ -518,56 +519,85 @@ export async function saveBulkProducts(productsData) {
 
     if (attrFetchError) throw attrFetchError;
 
-    // تحويل قائمة الخصائص لقاموس لسهولة الوصول (Slug -> ID)
-    const attrMap = attributesList.reduce((acc, curr) => {
-      acc[curr.slug] = curr.id;
-      return acc;
-    }, {});
+    const attrMap = attributesList?.reduce(
+      (acc, curr) => ({ ...acc, [curr.slug]: curr.id }),
+      {}
+    ) || {};
 
-    // ربط المنتجات المدرجة ببياناتها الأصلية لإدراج الخصائص والمخزون
+    // 2. ربط البيانات المدرجة بالخصائص والمخزون
     insertedProducts.forEach((product, index) => {
+      // نعتمد على الترتيب (Index) لأن سوبابيس يعيد البيانات بنفس ترتيب الإدخال في الـ Bulk
       const originalData = productsData[index];
+      if (!originalData) return;
 
       // أ. تجهيز بيانات المخزون
-      stockEntriesToInsert.push({
-        warehouse_id: originalData.warehouse_id,
-        product_id: product.id,
-        quantity: product.stock,
-        product_variant_id: null,
-      });
+      if (originalData.warehouse_id) {
+        stockEntriesToInsert.push({
+          warehouse_id: originalData.warehouse_id,
+          product_id: product.id,
+          quantity: Number(product.stock) || 0,
+          product_variant_id: null,
+        });
+      }
 
-      // ب. تجهيز بيانات الخصائص
+      // ب. معالجة الخصائص (Attributes) - الفلترة الصارمة لمنع الـ Null
       const attrs = originalData.attributes || {};
       for (let slug in attrs) {
-        let val = attrs[slug];
-        if (typeof val === "object" && val !== null && "value" in val) {
-          val = val.value;
+        let rawVal = attrs[slug];
+        let finalStringVal = "";
+
+        // فك تشفير القيمة مهما كان نوعها (Object, String, Number)
+        if (rawVal !== null && rawVal !== undefined) {
+          if (typeof rawVal === "object") {
+            if ("value" in rawVal) {
+              finalStringVal = String(rawVal.value);
+            } else if ("label" in rawVal) {
+              finalStringVal = String(rawVal.label);
+            }
+          } else {
+            finalStringVal = String(rawVal);
+          }
         }
 
-        if (attrMap[slug]) {
+        const attributeId = attrMap[slug];
+        
+        // القيد الذهبي: لا تسمح بمرور الصف إذا كانت القيمة فارغة نهائياً
+        // هذا يمنع خطأ "null value in column value"
+        if (
+          attributeId && 
+          finalStringVal.trim() !== "" && 
+          finalStringVal !== "null" && 
+          finalStringVal !== "undefined"
+        ) {
           attributeValuesToInsert.push({
             product_id: product.id,
-            attribute_id: attrMap[slug],
-            value: val,
+            attribute_id: attributeId,
+            value: finalStringVal.trim(),
           });
         }
       }
     });
 
-    // 3. تنفيذ الإدراج الجماعي للجداول الفرعية
+    // 3. تنفيذ عمليات الإدراج في الجداول الفرعية
     
-    // إدراج المخزن دفعة واحدة
-    const { error: stockError } = await supabase
-      .from("warehouse_stock")
-      .insert(stockEntriesToInsert);
-    if (stockError) throw stockError;
+    // إدراج المخزون
+    if (stockEntriesToInsert.length > 0) {
+      const { error: stockError } = await supabase
+        .from("warehouse_stock")
+        .insert(stockEntriesToInsert);
+      if (stockError) throw stockError;
+    }
 
-    // إدراج قيم الخصائص دفعة واحدة (إذا وجدت)
+    // إدراج الخصائص (Attributes)
     if (attributeValuesToInsert.length > 0) {
       const { error: attrInsertError } = await supabase
         .from("product_attribute_values")
         .insert(attributeValuesToInsert);
-      if (attrInsertError) throw attrInsertError;
+      
+      if (attrInsertError) {
+        console.error("Failed Attribute Payload:", attributeValuesToInsert);
+        throw attrInsertError;
+      }
     }
 
     return insertedProducts;
@@ -576,7 +606,6 @@ export async function saveBulkProducts(productsData) {
     throw err;
   }
 }
-
 
 
 

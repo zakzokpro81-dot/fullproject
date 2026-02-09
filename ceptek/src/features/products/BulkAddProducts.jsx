@@ -12,7 +12,6 @@ import {
   InputAdornment,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
-import { useQuery } from "@tanstack/react-query";
 import {
   getCategories,
   getProductTypes,
@@ -24,6 +23,8 @@ import { BulkModelAutocomplete } from "./BulkModelAutocomplete";
 import FlashOnIcon from "@mui/icons-material/FlashOn";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import BulkProductTable from "./BulkProductTable";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import ProductActionDialogs from "./ProductActionDialogs"; // تأكد من مسار الملف الصحيح
 const SECTION_STYLE = {
   p: 3,
   borderRadius: 2,
@@ -112,6 +113,73 @@ export function BulkAddProducts() {
     }
     return edited;
   };
+
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: saveBulkProducts,
+    onSuccess: () => {
+      // نفس الأسطر في ملفك الفردي
+      queryClient.invalidateQueries(["products"]);
+      setRows([]); // مسح الجدول الجماعي
+      setOpenSaveConfirm(false); // إغلاق الديالوغ
+      // يمكنك إضافة alert هنا إذا أردت كما في ملفك
+    },
+    onError: (error) => {
+      console.error("Error details:", error);
+      alert(`فشل الحفظ: ${error.message || "تأكد من إدخال البيانات المطلوبة"}`);
+    },
+  });
+
+  const handleConfirmSave = () => {
+    const productsData = rows.map((row) => {
+      // تقليد منطق الـ API الفردي في استخراج الـ attributes
+      const cleanedAttributes = {};
+
+      if (row.attributes) {
+        Object.entries(row.attributes).forEach(([slug, val]) => {
+          let finalValue = val;
+
+          // --- هذا هو السطر الجوهري الذي يقلد كود الـ API الفردي لديك ---
+          if (typeof val === "object" && val !== null && "value" in val) {
+            finalValue = val.value;
+          }
+
+          // إرسال الحقل فقط إذا كان له قيمة (تجنب الـ null value error)
+          if (
+            finalValue !== null &&
+            finalValue !== undefined &&
+            finalValue !== ""
+          ) {
+            cleanedAttributes[slug] = finalValue;
+          }
+        });
+      }
+
+      return {
+        name: row.name || "",
+        brand_id: row.brand_id || null,
+        model_id: row.model_id || null,
+        family_id: row.family_id || null,
+        product_type_id: watchedProductType?.id || null,
+        category_id: watchedCategory?.id || null,
+        sell_price: Number(row.sell_price) || 0,
+        cost_price: Number(row.cost_price) || 0,
+        stock: Number(row.stock) || 0,
+        description: row.description || "",
+        warehouse_id: row.warehouse_id || warehouses[0]?.id || null,
+        attributes: cleanedAttributes, // ترسل الآن كـ { color: "Red" } وليس كـ { color: {value: "Red"} }
+      };
+    });
+
+    mutation.mutate(productsData);
+  };
+  useEffect(() => {
+    if (warehouses && warehouses.length > 0) {
+      // تعيين أول مستودع في "الحقول العلوية" تلقائياً
+      setValue("warehouse", warehouses[0]);
+    }
+  }, [warehouses, setValue]);
 
   // --- المزامنة التلقائية (المنطق المحمي) ---
   useEffect(() => {
@@ -214,6 +282,7 @@ export function BulkAddProducts() {
 
   const handleInsertBulk = useCallback(
     (selectedModels) => {
+      const currentWarehouse = watch("warehouse");
       // 1. تحضير السمات العلوية الحالية
       const topAttrs = {};
       if (watchedAttributes) {
@@ -228,8 +297,9 @@ export function BulkAddProducts() {
         name: model.label,
         part_name: watchedProductType?.name || "",
         // حقن القيم العلوية هنا يضمن ظهورها فوراً عند الإدراج
-        warehouse_name: allValues.warehouse?.name || "",
-        warehouse_id: allValues.warehouse?.id || null,
+        warehouse_name:
+          allValues.warehouse?.name || currentWarehouse?.name || "",
+        warehouse_id: allValues.warehouse?.id || currentWarehouse?.id || null,
         sell_price: Number(allValues.sellPrice) || 0,
         cost_price: Number(allValues.costPrice) || 0,
         stock: Number(allValues.stock) || 0,
@@ -249,62 +319,12 @@ export function BulkAddProducts() {
     setRows((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
   };
 
-  const handleSaveAll = async () => {
-    // 1. تحقق من وجود بيانات
-    if (rows.length === 0) {
-      alert("لا توجد منتجات لحفظها");
-      return;
-    }
-
-    // اختياري: إضافة حالة تحميل (Loading)
-    // setIsSaving(true);
-
-    try {
-      // 2. استدعاء دالة الحفظ الجماعي التي أنشأناها للسوبابيس
-      // نمرر لها مصفوفة الصفوف (rows) مباشرة
-      const result = await saveBulkProducts(rows);
-
-      if (result) {
-        // 3. في حال النجاح:
-        alert(`تم حفظ ${rows.length} منتج بنجاح!`);
-
-        // مسح الجدول بعد الحفظ الناجح
-        setRows([]);
-
-        // اختياري: إعادة تعيين قيم الفورم العلوية
-        // reset();
-      }
-    } catch (error) {
-      // 4. معالجة الأخطاء
-      console.error("Failed to save products:", error);
-      alert("حدث خطأ أثناء الحفظ: " + (error.message || "خطأ غير معروف"));
-    } finally {
-      // setIsSaving(false);
-    }
-  };
-
   const handleRequestSave = () => {
     if (rows.length === 0) {
       alert("لا توجد منتجات لحفظها");
       return;
     }
     setOpenSaveConfirm(true); // نفتح الديالوغ بدل الحفظ المباشر
-  };
-  const handleConfirmSave = async () => {
-    setIsSaving(true);
-    try {
-      const result = await saveBulkProducts(rows);
-      if (result) {
-        // هنا يمكنك إضافة Snackbar للنجاح بدلاً من الـ alert
-        setRows([]);
-        setOpenSaveConfirm(false);
-      }
-    } catch (error) {
-      console.error("Failed to save products:", error);
-      alert("حدث خطأ أثناء الحفظ: " + (error.message || "خطأ غير معروف"));
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   return (
@@ -601,13 +621,27 @@ export function BulkAddProducts() {
         <Button
           variant="contained"
           size="large"
-          onClick={handleSaveAll}
+          onClick={() => setOpenSaveConfirm(true)}
           disabled={rows.length === 0}
           sx={{ px: 10, py: 2, borderRadius: 50, fontWeight: "bold" }}
         >
           Save All ({rows.length})
         </Button>
       </Box>
+
+      <ProductActionDialogs
+        openSaveConfirm={openSaveConfirm}
+        setOpenSaveConfirm={setOpenSaveConfirm}
+        handleSaveConfirm={handleConfirmSave}
+        isSaving={mutation.isPending} // استخدام isPending من الميوتيشن
+        rowCount={rows.length}
+        // قيم افتراضية لديالوغات الحذف لكي لا يظهر خطأ
+        selectedIds={new Set()}
+        openDeleteSelectedDialog={false}
+        setOpenDeleteSelectedDialog={() => {}}
+        openDeleteDialog={false}
+        setOpenDeleteDialog={() => {}}
+      />
     </Container>
   );
 }

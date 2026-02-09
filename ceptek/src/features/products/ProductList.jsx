@@ -38,7 +38,7 @@ import { productColumns } from "./product.columns";
 import AddProductForm from "./AddProductForm";
 import EditProductForm from "./EditProductForm";
 import { ProductsHeader } from "./ProductsHeader";
-import { ProductDeleteDialogs } from "./ProductDeleteDialogs";
+import ProductActionDialogs from "./ProductActionDialogs";
 function normalizeTurkish(str = "") {
   return str
     .replace(/İ/g, "I")
@@ -139,7 +139,6 @@ export function ProductsList() {
     if (selectedProduct) deleteMutation.mutate(selectedProduct.id);
   };
 
-
   const handleRowClick = (params) => {
     const fullProductData = data?.data?.find((p) => p.id === params.row.id);
     setSelectedProduct(fullProductData || params.row);
@@ -182,7 +181,6 @@ export function ProductsList() {
   const handleAddClick = () => setOpenAddDialog(true);
   return (
     <Box sx={{ width: "100%", p: 3 }}>
-
       <ProductsHeader
         selectedIds={selectedIds}
         setOpenDeleteSelectedDialog={setOpenDeleteSelectedDialog}
@@ -197,7 +195,6 @@ export function ProductsList() {
         productTypes={productTypes}
         handleAddClick={handleAddClick}
       />
-
 
       <Paper sx={{ height: 650, width: "100%" }}>
         <DataGrid
@@ -219,8 +216,7 @@ export function ProductsList() {
         selectedProduct={selectedProduct}
       />
 
-
-      <ProductDeleteDialogs
+      <ProductActionDialogs
         openDeleteSelectedDialog={openDeleteSelectedDialog}
         setOpenDeleteSelectedDialog={setOpenDeleteSelectedDialog}
         selectedIds={selectedIds}
@@ -230,8 +226,6 @@ export function ProductsList() {
         selectedProduct={selectedProduct}
         handleDeleteConfirm={handleDeleteConfirm}
       />
-
-
 
       {openAddDialog && (
         <AddProductForm
