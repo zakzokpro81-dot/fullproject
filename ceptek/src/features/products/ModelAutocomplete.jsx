@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Autocomplete, TextField, CircularProgress } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import supabase from "../../config/supabase";
@@ -36,7 +35,8 @@ export function ModelAutocomplete({ value, onChange, label = "Select Model" }) {
     }));
 
     return (
-        <Autocomplete
+        <Autocomplete 
+           
             options={modelOptions}
             value={value || null} // قيمة الفورم
             onChange={(e, val) => onChange(val)} // تحديث الفورم
@@ -49,6 +49,8 @@ export function ModelAutocomplete({ value, onChange, label = "Select Model" }) {
             loading={isLoading}
             renderInput={(params) => (
                 <TextField
+                 sx={{color:"#d21994",  backgroundColor:"#e2e8ee",}}
+                   
                     {...params}
                     label={label}
                     margin="normal"

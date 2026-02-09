@@ -81,7 +81,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 const basicJubs = [
   { text: "Depo", icon: <HomeOutlined />, path: "/" },
   { text: "müştri", icon: <PeopleOutline />, path: "/team" },
-  { text: "sipariş", icon: <ContactsOutlined />, path: "/input" },
+  { text: "BulkAddProducts", icon: <ContactsOutlined />, path: "/BulkAddProducts" },
   { text: "fatura", icon: <ReceiptOutlined />, path: "/BrandList" },
 ];
 
