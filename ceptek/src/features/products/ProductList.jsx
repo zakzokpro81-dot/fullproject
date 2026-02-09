@@ -38,7 +38,7 @@ import { productColumns } from "./product.columns";
 import AddProductForm from "./AddProductForm";
 import EditProductForm from "./EditProductForm";
 import { ProductsHeader } from "./ProductsHeader";
-import ProductActionDialogs from "./ProductActionDialogs";
+import ProductActionDialogs from "../../componenets/ProductActionDialogs";
 function normalizeTurkish(str = "") {
   return str
     .replace(/İ/g, "I")

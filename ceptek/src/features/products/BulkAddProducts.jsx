@@ -24,7 +24,7 @@ import FlashOnIcon from "@mui/icons-material/FlashOn";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import BulkProductTable from "./BulkProductTable";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import ProductActionDialogs from "./ProductActionDialogs"; // تأكد من مسار الملف الصحيح
+import ProductActionDialogs from "../../componenets/ProductActionDialogs"; // تأكد من مسار الملف الصحيح
 const SECTION_STYLE = {
   p: 3,
   borderRadius: 2,

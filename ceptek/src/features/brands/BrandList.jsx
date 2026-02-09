@@ -27,11 +27,12 @@ import {
   DialogActions,
 } from "@mui/material";
 import ScrollToTopButton from "../../componenets/ScrollToTopButton";
+import ProductActionDialogs from "../../componenets/ProductActionDialogs"; // تأكد من مسار الملف الصحيح
 
 export function BrandList() {
   const queryClient = useQueryClient();
 
-  const [selectedBrand, setSelectedBrand] = useState(null)
+  const [selectedBrand, setSelectedBrand] = useState(null);
   const [openDelete, setOpenDelete] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [mode, setMode] = useState("add");
@@ -96,24 +97,18 @@ export function BrandList() {
     }
   };
 
-
   const handleDeleteClick = (brand) => {
     setSelectedBrand(brand);
     setOpenDelete(true);
   };
 
-
-
   const confirmDelete = () => {
-    if (!selectedBrand) return
+    if (!selectedBrand) return;
 
-    deleteMutation.mutate(selectedBrand.id)
-    setOpenDelete(false)
-    setSelectedBrand(null)
-  }
-
-
-
+    deleteMutation.mutate(selectedBrand.id);
+    setOpenDelete(false);
+    setSelectedBrand(null);
+  };
 
   function BrandGridToolbar({ searchText, onSearchChange }) {
     return (
@@ -142,9 +137,6 @@ export function BrandList() {
     );
   }
 
-
-
-
   return (
     <Box>
       <Box
@@ -159,18 +151,13 @@ export function BrandList() {
         </Button>
       </Box>
 
-
-
-
-
-      <Box display="flex" >
+      <Box display="flex">
         <DataGrid
           rows={brands}
           columns={brandColumns(handleOpenEdit, handleDeleteClick)}
           autoHeight
           loading={isLoading}
           pageSizeOptions={[10, 25, 50]}
-
           sx={{
             width: "100%",
           }}
@@ -178,7 +165,6 @@ export function BrandList() {
           slots={{
             toolbar: GridToolbar,
           }}
-          
         />
       </Box>
 
@@ -189,14 +175,12 @@ export function BrandList() {
         onClose={handleCloseForm}
         onSubmit={handleSubmit}
       />
-      
-  <ScrollToTopButton />
-      <Dialog open={openDelete} onClose={() => setOpenDelete(false)} >
+
+      <ScrollToTopButton />
+      {/* <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
         <DialogTitle>تأكيد الحذف</DialogTitle>
 
         <DialogContent>
-
-
           هل أنت متأكد أنك تريد حذف البراند{" "}
           <strong>{selectedBrand?.name}</strong>؟
           <br />
@@ -209,7 +193,18 @@ export function BrandList() {
             Save
           </Button>
         </DialogActions>
-      </Dialog>
+      </Dialog> */}
+
+      <ProductActionDialogs
+        //openDeleteSelectedDialog={openDeleteDialog}
+        //setOpenDeleteSelectedDialog={setOpenDelete}
+        selectedIds={selectedBrand?.id}
+        handleDeleteSelected={handleDeleteClick}
+        openDeleteDialog={openDelete}
+        setOpenDeleteDialog={setOpenDelete}
+        selectedProduct={selectedBrand}
+        handleDeleteConfirm={confirmDelete}
+      />
     </Box>
   );
 }
