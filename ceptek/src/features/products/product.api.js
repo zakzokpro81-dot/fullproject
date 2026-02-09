@@ -479,6 +479,104 @@ export async function getAttributes(productTypeId) {
 }
 
 
+export async function saveBulkProducts(productsData) {
+  try {
+    // 1. إدراج جميع المنتجات دفعة واحدة في جدول products
+    // نقوم بتجهيز المصفوفة لتناسب أعمدة الجدول
+    const productsToInsert = productsData.map(item => ({
+      name: item.name,
+      brand_id: item.brand_id,
+      model_id: item.model_id,
+      product_type_id: item.product_type_id,
+      category_id: item.category_id,
+      cost_price: item.cost_price,
+      sell_price: item.sell_price,
+      stock: item.stock,
+      description: item.description,
+      is_active: true,
+      // أضف أي حقول أخرى مثل family_id إذا كانت متوفرة
+    }));
+
+    const { data: insertedProducts, error: productsError } = await supabase
+      .from("products")
+      .insert(productsToInsert)
+      .select(); // نستخدم select لجلب الـ IDs الجديدة
+
+    if (productsError) throw productsError;
+
+    // 2. تجهيز بيانات الخصائص والمخزون بناءً على المنتجات التي تم إدراجها
+    const attributeValuesToInsert = [];
+    const stockEntriesToInsert = [];
+
+    // سنحتاج لجلب الـ IDs الخاصة بالـ attributes بناءً على الـ slugs
+    // لتجنب جلبها داخل حلقة تكرارية، نجمع كل الـ slugs الفريدة أولاً
+    const allSlugs = [...new Set(productsData.flatMap(p => Object.keys(p.attributes || {})))];
+    const { data: attributesList, error: attrFetchError } = await supabase
+      .from("attributes")
+      .select("id, slug")
+      .in("slug", allSlugs);
+
+    if (attrFetchError) throw attrFetchError;
+
+    // تحويل قائمة الخصائص لقاموس لسهولة الوصول (Slug -> ID)
+    const attrMap = attributesList.reduce((acc, curr) => {
+      acc[curr.slug] = curr.id;
+      return acc;
+    }, {});
+
+    // ربط المنتجات المدرجة ببياناتها الأصلية لإدراج الخصائص والمخزون
+    insertedProducts.forEach((product, index) => {
+      const originalData = productsData[index];
+
+      // أ. تجهيز بيانات المخزون
+      stockEntriesToInsert.push({
+        warehouse_id: originalData.warehouse_id,
+        product_id: product.id,
+        quantity: product.stock,
+        product_variant_id: null,
+      });
+
+      // ب. تجهيز بيانات الخصائص
+      const attrs = originalData.attributes || {};
+      for (let slug in attrs) {
+        let val = attrs[slug];
+        if (typeof val === "object" && val !== null && "value" in val) {
+          val = val.value;
+        }
+
+        if (attrMap[slug]) {
+          attributeValuesToInsert.push({
+            product_id: product.id,
+            attribute_id: attrMap[slug],
+            value: val,
+          });
+        }
+      }
+    });
+
+    // 3. تنفيذ الإدراج الجماعي للجداول الفرعية
+    
+    // إدراج المخزن دفعة واحدة
+    const { error: stockError } = await supabase
+      .from("warehouse_stock")
+      .insert(stockEntriesToInsert);
+    if (stockError) throw stockError;
+
+    // إدراج قيم الخصائص دفعة واحدة (إذا وجدت)
+    if (attributeValuesToInsert.length > 0) {
+      const { error: attrInsertError } = await supabase
+        .from("product_attribute_values")
+        .insert(attributeValuesToInsert);
+      if (attrInsertError) throw attrInsertError;
+    }
+
+    return insertedProducts;
+  } catch (err) {
+    console.error("Error in Bulk Saving:", err);
+    throw err;
+  }
+}
+
 
 
 
