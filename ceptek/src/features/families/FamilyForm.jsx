@@ -46,17 +46,18 @@ export default function FamilyForm({ open, onClose, onSubmit, defaultValues }) {
         },
     });
 
-    // fetch categories
-    const { data: categories = [] } = useQuery({
-        queryKey: ["categories"],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from("categories")
-                .select("id, name");
-            if (error) throw error;
-            return data;
-        },
-    });
+  // fetch product types
+const { data: productTypes = [] } = useQuery({
+  queryKey: ["product_types"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("product_types")
+      .select("id, name");
+
+    if (error) throw error;
+    return data;
+  },
+});
 
     useEffect(() => {
         reset(defaultValues);
@@ -97,10 +98,10 @@ export default function FamilyForm({ open, onClose, onSubmit, defaultValues }) {
                         </Select>
                     </FormControl>
 
-                    <FormControl fullWidth error={!!errors.category}>
-                        <InputLabel>Category</InputLabel>
-                        <Select defaultValue="" {...register("category")}>
-                            {categories.map((cat) => (
+                    <FormControl fullWidth error={!!errors.product_types}>
+                        <InputLabel>product types</InputLabel>
+                        <Select defaultValue="" {...register("product_types")}>
+                            {productTypes.map((cat) => (
                                 <MenuItem key={cat.id} value={cat.id}>
                                     {cat.name}
                                 </MenuItem>

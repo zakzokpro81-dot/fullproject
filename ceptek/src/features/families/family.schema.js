@@ -13,8 +13,8 @@ export const familySchema = z.object({
     invalid_type_error: "Brand must be a number",
   }),
   category: z.number({
-    required_error: "Category is required",
-    invalid_type_error: "Category must be a number",
+    required_error: "product_type is required",
+    invalid_type_error: "product_type must be a number",
   }),
   slug: z.string().min(1, "Slug is required"),
   is_active: z.boolean().optional(),

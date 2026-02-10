@@ -88,9 +88,13 @@ export function FamilyList() {
 
   const handleFormSubmit = (data) => {
     if (selectedFamily) {
+            console.log("update",data)
+
       updateMutation.mutate({ id: selectedFamily.id, ...data });
     } else {
+      console.log("create",data)
       createMutation.mutate(data);
+      
     }
   };
 

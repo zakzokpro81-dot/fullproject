@@ -13,23 +13,24 @@ import supabase from "../../config/supabase";
 
 // Fetch all families
 export const getFamilies = async () => {
-    const { data, error } = await supabase
-        .from("families")
-        .select(`
+  const { data, error } = await supabase
+    .from("families")
+    .select(`
       id,
       name,
       slug,
       is_active,
       brand,
-      category,
-       brands:brands!families_brand_fkey ( id, name ),
-  categories:categories!families_catagori_fkey ( id, name )
+      product_type_id,
+      brands:brands!families_brand_fkey ( id, name ),
+      product_types:product_types!families_product_type_fkey ( id, name )
     `)
-        .order("id", { ascending: true });
+    .order("id", { ascending: true });
 
-    if (error) throw error;
-    return data;
+  if (error) throw error;
+  return data;
 };
+
 
 // Create family
 export const createFamily = async (family) => {

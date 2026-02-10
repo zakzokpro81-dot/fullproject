@@ -24,10 +24,10 @@ export const familyColumns = (onEdit, onDelete) => [
         valueGetter: (value, row) => row?.brands?.name || ""
     },
     {
-        field: "category_name",
-        headerName: "Category",
+        field: "product_type_id",
+        headerName: "product_type_id",
         width: 150,
-        valueGetter: (value, row) => row?.categories?.name || ""
+        valueGetter: (value, row) => row?.product_types?.name || ""
     },
 
 
