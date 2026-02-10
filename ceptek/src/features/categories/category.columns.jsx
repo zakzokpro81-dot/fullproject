@@ -25,6 +25,12 @@ export const categoryColumns = (onEdit, onDelete) => [
     renderCell: (params) => (params.value ? "Yes" : "No"),
   },
   {
+    field: "show_all_models",
+    headerName: "show_all_models",
+    width: 120,
+    renderCell: (params) => (params.value ? "Yes" : "No"),
+  },
+  {
     field: "actions",
     headerName: "Actions",
     width: 150,

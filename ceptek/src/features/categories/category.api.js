@@ -18,10 +18,10 @@ export const getCategories = async () => {
 };
 
 // إضافة تصنيف جديد
-export const createCategory = async (category) => {
+export const createCategory = async (product_categories) => {
     const { data, error } = await supabase
         .from(TABLE_NAME)
-        .insert([category])
+        .insert([product_categories])
         .select()
         .single();
 
@@ -33,10 +33,10 @@ export const createCategory = async (category) => {
 };
 
 // تعديل تصنيف
-export const updateCategory = async ({ id, ...category }) => {
+export const updateCategory = async ({ id, ...product_categories }) => {
     const { data, error } = await supabase
         .from(TABLE_NAME)
-        .update(category)
+        .update(product_categories)
         .eq("id", id)
         .select()
         .single();

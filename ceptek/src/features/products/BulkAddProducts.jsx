@@ -356,7 +356,7 @@ export function BulkAddProducts() {
           <Typography variant="subtitle1" fontWeight="bold" mb={2.5}>
             1. Classification
           </Typography>
-          <Stack direction={{ xs: "column", md: "row" }} spacing={2}>
+          <Stack direction="column" spacing={2}>
             <Controller
               name="category"
               control={control}
