@@ -79,25 +79,34 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 }));
 
 const basicJubs = [
-  { text: "Depo", icon: <HomeOutlined />, path: "/" },
-  { text: "müştri", icon: <PeopleOutline />, path: "/team" },
-  { text: "BulkAddProducts", icon: <ContactsOutlined />, path: "/BulkAddProducts" },
-  { text: "fatura", icon: <ReceiptOutlined />, path: "/BrandList" },
+  { text: "CategoryList", icon: <HomeOutlined />, path: "/CategoryList" },
+  { text: "ProductTypeList", icon: <PeopleOutline />, path: "/ProductTypeList" },
+  { text: "ProductTypeAttributesList", icon: <ContactsOutlined />, path: "/ProductTypeAttributesList" },
+  { text: "AttributeList", icon: <ReceiptOutlined />, path: "/AttributeList" },
 ];
 
 const basicJubs2 = [
-  { text: "FamilyList", icon: <HomeOutlined />, path: "/FamilyList" },
-  { text: "ModelsList", icon: <PeopleOutline />, path: "/ModelsList" },
-  { text: "ProductsList", icon: <ContactsOutlined />, path: "/ProductsList" },
-  { text: "WarehousesList", icon: <ReceiptOutlined />, path: "/WarehousesList" },
+  { text: "AttributeOptionList", icon: <HomeOutlined />, path: "/AttributeOptionList" },
+  { text: "8", icon: <PeopleOutline />, path: "/8" },
+  { text: "7", icon: <ContactsOutlined />, path: "/7" },
+  { text: "10", icon: <ReceiptOutlined />, path: "/10" },
 ];
 
 const basicJubs3 = [
-  { text: "BulkProductCreate", icon: <HomeOutlined />, path: "/BulkProductCreate" },
-  { text: "ProductTestPage", icon: <PeopleOutline />, path: "/ProductTestPage" },
-  { text: "sipariş", icon: <ContactsOutlined />, path: "/9" },
+  { text: "BrandList", icon: <HomeOutlined />, path: "/BrandList" },
+  { text: "FamilyList", icon: <PeopleOutline />, path: "/FamilyList" },
+  { text: "ModelsList", icon: <ContactsOutlined />, path: "/ModelsList" },
+  { text: "ProductsList", icon: <ReceiptOutlined />, path: "/ProductsList" },
+];
+
+const basicJubs4 = [
+  { text: "BulkAddProducts", icon: <HomeOutlined />, path: "/BulkAddProducts" },
+  { text: "WarehousesList", icon: <PeopleOutline />, path: "/WarehousesList" },
+  { text: "9", icon: <ContactsOutlined />, path: "/9" },
   { text: "fatura", icon: <ReceiptOutlined />, path: "/10" },
 ];
+
+
 export function SideBar({ open, handleDrawerClose }) {
   const theme = useTheme();
   const navigate = useNavigate();
@@ -271,6 +280,68 @@ export function SideBar({ open, handleDrawerClose }) {
 
       <List>
         {basicJubs3.map((item) => (
+          <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
+            <Tooltip title={open ? null : item.text} placement="left">
+              <ListItemButton
+                onClick={() => {
+                  navigate(item.path);
+                }}
+                sx={[
+                  {
+                    minHeight: 48,
+                    px: 2.5,
+                    bgcolor:
+                      location.pathname === item.path
+                        ? theme.palette.mode === "dark"
+                          ? grey[800]
+                          : grey[400]
+                        : null,
+                  },
+                  open
+                    ? {
+                        justifyContent: "initial",
+                      }
+                    : {
+                        justifyContent: "center",
+                      },
+                ]}
+              >
+                <ListItemIcon
+                  sx={[
+                    {
+                      minWidth: 0,
+                      justifyContent: "center",
+                    },
+                    open
+                      ? {
+                          mr: 3,
+                        }
+                      : {
+                          mr: "auto",
+                        },
+                  ]}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  sx={[
+                    open
+                      ? {
+                          opacity: 1,
+                        }
+                      : {
+                          opacity: 0,
+                        },
+                  ]}
+                />
+              </ListItemButton>
+            </Tooltip>
+          </ListItem>
+        ))}
+      </List>
+      <List>
+        {basicJubs4.map((item) => (
           <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
             <Tooltip title={open ? null : item.text} placement="left">
               <ListItemButton

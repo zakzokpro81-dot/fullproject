@@ -23,6 +23,11 @@ import {WarehousesList} from "../src/features/warehouses/WarehousesList";
 import {WarehouseStockList} from "../src/features/WarehouseStock/WarehouseStockList";
 import {BulkProductCreate} from "../src/features/products/BulkProductCreate"
 import {BulkAddProducts} from "../src/features/products/BulkAddProducts"
+import {CategoryList} from "../src/features/categories/CategoryList"
+import {ProductTypeList} from "../src/features/Product Types/ProductTypeList"
+import {ProductTypeAttributesList} from "../src/features/product type attributes/ProductTypeAttributesList"
+import {AttributeOptionList} from "./features/attributeOption/AttributeOptionList"
+import {AttributeList } from "../src/features/attributes/AttributeList"
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter(
@@ -39,6 +44,11 @@ const router = createBrowserRouter(
       <Route path="/WarehouseStockList" element={<WarehouseStockList  />} />
       <Route path="/BulkProductCreate" element={<BulkProductCreate  />} />
       <Route path="/BulkAddProducts" element={<BulkAddProducts  />} />
+      <Route path="/CategoryList" element={<CategoryList  />} />
+      <Route path="/ProductTypeList" element={<ProductTypeList  />} />
+      <Route path="/ProductTypeAttributesList" element={<ProductTypeAttributesList  />} />
+      <Route path="/AttributeOptionList" element={<AttributeOptionList  />} />
+      <Route path="/AttributeList" element={<AttributeList  />} />
     </Route>,
   ),
 );
