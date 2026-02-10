@@ -12,10 +12,11 @@ export const familySchema = z.object({
     required_error: "Brand is required",
     invalid_type_error: "Brand must be a number",
   }),
-  category: z.number({
-    required_error: "product_type is required",
-    invalid_type_error: "product_type must be a number",
-  }),
+ product_type_id: z.coerce.number({
+    required_error: "Product type is required",
+    invalid_type_error: "Product type must be a number",
+  }).min(1, "Please select a product type"),
+  
   slug: z.string().min(1, "Slug is required"),
   is_active: z.boolean().optional(),
 });

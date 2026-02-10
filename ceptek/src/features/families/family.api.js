@@ -55,6 +55,7 @@ export const updateFamily = async ({ id, ...family }) => {
     return data[0];
 };
 
+
 // Delete family
 export const deleteFamily = async (id) => {
     const { error } = await supabase

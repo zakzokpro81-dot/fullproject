@@ -31,31 +31,89 @@ function normalizeText(text) {
   return text.replace(/[çğıİöşüÇĞIÖŞÜ]/g, (m) => map[m]).toLowerCase();
 }
 
-export function BulkModelAutocomplete({ onSelectBulk, disabled }) {
+export function BulkModelAutocomplete({
+  onSelectBulk,
+  disabled,
+  selectedCategory,
+  selectedProductType,
+}) {
   const [inputValue, setInputValue] = useState("");
 
-  const { data: models = [] } = useQuery({
-    queryKey: ["models-for-bulk"],
+  // const { data: models = [] } = useQuery({
+  //   queryKey: ["models-for-bulk", productTypeId],
+  //   queryFn: async () => {
+  //     const { data, error } = await supabase
+  //       .from("models")
+  //       .select(`id, name, families(id, name, brands(id, name))`)
+  //       .eq("is_active", true);
+  //     if (error) throw error;
+  //     return data;
+  //   },
+  // });
+
+  const { data: models = [], isLoading } = useQuery({
+    queryKey: [
+      "models-for-bulk",
+      selectedCategory?.id,
+      selectedProductType?.id,
+    ],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // إذا لم يتم اختيار تصنيف، لا داعي لجلب بيانات
+      if (!selectedCategory?.id) return [];
+
+      let query = supabase
         .from("models")
-        .select(`id, name, families(id, name, brands(id, name))`)
+        .select(
+          `
+          id, name, 
+          families!inner (
+            id, name, product_type_id,
+            brands (id, name)
+          )
+        `,
+        )
         .eq("is_active", true);
+
+      // --- المنطق الديناميكي ---
+      // إذا كان التصنيف الحالي لا يدعم "إظهار الكل" (مثل الشاشات، البطاريات)
+      if (!selectedCategory.show_all_models) {
+        // نتحقق من اختيار "نوع المنتج" أولاً
+        if (selectedProductType?.id) {
+          query = query.eq("families.product_type_id", selectedProductType.id);
+        } else {
+          // إذا كان التصنيف يتطلب نوعاً ولم يتم اختياره بعد، نعيد نتائج فارغة
+          return [];
+        }
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
+    enabled: !!selectedCategory?.id,
   });
 
-  const modelOptions = useMemo(
-    () =>
-      models.map((m) => ({
-        label: `${m.families?.brands?.name || ""} ${m.families?.name || ""} ${m.name || ""}`,
-        brand_id: m.families?.brands?.id,
-        family_id: m.families?.id,
-        model_id: m.id,
-      })),
-    [models],
-  );
+  // const modelOptions = useMemo(
+  //   () =>
+  //     models.map((m) => ({
+  //       label: `${m.families?.brands?.name || ""} ${m.families?.name || ""} ${m.name || ""}`,
+  //       brand_id: m.families?.brands?.id,
+  //       family_id: m.families?.id,
+  //       model_id: m.id,
+  //     })),
+  //   [models],
+  // );
+
+  const modelOptions = useMemo(() => {
+    if (!models) return [];
+    return models.map((m) => ({
+      label:
+        `${m.families?.brands?.name || ""} ${m.families?.name || ""} ${m.name || ""}`.trim(),
+      brand_id: m.families?.brands?.id,
+      family_id: m.families?.id,
+      model_id: m.id,
+    }));
+  }, [models]);
 
   // تخصيص الفلتر ليدعم البحث بالأحرف التركية واللاتينية معاً
   const filterOptions = (options, { inputValue }) => {

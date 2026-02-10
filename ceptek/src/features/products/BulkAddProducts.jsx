@@ -479,6 +479,8 @@ export function BulkAddProducts() {
           <BulkModelAutocomplete
             disabled={!watchedProductType}
             onSelectBulk={handleInsertBulk}
+            selectedCategory={watchedCategory}
+            selectedProductType={watchedProductType}
           />
         </Paper>
 
