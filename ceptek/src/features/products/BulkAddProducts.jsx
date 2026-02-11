@@ -280,9 +280,42 @@ export function BulkAddProducts() {
     );
   };
 
+  // const handleInsertBulk = useCallback(
+  //   (selectedModels) => {
+  //     const currentWarehouse = watch("warehouse");
+  //     // 1. تحضير السمات العلوية الحالية
+  //     const topAttrs = {};
+  //     if (watchedAttributes) {
+  //       Object.entries(watchedAttributes).forEach(([k, v]) => {
+  //         topAttrs[k] = v && typeof v === "object" ? (v.value ?? v.id) : v;
+  //       });
+  //     }
+
+  //     // 2. إنشاء الصفوف مع حقن القيم العلوية مباشرة
+  //     const newEntries = selectedModels.map((model) => ({
+  //       id: Math.random().toString(36).substr(2, 9),
+  //       name: model.label,
+  //       part_name: watchedProductType?.name || "",
+  //       // حقن القيم العلوية هنا يضمن ظهورها فوراً عند الإدراج
+  //       warehouse_name:
+  //         allValues.warehouse?.name || currentWarehouse?.name || "",
+  //       warehouse_id: allValues.warehouse?.id || currentWarehouse?.id || null,
+  //       sell_price: Number(allValues.sellPrice) || 0,
+  //       cost_price: Number(allValues.costPrice) || 0,
+  //       stock: Number(allValues.stock) || 0,
+  //       description: allValues.description || "",
+  //       attributes: { ...topAttrs }, // استخدام السمات المعالجة
+  //       manuallyEditedFields: [], // تبدأ فارغة لتسمح للمزامنة اللاحقة بالعمل
+  //     }));
+
+  //     setRows((prev) => [...prev, ...newEntries]);
+  //   },
+  //   [watchedProductType, allValues, watchedAttributes],
+  // ); // تأكد من إضافة الاعتمادات هنا
   const handleInsertBulk = useCallback(
     (selectedModels) => {
       const currentWarehouse = watch("warehouse");
+
       // 1. تحضير السمات العلوية الحالية
       const topAttrs = {};
       if (watchedAttributes) {
@@ -291,12 +324,18 @@ export function BulkAddProducts() {
         });
       }
 
-      // 2. إنشاء الصفوف مع حقن القيم العلوية مباشرة
+      // 2. إنشاء الصفوف مع حقن (category & productType) داخل كل row
       const newEntries = selectedModels.map((model) => ({
         id: Math.random().toString(36).substr(2, 9),
         name: model.label,
+        model_id: model.id, // تأكد أن الموديل يحمل الـ id
+        brand_id: model.brand_id,
         part_name: watchedProductType?.name || "",
-        // حقن القيم العلوية هنا يضمن ظهورها فوراً عند الإدراج
+
+        // الكائنات المطلوبة لعمل الـ Autocomplete داخل الجدول
+        category: watchedCategory, // <--- هذا هو السطر الناقص
+        productType: watchedProductType, // <--- وهذا أيضاً
+
         warehouse_name:
           allValues.warehouse?.name || currentWarehouse?.name || "",
         warehouse_id: allValues.warehouse?.id || currentWarehouse?.id || null,
@@ -304,14 +343,15 @@ export function BulkAddProducts() {
         cost_price: Number(allValues.costPrice) || 0,
         stock: Number(allValues.stock) || 0,
         description: allValues.description || "",
-        attributes: { ...topAttrs }, // استخدام السمات المعالجة
-        manuallyEditedFields: [], // تبدأ فارغة لتسمح للمزامنة اللاحقة بالعمل
+        attributes: { ...topAttrs },
+        manuallyEditedFields: [],
       }));
 
       setRows((prev) => [...prev, ...newEntries]);
     },
-    [watchedProductType, allValues, watchedAttributes],
-  ); // تأكد من إضافة الاعتمادات هنا
+    // أضف watchedCategory و watchedProductType للمصفوفة لضمان تحديث القيم
+    [watchedProductType, watchedCategory, allValues, watchedAttributes, watch],
+  );
 
   const handleRowUpdate = (newRow, oldRow) => {
     const edited = getUpdatedProtectionList(oldRow, newRow);

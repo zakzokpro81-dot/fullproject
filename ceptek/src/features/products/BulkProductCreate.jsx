@@ -1,14 +1,8 @@
 // src/pages/BulkProductGrid.jsx
 import { useState } from "react";
-import {
-  Box,
-  TextField,
-  Button,
-  Typography,
-  Paper,
-} from "@mui/material";
+import { Box, TextField, Button, Typography, Paper } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import  supabase  from "../../config/supabase";
+import supabase from "../../config/supabase";
 
 // نفس دالة الفورم
 const normalizeTurkishText = (text) => {
@@ -28,7 +22,7 @@ const normalizeTurkishText = (text) => {
     .replace(/Ü/g, "u");
 };
 
-export  function BulkProductCreate() {
+export function BulkProductCreate() {
   const [modelSearch, setModelSearch] = useState("");
   const [rows, setRows] = useState([]);
 
@@ -73,7 +67,7 @@ export  function BulkProductCreate() {
       prev.map((row) => ({
         ...row,
         [field]: value,
-      }))
+      })),
     );
   };
 
@@ -153,11 +147,7 @@ export  function BulkProductCreate() {
         />
       </Paper>
 
-      <Button
-        variant="contained"
-        sx={{ mt: 2 }}
-        onClick={handleSave}
-      >
+      <Button variant="contained" sx={{ mt: 2 }} onClick={handleSave}>
         Save All
       </Button>
     </Box>

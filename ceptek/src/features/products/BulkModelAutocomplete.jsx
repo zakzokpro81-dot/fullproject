@@ -51,6 +51,49 @@ export function BulkModelAutocomplete({
   //   },
   // });
 
+  // const { data: models = [], isLoading } = useQuery({
+  //   queryKey: [
+  //     "models-for-bulk",
+  //     selectedCategory?.id,
+  //     selectedProductType?.id,
+  //   ],
+  //   queryFn: async () => {
+  //     // إذا لم يتم اختيار تصنيف، لا داعي لجلب بيانات
+  //     if (!selectedCategory?.id) return [];
+
+  //     let query = supabase
+  //       .from("models")
+  //       .select(
+  //         `
+  //         id, name,
+  //         families!inner (
+  //           id, name, product_type_id,
+  //           brands (id, name)
+  //         )
+  //       `,
+  //       )
+  //       .eq("is_active", true);
+
+  //     // --- المنطق الديناميكي ---
+  //     // إذا كان التصنيف الحالي لا يدعم "إظهار الكل" (مثل الشاشات، البطاريات)
+  //     if (!selectedCategory.show_all_models) {
+  //       // نتحقق من اختيار "نوع المنتج" أولاً
+  //       if (selectedProductType?.id) {
+  //         query = query.eq("families.product_type_id", selectedProductType.id);
+  //       } else {
+  //         // إذا كان التصنيف يتطلب نوعاً ولم يتم اختياره بعد، نعيد نتائج فارغة
+  //         return [];
+  //       }
+  //     }
+
+  //     const { data, error } = await query;
+  //     if (error) throw error;
+  //     return data;
+  //   },
+  //   enabled: !!selectedCategory?.id,
+  // });
+
+  // داخل استعلام useQuery في ملف BulkModelAutocomplete.js
   const { data: models = [], isLoading } = useQuery({
     queryKey: [
       "models-for-bulk",
@@ -58,30 +101,19 @@ export function BulkModelAutocomplete({
       selectedProductType?.id,
     ],
     queryFn: async () => {
-      // إذا لم يتم اختيار تصنيف، لا داعي لجلب بيانات
       if (!selectedCategory?.id) return [];
 
+      // نطلب البيانات من الـ View التي أنشأناها
       let query = supabase
-        .from("models")
-        .select(
-          `
-          id, name, 
-          families!inner (
-            id, name, product_type_id,
-            brands (id, name)
-          )
-        `,
-        )
-        .eq("is_active", true);
+        .from("model_full_tree") // اسم الـ View
+        .select("*");
 
-      // --- المنطق الديناميكي ---
-      // إذا كان التصنيف الحالي لا يدعم "إظهار الكل" (مثل الشاشات، البطاريات)
+      // المنطق الديناميكي
       if (!selectedCategory.show_all_models) {
-        // نتحقق من اختيار "نوع المنتج" أولاً
         if (selectedProductType?.id) {
-          query = query.eq("families.product_type_id", selectedProductType.id);
+          // الفلترة هنا أصبحت أسهل لأن product_type_id موجود مباشرة في الـ View
+          query = query.eq("product_type_id", selectedProductType.id);
         } else {
-          // إذا كان التصنيف يتطلب نوعاً ولم يتم اختياره بعد، نعيد نتائج فارغة
           return [];
         }
       }
@@ -92,6 +124,18 @@ export function BulkModelAutocomplete({
     },
     enabled: !!selectedCategory?.id,
   });
+
+  // تحديث الـ options لتناسب أسماء الحقول في الـ View
+  const modelOptions = useMemo(() => {
+    return models.map((m) => ({
+      // الآن الأسماء تأتي مباشرة: brand_name, family_name, model_name
+      label:
+        `${m.brand_name || ""} ${m.family_name || ""} ${m.model_name || ""}`.trim(),
+      brand_id: m.brand_id,
+      family_id: m.family_id,
+      model_id: m.model_id, // انتبه هنا الاسم في الـ View هو model_id
+    }));
+  }, [models]);
 
   // const modelOptions = useMemo(
   //   () =>
@@ -104,16 +148,16 @@ export function BulkModelAutocomplete({
   //   [models],
   // );
 
-  const modelOptions = useMemo(() => {
-    if (!models) return [];
-    return models.map((m) => ({
-      label:
-        `${m.families?.brands?.name || ""} ${m.families?.name || ""} ${m.name || ""}`.trim(),
-      brand_id: m.families?.brands?.id,
-      family_id: m.families?.id,
-      model_id: m.id,
-    }));
-  }, [models]);
+  // const modelOptions = useMemo(() => {
+  //   if (!models) return [];
+  //   return models.map((m) => ({
+  //     label:
+  //       `${m.families?.brands?.name || ""} ${m.families?.name || ""} ${m.name || ""}`.trim(),
+  //     brand_id: m.families?.brands?.id,
+  //     family_id: m.families?.id,
+  //     model_id: m.id,
+  //   }));
+  // }, [models]);
 
   // تخصيص الفلتر ليدعم البحث بالأحرف التركية واللاتينية معاً
   const filterOptions = (options, { inputValue }) => {
