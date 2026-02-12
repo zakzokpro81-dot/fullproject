@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import * as React from "react";
 import {
   Dialog,
   DialogTitle,
@@ -6,112 +6,78 @@ import {
   DialogActions,
   Button,
   TextField,
-  Stack,
+  Box,
 } from "@mui/material";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import { customerTypeSchema } from "./customerType.schema";
-import {
-  createCustomerType,
-  updateCustomerType,
-} from "./customerType.api";
+import { createCustomerType, updateCustomerType } from "./customerType.api";
 
-export default function CustomerTypeForm({
-  open,
-  onClose,
-  selectedCustomerType,
-}) {
+export default function CustomerTypeForm({ open, onClose, initialData }) {
   const queryClient = useQueryClient();
+  const isEditMode = !!initialData;
 
   const {
     register,
     handleSubmit,
+    formState: { errors },
     reset,
-    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(customerTypeSchema),
-    defaultValues: {
-      type_name: "",
-    },
+    defaultValues: initialData || { type_name: "" },
   });
 
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: createCustomerType,
+  // الـ Mutation للإضافة أو التعديل
+  const mutation = useMutation({
+    mutationFn: isEditMode ? updateCustomerType : createCustomerType,
     onSuccess: () => {
-      queryClient.invalidateQueries(["customer_types"]);
-      handleClose();
+      queryClient.invalidateQueries(["customerTypes"]);
+      onClose();
+      reset();
     },
   });
-
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: updateCustomerType,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["customer_types"]);
-      handleClose();
-    },
-  });
-
-  useEffect(() => {
-    if (selectedCustomerType) {
-      reset({
-        type_name: selectedCustomerType.type_name,
-      });
-    } else {
-      reset({
-        type_name: "",
-      });
-    }
-  }, [selectedCustomerType, reset]);
 
   const onSubmit = (data) => {
-    if (selectedCustomerType) {
-      updateMutation.mutate({
-        id: selectedCustomerType.id,
-        ...data,
-      });
+    if (isEditMode) {
+      mutation.mutate({ id: initialData.id, ...data });
     } else {
-      createMutation.mutate(data);
+      mutation.mutate(data);
     }
-  };
-
-  const handleClose = () => {
-    reset();
-    onClose();
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {selectedCustomerType ? "Edit Customer Type" : "Add Customer Type"}
+        {isEditMode ? "تعديل نوع الزبون" : "إضافة نوع زبون جديد"}
       </DialogTitle>
 
-      <DialogContent>
-        <Stack spacing={2} mt={1}>
+      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        <DialogContent dividers>
           <TextField
-            label="Type Name"
-            fullWidth
             {...register("type_name")}
+            label="اسم النوع"
+            fullWidth
             error={!!errors.type_name}
             helperText={errors.type_name?.message}
+            autoFocus
+            margin="dense"
           />
-        </Stack>
-      </DialogContent>
+        </DialogContent>
 
-      <DialogActions sx={{ p: 2 }}>
-        <Button onClick={handleClose}>Cancel</Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit(onSubmit)}
-          disabled={isSubmitting}
-        >
-          {selectedCustomerType ? "Update" : "Save"}
-        </Button>
-      </DialogActions>
+        <DialogActions>
+          <Button onClick={onClose} color="inherit">
+            إلغاء
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={mutation.isLoading}
+          >
+            {mutation.isLoading ? "جاري الحفظ..." : "حفظ"}
+          </Button>
+        </DialogActions>
+      </Box>
     </Dialog>
   );
 }

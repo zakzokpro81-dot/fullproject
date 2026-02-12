@@ -1,201 +1,159 @@
-import React, { useEffect } from "react";
+import * as React from "react";
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Button,
-    Stack,
-    TextField,
-    CircularProgress,
-    Autocomplete,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Box,
+  MenuItem,
+  Stack,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import supabase from "../../config/supabase";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { customerSchema } from "./customer.schema";
+import { createCustomer, updateCustomer } from "./customer.api";
 
-export default function CustomerForm({ open, onClose, editRow }) {
-    const queryClient = useQueryClient();
+export default function CustomerForm({
+  open,
+  onClose,
+  initialData,
+  customerTypes,
+}) {
+  const queryClient = useQueryClient();
+  const isEditMode = !!initialData;
 
-    const {
-        control,
-        handleSubmit,
-        reset,
-        formState: { errors },
-    } = useForm({
-        defaultValues: {
-            name: "",
-            store_name: "",
-            email: "",
-            phone: "",
-            address: "",
-            customer_type_id: null,
-        },
-    });
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+  } = useForm({
+    resolver: zodResolver(customerSchema),
+    defaultValues: initialData || {
+      name: "",
+      store_name: "",
+      email: "",
+      phone: "",
+      address: "",
+      customer_type_id: "",
+      is_active: true,
+    },
+  });
 
-    // fetch customer types
-    const { data: customerTypes = [], isLoading: loadingTypes } = useQuery({
-        queryKey: ["customer_types"],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from("customer_types")
-                .select("id, type_name")
-                .order("type_name");
-            if (error) throw error;
-            return data;
-        },
-    });
+  // Mutation للحفظ أو التعديل
+  const mutation = useMutation({
+    mutationFn: isEditMode ? updateCustomer : createCustomer,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["customers"]);
+      onClose();
+      reset();
+    },
+  });
 
-    // mutation
-    const mutation = useMutation({
-        mutationFn: async (formData) => {
-            if (editRow) {
-                const { error } = await supabase
-                    .from("customers")
-                    .update(formData)
-                    .eq("id", editRow.id);
-                if (error) throw error;
-            } else {
-                const { error } = await supabase.from("customers").insert(formData);
-                if (error) throw error;
-            }
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries(["customers"]);
-            onClose();
-            reset();
-        },
-    });
+  const onSubmit = (data) => {
+    // التأكد من إرسال الـ ID في حالة التعديل
+    if (isEditMode) {
+      mutation.mutate({ id: initialData.id, ...data });
+    } else {
+      mutation.mutate(data);
+    }
+  };
 
-    useEffect(() => {
-        if (editRow) {
-            reset({
-                name: editRow.name || "",
-                store_name: editRow.store_name || "",
-                email: editRow.email || "",
-                phone: editRow.phone || "",
-                address: editRow.address || "",
-                customer_type_id: editRow.customer_type_id || null,
-            });
-        } else {
-            reset({
-                name: "",
-                store_name: "",
-                email: "",
-                phone: "",
-                address: "",
-                customer_type_id: null,
-            });
-        }
-    }, [editRow, reset]);
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>
+        {isEditMode ? "Edit Customer Details" : "Add New Customer"}
+      </DialogTitle>
 
-    const onSubmit = (data) => {
-        mutation.mutate(data);
-    };
+      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
+        <DialogContent dividers>
+          {/* استخدام Stack لترتيب الحقول عمودياً بشكل تلقائي */}
+          <Stack spacing={2.5}>
+            <TextField
+              {...register("name")}
+              label="Full Name"
+              fullWidth
+              error={!!errors.name}
+              helperText={errors.name?.message}
+            />
 
-    return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>
-                {editRow ? "Edit Customer" : "Add Customer"}
-            </DialogTitle>
+            <TextField
+              {...register("store_name")}
+              label="Store Name"
+              fullWidth
+            />
 
-            <DialogContent>
-                <Stack spacing={2} mt={1}>
-                    <Controller
-                        name="name"
-                        control={control}
-                        rules={{ required: "Name is required" }}
-                        render={({ field }) => (
-                            <TextField
-                                {...field}
-                                label="Name"
-                                error={!!errors.name}
-                                helperText={errors.name?.message}
-                                fullWidth
-                            />
-                        )}
+            <TextField
+              {...register("email")}
+              label="Email Address"
+              fullWidth
+              error={!!errors.email}
+              helperText={errors.email?.message}
+            />
+
+            <TextField {...register("phone")} label="Phone Number" fullWidth />
+
+            <TextField
+              {...register("address")}
+              label="Address"
+              fullWidth
+              multiline
+              rows={3}
+            />
+
+            <TextField
+              select
+              fullWidth
+              label="Customer Type"
+              {...register("customer_type_id")}
+              defaultValue={initialData?.customer_type_id || ""}
+              error={!!errors.customer_type_id}
+            >
+              <MenuItem value="">None</MenuItem>
+              {customerTypes?.map((type) => (
+                <MenuItem key={type.id} value={type.id}>
+                  {type.type_name}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <Controller
+              name="is_active"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
                     />
+                  }
+                  label="Active Status"
+                />
+              )}
+            />
+          </Stack>
+        </DialogContent>
 
-                    <Controller
-                        name="store_name"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField {...field} label="Store Name" fullWidth />
-                        )}
-                    />
-
-                    <Controller
-                        name="email"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField {...field} label="Email" fullWidth />
-                        )}
-                    />
-
-                    <Controller
-                        name="phone"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField {...field} label="Phone" fullWidth />
-                        )}
-                    />
-
-                    <Controller
-                        name="address"
-                        control={control}
-                        render={({ field }) => (
-                            <TextField {...field} label="Address" fullWidth />
-                        )}
-                    />
-
-                    {/* Customer Type */}
-                    <Controller
-                        name="customer_type_id"
-                        control={control}
-                        render={({ field }) => (
-                            <Autocomplete
-                                options={customerTypes}
-                                loading={loadingTypes}
-                                getOptionLabel={(option) => option?.type_name || ""}
-                                value={
-                                    customerTypes.find((t) => t.id === field.value) || null
-                                }
-                                onChange={(e, newValue) =>
-                                    field.onChange(newValue ? newValue.id : null)
-                                }
-                                renderInput={(params) => (
-                                    <TextField
-                                        {...params}
-                                        label="Customer Type"
-                                        InputProps={{
-                                            ...params.InputProps,
-                                            endAdornment: (
-                                                <>
-                                                    {loadingTypes ? (
-                                                        <CircularProgress size={20} />
-                                                    ) : null}
-                                                    {params.InputProps.endAdornment}
-                                                </>
-                                            ),
-                                        }}
-                                    />
-                                )}
-                            />
-                        )}
-                    />
-                </Stack>
-            </DialogContent>
-
-            <DialogActions>
-                <Button onClick={onClose}>Cancel</Button>
-                <Button
-                    onClick={handleSubmit(onSubmit)}
-                    variant="contained"
-                    disabled={mutation.isLoading}
-                >
-                    {editRow ? "Update" : "Save"}
-                </Button>
-            </DialogActions>
-        </Dialog>
-    );
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={onClose} color="inherit">
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={mutation.isLoading}
+          >
+            {mutation.isLoading ? "Saving..." : "Save Customer"}
+          </Button>
+        </DialogActions>
+      </Box>
+    </Dialog>
+  );
 }

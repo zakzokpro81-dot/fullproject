@@ -61,6 +61,46 @@ export const getProducts = async ({ page, pageSize, searchText, warehouseId, typ
 };
 
 
+// دالة لجلب الموديلات مع الفلترة حسب نوع المنتج (عن طريق العائلة)
+export const getFilteredModels = async (typeId) => {
+    // 1. نبدأ بالاستعلام من جدول الموديلات
+    // نستخدم !inner مع families لنتمكن من الفلترة عليها
+    let query = supabase
+        .from("models")
+        .select(`
+            id,
+            name,
+            brand:brands(id, name),
+            family:families!inner(
+                id, 
+                name, 
+                product_type_id
+            )
+        `);
+
+    // 2. منطق التصفية: 
+    // إذا كان هناك typeId (وليس قطع تبديل - بفرض أن ID قطع التبديل هو 1)
+    // ملاحظة: استبدل رقم 1 بـ ID "قطع التبديل" الفعلي عندك إذا كان مختلفاً
+    if (typeId && typeId !== 1) {
+        query = query.eq('family.product_type_id', typeId);
+    }
+
+    const { data, error } = await query.order('name');
+
+    if (error) {
+        console.error("Error fetching filtered models:", error.message);
+        throw error;
+    }
+
+    // 3. تنسيق البيانات لتناسب الـ Autocomplete (Label & ID)
+    return data.map(model => ({
+        id: model.id,
+        label: `${model.brand?.name || 'Unknown'} - ${model.family?.name} - ${model.name}`,
+        brand_id: model.brand?.id,
+        family_id: model.family?.id,
+        model_id: model.id
+    }));
+};
 
 
 // تعديل دالة جلب المنتجات لتدعم الترقيم والبحث من السيرفر

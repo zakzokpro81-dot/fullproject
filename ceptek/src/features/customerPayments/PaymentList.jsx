@@ -6,73 +6,59 @@ import {
   Button,
   Stack,
   TextField,
-  MenuItem,
-  FormControl,
-  InputLabel,
-  Select,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
 
-import { getCustomers, deleteCustomer, deleteCustomers } from "./customer.api"; // تأكد من وجود deleteCustomers في الـ API
-import { getCustomerTypes } from "../customerTypes/customerType.api";
-import { customerColumns } from "./customer.columns";
-import CustomerForm from "./CustomerForm";
+import { getPayments, deletePayment, deletePayments } from "./payment.api";
+import { paymentColumns } from "./payment.columns";
+import PaymentForm from "./PaymentForm";
 import ProductActionDialogs from "../../componenets/ProductActionDialogs";
 
-export function CustomerList() {
+export function PaymentList() {
   const queryClient = useQueryClient();
 
+  // States
   const [openForm, setOpenForm] = React.useState(false);
-  const [selectedCustomer, setSelectedCustomer] = React.useState(null);
+  const [selectedPayment, setSelectedPayment] = React.useState(null);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
   const [openDeleteSelectedDialog, setOpenDeleteSelectedDialog] =
     React.useState(false);
-
-  // منطق الاختيار المخصص (كما في مثالك)
   const [selectedIds, setSelectedIds] = React.useState(new Set());
-
   const [searchText, setSearchText] = React.useState("");
-  const [customerTypeId, setCustomerTypeId] = React.useState("");
   const [paginationModel, setPaginationModel] = React.useState({
     page: 0,
     pageSize: 10,
   });
 
+  // Query
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["customers", paginationModel, searchText, customerTypeId],
+    queryKey: ["payments", paginationModel, searchText],
     queryFn: () =>
-      getCustomers({
+      getPayments({
         page: paginationModel.page,
         pageSize: paginationModel.pageSize,
         searchText,
-        customerTypeId,
       }),
     keepPreviousData: true,
   });
 
-  const { data: typesData } = useQuery({
-    queryKey: ["customerTypesSelect"],
-    queryFn: () => getCustomerTypes({ page: 0, pageSize: 100 }),
-  });
-
-  // الحذف المفرد
+  // Mutations
   const deleteMutation = useMutation({
-    mutationFn: deleteCustomer,
+    mutationFn: deletePayment,
     onSuccess: () => {
-      queryClient.invalidateQueries(["customers"]);
+      queryClient.invalidateQueries(["payments"]);
       setOpenDeleteDialog(false);
-      setSelectedCustomer(null);
+      setSelectedPayment(null);
     },
   });
 
-  // منطق اختيار الكل
   const rows = data?.data || [];
+
+  // Handlers
   const toggleSelectAll = () => {
-    const allSelected =
-      rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
-    if (allSelected) {
+    if (rows.length > 0 && selectedIds.size === rows.length) {
       setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(rows.map((r) => r.id)));
@@ -85,21 +71,20 @@ export function CustomerList() {
     setSelectedIds(newSet);
   };
 
-  // تنفيذ الحذف الجماعي
   const handleDeleteSelected = async () => {
-    await deleteCustomers(Array.from(selectedIds));
-    queryClient.invalidateQueries(["customers"]);
+    await deletePayments(Array.from(selectedIds));
+    queryClient.invalidateQueries(["payments"]);
     setSelectedIds(new Set());
     setOpenDeleteSelectedDialog(false);
   };
 
-  const columns = customerColumns(
-    (cust) => {
-      setSelectedCustomer(cust);
+  const columns = paymentColumns(
+    (p) => {
+      setSelectedPayment(p);
       setOpenForm(true);
     },
-    (cust) => {
-      setSelectedCustomer(cust);
+    (p) => {
+      setSelectedPayment(p);
       setOpenDeleteDialog(true);
     },
     selectedIds,
@@ -119,7 +104,7 @@ export function CustomerList() {
           sx={{ mb: 3 }}
         >
           <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-            Customers Management
+            Customer Payments
           </Typography>
           <Stack direction="row" spacing={1}>
             <Button
@@ -128,45 +113,28 @@ export function CustomerList() {
               disabled={selectedIds.size === 0}
               onClick={() => setOpenDeleteSelectedDialog(true)}
             >
-              Delete Selected ({selectedIds.size})
+              Delete ({selectedIds.size})
             </Button>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={() => {
-                setSelectedCustomer(null);
+                setSelectedPayment(null);
                 setOpenForm(true);
               }}
             >
-              Add Customer
+              Add Payment
             </Button>
           </Stack>
         </Stack>
 
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-          <TextField
-            label="Search name or store..."
-            size="small"
-            fullWidth
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Type</InputLabel>
-            <Select
-              value={customerTypeId}
-              label="Type"
-              onChange={(e) => setCustomerTypeId(e.target.value)}
-            >
-              <MenuItem value="">All Types</MenuItem>
-              {typesData?.data?.map((type) => (
-                <MenuItem key={type.id} value={type.id}>
-                  {type.type_name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Stack>
+        <TextField
+          label="Search by Note or Customer Name"
+          size="small"
+          fullWidth
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
       </Paper>
 
       <Paper sx={{ height: 600, width: "100%" }}>
@@ -185,9 +153,8 @@ export function CustomerList() {
       <ProductActionDialogs
         openDeleteDialog={openDeleteDialog}
         setOpenDeleteDialog={setOpenDeleteDialog}
-        selectedProduct={selectedCustomer}
-        handleDeleteConfirm={() => deleteMutation.mutate(selectedCustomer.id)}
-        // الحذف الجماعي
+        selectedProduct={selectedPayment}
+        handleDeleteConfirm={() => deleteMutation.mutate(selectedPayment.id)}
         openDeleteSelectedDialog={openDeleteSelectedDialog}
         setOpenDeleteSelectedDialog={setOpenDeleteSelectedDialog}
         selectedIds={selectedIds}
@@ -195,11 +162,10 @@ export function CustomerList() {
       />
 
       {openForm && (
-        <CustomerForm
+        <PaymentForm
           open={openForm}
           onClose={() => setOpenForm(false)}
-          initialData={selectedCustomer}
-          customerTypes={typesData?.data || []}
+          initialData={selectedPayment}
         />
       )}
     </Box>

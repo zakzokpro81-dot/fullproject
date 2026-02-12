@@ -1,155 +1,95 @@
 import * as React from "react";
-import {
-  Box,
-  Button,
-  Paper,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { Box, Paper, Typography, Button, Stack } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import AddIcon from "@mui/icons-material/Add";
 
-import {
-  getCustomerTypes,
-  deleteCustomerType,
-  deleteCustomerTypes,
-} from "./customerType.api";
-
+import { getCustomerTypes, deleteCustomerType } from "./customerType.api";
 import { customerTypeColumns } from "./customerType.columns";
-import ProductActionDialogs from "../../componenets/ProductActionDialogs";
-
-// لاحقاً ستربطهم بنماذج الإضافة والتعديل
-// import AddCustomerTypeForm from "./AddCustomerTypeForm";
-// import EditCustomerTypeForm from "./EditCustomerTypeForm";
+import CustomerTypeForm from "./CustomerTypeForm"; // سننشئه في الخطوة التالية
+import ProductActionDialogs from "../../componenets/ProductActionDialogs"; // إعادة استخدام مكون الديالوغ الخاص بك
 
 export function CustomerTypeList() {
   const queryClient = useQueryClient();
 
-  const [openAddDialog, setOpenAddDialog] = React.useState(false);
-  const [openEditDialog, setOpenEditDialog] = React.useState(false);
-
+  // States
+  const [openForm, setOpenForm] = React.useState(false);
+  const [selectedType, setSelectedType] = React.useState(null);
   const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
-  const [openDeleteSelectedDialog, setOpenDeleteSelectedDialog] =
-    React.useState(false);
-
-  const [selectedCustomerType, setSelectedCustomerType] = React.useState(null);
-  const [selectedIds, setSelectedIds] = React.useState(new Set());
-
-  const [searchText, setSearchText] = React.useState("");
-  const [debouncedSearch, setDebouncedSearch] = React.useState("");
-
   const [paginationModel, setPaginationModel] = React.useState({
     page: 0,
     pageSize: 10,
   });
 
-  React.useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchText), 500);
-    return () => clearTimeout(timer);
-  }, [searchText]);
-
+  // Query: جلب البيانات من السيرفر
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["customerTypes", paginationModel, debouncedSearch],
+    queryKey: ["customerTypes", paginationModel],
     queryFn: () =>
       getCustomerTypes({
         page: paginationModel.page,
         pageSize: paginationModel.pageSize,
-        searchText: debouncedSearch,
       }),
     keepPreviousData: true,
   });
 
+  // Mutation: حذف النوع
   const deleteMutation = useMutation({
     mutationFn: deleteCustomerType,
     onSuccess: () => {
       queryClient.invalidateQueries(["customerTypes"]);
       setOpenDeleteDialog(false);
-      setSelectedCustomerType(null);
+      setSelectedType(null);
     },
   });
 
-  const rows = data?.data || [];
-
-  const toggleSelectAll = () => {
-    const allSelected =
-      rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
-
-    if (allSelected) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(rows.map((r) => r.id)));
-    }
+  // Handlers
+  const handleAddClick = () => {
+    setSelectedType(null);
+    setOpenForm(true);
   };
 
-  const toggleSelect = (id) => {
-    const newSet = new Set(selectedIds);
-    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
-    setSelectedIds(newSet);
+  const handleEditAction = (type) => {
+    setSelectedType(type);
+    setOpenForm(true);
   };
 
-  const handleDeleteSelected = async () => {
-    await deleteCustomerTypes(Array.from(selectedIds));
-    queryClient.invalidateQueries(["customerTypes"]);
-    setSelectedIds(new Set());
-  };
-
-  const handleDeleteAction = (row) => {
-    setSelectedCustomerType(row);
+  const handleDeleteAction = (type) => {
+    setSelectedType(type);
     setOpenDeleteDialog(true);
   };
 
-  const handleEditAction = (row) => {
-    setSelectedCustomerType(row);
-    setOpenEditDialog(true);
-  };
-
   const handleDeleteConfirm = () => {
-    if (selectedCustomerType) {
-      deleteMutation.mutate(selectedCustomerType.id);
-    }
+    if (selectedType) deleteMutation.mutate(selectedType.id);
   };
 
-  const columns = customerTypeColumns(
-    handleEditAction,
-    handleDeleteAction,
-    selectedIds,
-    toggleSelect,
-    rows,
-    toggleSelectAll
-  );
+  const columns = customerTypeColumns(handleEditAction, handleDeleteAction);
 
   return (
     <Box sx={{ width: "100%", p: 3 }}>
-      {/* Toolbar */}
-      <Stack direction="row" spacing={2} mb={2}>
-        <TextField
-          size="small"
-          label="Search"
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
-
-        <Button
-          variant="contained"
-          onClick={() => setOpenAddDialog(true)}
+      {/* Header بسيط متوافق مع تصميمك */}
+      <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
         >
-          Add Customer Type
-        </Button>
-
-        {selectedIds.size > 0 && (
+          <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+            إدارة أنواع الزبائن
+          </Typography>
           <Button
-            color="error"
             variant="contained"
-            onClick={() => setOpenDeleteSelectedDialog(true)}
+            startIcon={<AddIcon />}
+            onClick={handleAddClick}
           >
-            Delete Selected ({selectedIds.size})
+            إضافة نوع جديد
           </Button>
-        )}
-      </Stack>
+        </Stack>
+      </Paper>
 
-      <Paper sx={{ height: 600, width: "100%" }}>
+      {/* الجدول */}
+      <Paper sx={{ height: 500, width: "100%" }}>
         <DataGrid
-          rows={rows}
+          rows={data?.data || []}
           rowCount={data?.count || 0}
           loading={isLoading || isFetching}
           columns={columns}
@@ -160,37 +100,24 @@ export function CustomerTypeList() {
         />
       </Paper>
 
+      {/* ديالوغ الحذف - إعادة استخدام المكون الخاص بك */}
       <ProductActionDialogs
-        openDeleteSelectedDialog={openDeleteSelectedDialog}
-        setOpenDeleteSelectedDialog={setOpenDeleteSelectedDialog}
-        selectedIds={selectedIds}
-        handleDeleteSelected={handleDeleteSelected}
         openDeleteDialog={openDeleteDialog}
         setOpenDeleteDialog={setOpenDeleteDialog}
-        selectedProduct={selectedCustomerType}
+        selectedProduct={selectedType} // المكون يتوقع selectedProduct سنمرر له النوع
         handleDeleteConfirm={handleDeleteConfirm}
+        // بما أننا لا نحتاج الحذف الجماعي هنا حالياً سأمرر قيم فارغة
+        openDeleteSelectedDialog={false}
       />
 
-      {/* لاحقاً */}
-      {/*
-      {openAddDialog && (
-        <AddCustomerTypeForm
-          open={openAddDialog}
-          onClose={() => setOpenAddDialog(false)}
+      {/* فورم الإضافة والتعديل */}
+      {openForm && (
+        <CustomerTypeForm
+          open={openForm}
+          onClose={() => setOpenForm(false)}
+          initialData={selectedType}
         />
       )}
-
-      {openEditDialog && selectedCustomerType && (
-        <EditCustomerTypeForm
-          open={openEditDialog}
-          onClose={() => {
-            setOpenEditDialog(false);
-            setSelectedCustomerType(null);
-          }}
-          customerType={selectedCustomerType}
-        />
-      )}
-      */}
     </Box>
   );
 }

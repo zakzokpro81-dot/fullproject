@@ -80,16 +80,32 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 
 const basicJubs = [
   { text: "CategoryList", icon: <HomeOutlined />, path: "/CategoryList" },
-  { text: "ProductTypeList", icon: <PeopleOutline />, path: "/ProductTypeList" },
-  { text: "ProductTypeAttributesList", icon: <ContactsOutlined />, path: "/ProductTypeAttributesList" },
+  {
+    text: "ProductTypeList",
+    icon: <PeopleOutline />,
+    path: "/ProductTypeList",
+  },
+  {
+    text: "ProductTypeAttributesList",
+    icon: <ContactsOutlined />,
+    path: "/ProductTypeAttributesList",
+  },
   { text: "AttributeList", icon: <ReceiptOutlined />, path: "/AttributeList" },
 ];
 
 const basicJubs2 = [
-  { text: "AttributeOptionList", icon: <HomeOutlined />, path: "/AttributeOptionList" },
+  {
+    text: "AttributeOptionList",
+    icon: <HomeOutlined />,
+    path: "/AttributeOptionList",
+  },
   { text: "CustomerList", icon: <PeopleOutline />, path: "/CustomerList" },
-  { text: "CustomerTypeList", icon: <ContactsOutlined />, path: "/CustomerTypeList" },
-  { text: "10", icon: <ReceiptOutlined />, path: "/10" },
+  {
+    text: "CustomerTypeList",
+    icon: <ContactsOutlined />,
+    path: "/CustomerTypeList",
+  },
+  { text: "PaymentList", icon: <ReceiptOutlined />, path: "/PaymentList" },
 ];
 
 const basicJubs3 = [
@@ -102,10 +118,9 @@ const basicJubs3 = [
 const basicJubs4 = [
   { text: "BulkAddProducts", icon: <HomeOutlined />, path: "/BulkAddProducts" },
   { text: "WarehousesList", icon: <PeopleOutline />, path: "/WarehousesList" },
-  { text: "9", icon: <ContactsOutlined />, path: "/9" },
+  { text: "InvoiceList", icon: <ContactsOutlined />, path: "/InvoiceList" },
   { text: "fatura", icon: <ReceiptOutlined />, path: "/10" },
 ];
-
 
 export function SideBar({ open, handleDrawerClose }) {
   const theme = useTheme();
