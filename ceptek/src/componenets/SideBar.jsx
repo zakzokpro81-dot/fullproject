@@ -87,8 +87,8 @@ const basicJubs = [
 
 const basicJubs2 = [
   { text: "AttributeOptionList", icon: <HomeOutlined />, path: "/AttributeOptionList" },
-  { text: "8", icon: <PeopleOutline />, path: "/8" },
-  { text: "7", icon: <ContactsOutlined />, path: "/7" },
+  { text: "CustomerList", icon: <PeopleOutline />, path: "/CustomerList" },
+  { text: "CustomerTypeList", icon: <ContactsOutlined />, path: "/CustomerTypeList" },
   { text: "10", icon: <ReceiptOutlined />, path: "/10" },
 ];
 

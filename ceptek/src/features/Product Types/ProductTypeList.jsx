@@ -21,7 +21,7 @@ import {
 import { productTypeColumns } from "./productType.columns";
 import ProductTypeForm from "./ProductTypeForm";
 
-export function ProductTypeList() {
+export  function ProductTypeList() {
     const queryClient = useQueryClient();
 
     const [openForm, setOpenForm] = useState(false);

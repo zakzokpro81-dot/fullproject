@@ -28,6 +28,8 @@ import {ProductTypeList} from "../src/features/Product Types/ProductTypeList"
 import {ProductTypeAttributesList} from "../src/features/product type attributes/ProductTypeAttributesList"
 import {AttributeOptionList} from "./features/attributeOption/AttributeOptionList"
 import {AttributeList } from "../src/features/attributes/AttributeList"
+import {CustomerList} from "../src/features/Customers/CustomerList"
+import {CustomerTypeList } from "../src/features/customerTypes/CustomerTypeList"
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter(
@@ -49,6 +51,8 @@ const router = createBrowserRouter(
       <Route path="/ProductTypeAttributesList" element={<ProductTypeAttributesList  />} />
       <Route path="/AttributeOptionList" element={<AttributeOptionList  />} />
       <Route path="/AttributeList" element={<AttributeList  />} />
+      <Route path="/CustomerList" element={<CustomerList  />} />
+     <Route path="/CustomerTypeList" element={<CustomerTypeList  />} />
     </Route>,
   ),
 );
