@@ -119,7 +119,11 @@ const basicJubs4 = [
   { text: "BulkAddProducts", icon: <HomeOutlined />, path: "/BulkAddProducts" },
   { text: "WarehousesList", icon: <PeopleOutline />, path: "/WarehousesList" },
   { text: "InvoiceList", icon: <ContactsOutlined />, path: "/InvoiceList" },
-  { text: "fatura", icon: <ReceiptOutlined />, path: "/10" },
+  {
+    text: "InvoiceItemsList",
+    icon: <ReceiptOutlined />,
+    path: "/InvoiceItemsList",
+  },
 ];
 
 export function SideBar({ open, handleDrawerClose }) {
