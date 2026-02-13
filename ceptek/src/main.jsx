@@ -31,9 +31,11 @@ import { AttributeList } from "../src/features/attributes/AttributeList";
 import { CustomerList } from "../src/features/Customers/CustomerList";
 import { CustomerTypeList } from "../src/features/customerTypes/CustomerTypeList";
 import { PaymentList } from "../src/features/customerPayments/PaymentList";
-import { InvoiceList } from "../src/features/invoice/InvoiceList";
+import { InvoicesList } from "./features/invoices/InvoicesList";
 import { InvoiceItemsList } from "../src/features/invoiceItem/InvoiceItemsList";
-import {StockMovementList} from "./features/StockMovement/StockMovementList";
+import { StockMovementList } from "./features/StockMovement/StockMovementList";
+import { AccountList } from "./features/accounts/AccountList";
+import { InvoiceList } from "./features/invoice/InvoiceList";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter(
@@ -61,9 +63,11 @@ const router = createBrowserRouter(
       <Route path="/CustomerList" element={<CustomerList />} />
       <Route path="/CustomerTypeList" element={<CustomerTypeList />} />
       <Route path="/PaymentList" element={<PaymentList />} />
-      <Route path="/InvoiceList" element={<InvoiceList />} />
+      <Route path="/InvoiceItemsList" element={<InvoiceItemsList />} />
       <Route path="/InvoiceItemsList" element={<InvoiceItemsList />} />
       <Route path="/StockMovementList" element={<StockMovementList />} />
+      <Route path="/AccountList" element={<AccountList />} />
+      <Route path="/InvoiceList" element={<InvoiceList />} />
     </Route>,
   ),
 );

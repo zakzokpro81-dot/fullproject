@@ -33,6 +33,9 @@ import {
   getWarehouses,
   getProductTypes,
   deleteProducts,
+  softDeleteProduct,
+  deactivateProduct,
+  deactivateMultipleProducts,
 } from "./product.api";
 import { productColumns } from "./product.columns";
 import AddProductForm from "./AddProductForm";
@@ -116,6 +119,40 @@ export function ProductsList() {
     keepPreviousData: true,
   });
 
+  // 1️⃣ موتيشن جديد لإيقاف تفعيل منتج واحد
+  const deactivateSingleMutation = useMutation({
+    mutationFn: deactivateProduct, // الدالة التي سنضيفها في الـ API
+    onSuccess: () => {
+      queryClient.invalidateQueries(["products"]);
+      setOpenDeleteDialog(false);
+      setSelectedProduct(null);
+    },
+  });
+
+  // 2️⃣ موتيشن جديد لإيقاف تفعيل مجموعة منتجات
+  const deactivateBulkMutation = useMutation({
+    mutationFn: deactivateMultipleProducts, // الدالة التي سنضيفها في الـ API
+    onSuccess: () => {
+      queryClient.invalidateQueries(["products"]);
+      setOpenDeleteSelectedDialog(false);
+      setSelectedIds(new Set());
+    },
+  });
+
+  // 3️⃣ دالة جديدة كلياً لمعالجة تأكيد إيقاف التفعيل الفردي
+  const handleDeactivateConfirm = () => {
+    if (selectedProduct) {
+      deactivateSingleMutation.mutate(selectedProduct.id);
+    }
+  };
+
+  // 4️⃣ دالة جديدة كلياً لمعالجة تأكيد إيقاف التفعيل الجماعي
+  const handleDeactivateSelectedConfirm = () => {
+    if (selectedIds.size > 0) {
+      deactivateBulkMutation.mutate(Array.from(selectedIds));
+    }
+  };
+
   const deleteMutation = useMutation({
     mutationFn: deleteProduct,
     onSuccess: () => {
@@ -165,7 +202,7 @@ export function ProductsList() {
   };
 
   const handleDeleteSelected = async () => {
-    await deleteProducts(Array.from(selectedIds));
+    await softDeleteProduct(Array.from(selectedIds));
     queryClient.invalidateQueries(["products"]);
     setSelectedIds(new Set());
   };
@@ -220,11 +257,11 @@ export function ProductsList() {
         openDeleteSelectedDialog={openDeleteSelectedDialog}
         setOpenDeleteSelectedDialog={setOpenDeleteSelectedDialog}
         selectedIds={selectedIds}
-        handleDeleteSelected={handleDeleteSelected}
+        handleDeleteSelected={handleDeactivateSelectedConfirm}
         openDeleteDialog={openDeleteDialog}
         setOpenDeleteDialog={setOpenDeleteDialog}
         selectedProduct={selectedProduct}
-        handleDeleteConfirm={handleDeleteConfirm}
+        handleDeleteConfirm={handleDeactivateConfirm}
       />
 
       {openAddDialog && (

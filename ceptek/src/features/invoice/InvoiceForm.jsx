@@ -9,157 +9,252 @@ import {
   MenuItem,
   Stack,
   Box,
-  CircularProgress,
+  Autocomplete,
+  Typography,
+  Divider,
+  InputAdornment,
 } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { invoiceSchema } from "./invoice.schema";
-import {
-  createInvoice,
-  updateInvoice,
-  getInvoiceStatuses,
-} from "./invoice.api";
-import { getCustomers } from "../customers/customer.api";
+import { createInvoiceAction } from "./invoice.api";
+import { getAccounts } from "../accounts/account.api";
+import supabase from "../../config/supabase";
 
-export default function InvoiceForm({ open, onClose, initialData }) {
+export default function InvoiceForm({ open, onClose }) {
   const queryClient = useQueryClient();
-  const isEditMode = !!initialData;
 
+  // 1. Setup form with default values
   const {
     register,
     handleSubmit,
+    control,
+    watch,
+    setValue,
     formState: { errors },
     reset,
   } = useForm({
     resolver: zodResolver(invoiceSchema),
-    defaultValues: initialData || {
-      customer_id: "",
-      invoice_date: new Date().toISOString().split("T")[0],
-      total_amount: 0,
+    defaultValues: {
+      customer_id: 7, // Default to Walk-in Customer (ID: 7)
+      warehouse_id: "", // Will be set once data is loaded
+      quantity: 1,
       paid_amount: 0,
-      status_id: "",
+      unit_price: 0,
     },
   });
 
-  // 1. جلب الزبائن
-  const { data: customersData, isLoading: loadingCust } = useQuery({
-    queryKey: ["customersSelect"],
-    queryFn: () => getCustomers({ page: 0, pageSize: 1000, searchText: "" }),
+  const watchQty = watch("quantity");
+  const watchPrice = watch("unit_price");
+  const total = (Number(watchQty) || 0) * (Number(watchPrice) || 0);
+  const watchWarehouse = watch("warehouse_id");
+
+  // 2. Fetch Data
+  const { data: accounts } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: getAccounts,
   });
 
-  // 2. جلب حالات الفواتير
-  const { data: statuses, isLoading: loadingStatus } = useQuery({
-    queryKey: ["invoiceStatuses"],
-    queryFn: getInvoiceStatuses,
+  const { data: warehouses } = useQuery({
+    queryKey: ["warehouses"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("warehouses")
+        .select("id, name");
+      if (error) throw error;
+      return data;
+    },
   });
 
+  // Effect to set the first warehouse as default once data is loaded
+  // كود لتعيين أول مخزن تلقائياً بمجرد تحميل البيانات
+  React.useEffect(() => {
+    if (warehouses && warehouses.length > 0) {
+      setValue("warehouse_id", warehouses[0].id);
+    }
+  }, [warehouses, setValue]);
+
+  const { data: customers } = useQuery({
+    queryKey: ["customers"],
+    queryFn: async () => {
+      const { data } = await supabase.from("customers").select("id, name");
+      return data;
+    },
+  });
+
+  const { data: products } = useQuery({
+    queryKey: ["productsForInvoice"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("products")
+        .select("id, name, sku, sell_price")
+        .eq("is_active", true);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // 3. Mutation Setup
   const mutation = useMutation({
-    mutationFn: isEditMode ? updateInvoice : createInvoice,
+    mutationFn: createInvoiceAction,
     onSuccess: () => {
       queryClient.invalidateQueries(["invoices"]);
+      queryClient.invalidateQueries(["accounts"]);
+      queryClient.invalidateQueries(["products"]);
       onClose();
       reset();
     },
+    onError: (err) => alert("Sale process failed: " + err.message),
   });
 
   const onSubmit = (data) => {
-    if (isEditMode) {
-      mutation.mutate({ id: initialData.id, ...data });
-    } else {
-      mutation.mutate(data);
-    }
+    mutation.mutate(data);
   };
-
-  const isLoadingData = loadingCust || loadingStatus;
+  React.useEffect(() => {
+    if (warehouses && warehouses.length > 0 && !watchWarehouse) {
+      setValue("warehouse_id", warehouses[0].id);
+    }
+  }, [warehouses, setValue, watchWarehouse]);
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{isEditMode ? "Edit Invoice" : "New Invoice"}</DialogTitle>
-
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+      <DialogTitle sx={{ fontWeight: "bold" }}>Create New Sale</DialogTitle>
       <Box component="form" onSubmit={handleSubmit(onSubmit)}>
         <DialogContent dividers>
-          {isLoadingData ? (
-            <Stack alignItems="center" py={3}>
-              <CircularProgress size={24} />
-            </Stack>
-          ) : (
-            <Stack spacing={3}>
-              {/* اختيار الزبون */}
-              <TextField
-                select
-                fullWidth
-                label="Select Customer"
-                {...register("customer_id")}
-                defaultValue={initialData?.customer_id || ""}
-                error={!!errors.customer_id}
-                helperText={errors.customer_id?.message}
-              >
-                {customersData?.data?.map((cust) => (
-                  <MenuItem key={cust.id} value={cust.id}>
-                    {cust.name} {cust.store_name ? `(${cust.store_name})` : ""}
-                  </MenuItem>
-                ))}
-              </TextField>
+          <Stack spacing={3}>
+            {/* Customer Selection - Defaults to ID 7 */}
+            <TextField
+              select
+              fullWidth
+              label="Customer"
+              {...register("customer_id")}
+              error={!!errors.customer_id}
+              defaultValue={7}
+            >
+              {customers?.map((c) => (
+                <MenuItem key={c.id} value={c.id}>
+                  {c.name}
+                </MenuItem>
+              ))}
+            </TextField>
 
-              {/* اختيار حالة الفاتورة */}
-              <TextField
-                select
-                fullWidth
-                label="Invoice Status"
-                {...register("status_id")}
-                defaultValue={initialData?.status_id || ""}
-                error={!!errors.status_id}
-                helperText={errors.status_id?.message}
-              >
-                {statuses?.map((st) => (
-                  <MenuItem key={st.id} value={st.id}>
-                    {st.status_name}
-                  </MenuItem>
-                ))}
-              </TextField>
+            {/* Warehouse Selection - Defaults to first warehouse in list */}
+            <TextField
+              select
+              fullWidth
+              label="Warehouse"
+              // ربط القيمة مباشرة بـ watch لضمان التحديث اللحظي
+              value={watchWarehouse || ""}
+              {...register("warehouse_id")}
+              error={!!errors.warehouse_id}
+              // إضافة هذا السطر للتأكد من أن MUI يعيد الرندر عند توفر البيانات
+              SelectProps={{
+                displayEmpty: true,
+              }}
+            >
+              {warehouses?.map((w) => (
+                <MenuItem key={w.id} value={w.id}>
+                  {w.name}
+                </MenuItem>
+              ))}
+            </TextField>
 
-              <TextField
-                {...register("invoice_date")}
-                label="Invoice Date"
-                type="date"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-                error={!!errors.invoice_date}
-                helperText={errors.invoice_date?.message}
-              />
+            <Divider>Product Details</Divider>
 
-              <TextField
-                {...register("total_amount")}
-                label="Total Amount"
-                type="number"
-                fullWidth
-                error={!!errors.total_amount}
-                helperText={errors.total_amount?.message}
-              />
+            {/* Product Autocomplete */}
+            <Controller
+              name="product_id"
+              control={control}
+              render={({ field }) => (
+                <Autocomplete
+                  options={products || []}
+                  getOptionLabel={(option) =>
+                    option ? `${option.name} (${option.sku || "N/A"})` : ""
+                  }
+                  onChange={(_, val) => {
+                    field.onChange(val?.id || "");
+                    if (val) setValue("unit_price", val.sell_price);
+                  }}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Search Product"
+                      error={!!errors.product_id}
+                    />
+                  )}
+                />
+              )}
+            />
 
-              <TextField
-                {...register("paid_amount")}
-                label="Paid Amount"
-                type="number"
-                fullWidth
-                error={!!errors.paid_amount}
-                helperText={errors.paid_amount?.message}
-              />
-            </Stack>
-          )}
+            <TextField
+              label="Quantity"
+              type="number"
+              {...register("quantity")}
+              fullWidth
+            />
+
+            <TextField
+              label="Unit Price"
+              type="number"
+              {...register("unit_price")}
+              fullWidth
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">$</InputAdornment>
+                ),
+              }}
+            />
+
+            <Divider>Payment</Divider>
+
+            <TextField
+              select
+              fullWidth
+              label="Payment Account"
+              {...register("account_id")}
+              error={!!errors.account_id}
+            >
+              {accounts?.map((a) => (
+                <MenuItem key={a.id} value={a.id}>
+                  {a.name} ({a.balance})
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              label="Paid Amount"
+              type="number"
+              {...register("paid_amount")}
+              fullWidth
+            />
+
+            <Box
+              sx={{
+                p: 2,
+                bgcolor: "primary.light",
+                color: "white",
+                borderRadius: 2,
+                textAlign: "center",
+              }}
+            >
+              <Typography variant="overline">Total Amount</Typography>
+              <Typography variant="h4" fontWeight="bold">
+                ${total.toFixed(2)}
+              </Typography>
+            </Box>
+          </Stack>
         </DialogContent>
-
-        <DialogActions>
+        <DialogActions sx={{ p: 2 }}>
           <Button onClick={onClose} color="inherit">
             Cancel
           </Button>
           <Button
             type="submit"
             variant="contained"
-            disabled={mutation.isPending || isLoadingData}
+            disabled={mutation.isPending}
           >
-            {mutation.isPending ? "Saving..." : "Save Invoice"}
+            {mutation.isPending ? "Processing..." : "Confirm Sale"}
           </Button>
         </DialogActions>
       </Box>

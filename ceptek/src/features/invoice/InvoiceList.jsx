@@ -1,134 +1,86 @@
 import * as React from "react";
-import {
-  Box,
-  Paper,
-  Typography,
-  Button,
-  Stack,
-  TextField,
-} from "@mui/material";
+// استيراد المكونات من مكتبة MUI
+import { Box, Button, Typography, Paper } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
+import { useQuery } from "@tanstack/react-query";
 
-import { getInvoices, deleteInvoice } from "./invoice.api";
+// استيراد الدوال والأعمدة الخاصة بالموديول
+import { getInvoices } from "./invoice.api";
 import { invoiceColumns } from "./invoice.columns";
 import InvoiceForm from "./InvoiceForm";
-import ProductActionDialogs from "../../componenets/ProductActionDialogs";
 
 export function InvoiceList() {
-  const queryClient = useQueryClient();
-
-  // States
+  // حالة التحكم في فتح وإغلاق نافذة البيع (الـ POS)
   const [openForm, setOpenForm] = React.useState(false);
-  const [selectedInvoice, setSelectedInvoice] = React.useState(null);
-  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
-  const [searchText, setSearchText] = React.useState("");
-  const [paginationModel, setPaginationModel] = React.useState({
-    page: 0,
-    pageSize: 10,
+
+  // جلب بيانات الفواتير باستخدام React Query
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["invoices"],
+    queryFn: getInvoices,
   });
 
-  // Query - جلب البيانات من السيرفر
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["invoices", paginationModel, searchText],
-    queryFn: () =>
-      getInvoices({
-        page: paginationModel.page,
-        pageSize: paginationModel.pageSize,
-        searchText,
-      }),
-  });
-
-  // Mutation - حذف فاتورة
-  const deleteMutation = useMutation({
-    mutationFn: deleteInvoice,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["invoices"]);
-      setOpenDeleteDialog(false);
-      setSelectedInvoice(null);
-    },
-  });
-
-  const rows = data?.data || [];
-
-  // إعداد الأعمدة مع تمرير دوال التحكم
-  const columns = invoiceColumns(
-    (inv) => {
-      setSelectedInvoice(inv);
-      setOpenForm(true);
-    }, // التعديل
-    (inv) => {
-      setSelectedInvoice(inv);
-      setOpenDeleteDialog(true);
-    }, // الحذف
-  );
+  // معالجة حالة الخطأ في جلب البيانات
+  if (isError) {
+    return (
+      <Typography color="error">
+        Error loading invoices: {error.message}
+      </Typography>
+    );
+  }
 
   return (
-    <Box sx={{ width: "100%", p: 3 }}>
-      {/* الرأس: العنوان وأزرار التحكم */}
-      <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-        <Stack
-          direction="row"
-          spacing={2}
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ mb: 3 }}
+    <Box sx={{ p: 3 }}>
+      {/* رأس الصفحة: العنوان وزر الإضافة */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 3,
+        }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#1a237e" }}>
+          Invoices & Sales Archive (سجل المبيعات)
+        </Typography>
+
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => setOpenForm(true)}
+          sx={{ borderRadius: 2, px: 3 }}
         >
-          <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-            Invoices Management
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => {
-              setSelectedInvoice(null);
-              setOpenForm(true);
-            }}
-          >
-            Create Invoice
-          </Button>
-        </Stack>
+          New Sale (عملية بيع جديدة)
+        </Button>
+      </Box>
 
-        <TextField
-          label="Search by Customer Name"
-          size="small"
-          fullWidth
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-        />
-      </Paper>
-
-      {/* الجدول الرئيسي */}
-      <Paper sx={{ height: 600, width: "100%" }}>
+      {/* جدول البيانات الرئيسي */}
+      <Paper sx={{ height: 600, width: "100%", boxShadow: 3, borderRadius: 2 }}>
         <DataGrid
-          rows={rows}
-          rowCount={data?.count || 0}
-          loading={isLoading || isFetching}
-          columns={columns}
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          disableSelectionOnClick
+          rows={data || []}
+          columns={invoiceColumns}
+          loading={isLoading}
+          pageSizeOptions={[10, 25, 50]}
+          initialState={{
+            pagination: {
+              paginationModel: { pageSize: 10 },
+            },
+          }}
+          // تحسين تجربة المستخدم: منع اختيار الصف عند الضغط على الخلايا
+          disableRowSelectionOnClick
+          // تنسيق إضافي للجدول
+          sx={{
+            border: 0,
+            "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: "#f5f5f5",
+              fontWeight: "bold",
+            },
+          }}
         />
       </Paper>
 
-      {/* نافذة التأكيد قبل الحذف */}
-      <ProductActionDialogs
-        openDeleteDialog={openDeleteDialog}
-        setOpenDeleteDialog={setOpenDeleteDialog}
-        selectedProduct={selectedInvoice}
-        handleDeleteConfirm={() => deleteMutation.mutate(selectedInvoice.id)}
-      />
-
-      {/* نافذة الفورم (إضافة/تعديل) */}
-      {openForm && (
-        <InvoiceForm
-          open={openForm}
-          onClose={() => setOpenForm(false)}
-          initialData={selectedInvoice}
-        />
-      )}
+      {/* استدعاء الفورم (نافذة البيع) */}
+      <InvoiceForm open={openForm} onClose={() => setOpenForm(false)} />
     </Box>
   );
 }

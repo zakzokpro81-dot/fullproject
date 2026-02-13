@@ -12,6 +12,7 @@ import {
   Divider,
   FormControlLabel,
   Switch,
+  Stack,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,12 +23,15 @@ import {
   getWarehouses,
   getProductStockLocation,
   getCategories,
+  adjustProductStock,
 } from "./product.api";
+import { StockAdjustmentDialog } from "./StockAdjustmentDialog";
 
 const EditProductForm = ({ open, onClose, product }) => {
   const queryClient = useQueryClient();
   const [isReady, setIsReady] = useState(false);
-
+  // تعريف حالة لفتح وإغلاق نافذة التسوية المخزنية
+  const [openAdjustment, setOpenAdjustment] = React.useState(false);
   // تم إضافة watch هنا لحل الخطأ الذي ظهر لك
   const { control, handleSubmit, setValue, watch } = useForm({
     defaultValues: {
@@ -216,9 +220,7 @@ const EditProductForm = ({ open, onClose, product }) => {
               value={product?.name || ""}
               disabled
             />
-
             <Divider sx={{ my: 2 }}>Attributes</Divider>
-
             {attributes?.map((attr) => (
               <Controller
                 key={attr.id}
@@ -254,9 +256,7 @@ const EditProductForm = ({ open, onClose, product }) => {
                 }
               />
             ))}
-
             <Divider sx={{ my: 2 }}>Pricing & Stock</Divider>
-
             <Controller
               name="sellPrice"
               control={control}
@@ -283,7 +283,7 @@ const EditProductForm = ({ open, onClose, product }) => {
                 />
               )}
             />
-            <Controller
+            {/* <Controller
               name="stock"
               control={control}
               render={({ field }) => (
@@ -295,6 +295,45 @@ const EditProductForm = ({ open, onClose, product }) => {
                   fullWidth
                 />
               )}
+            /> */}
+
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Controller
+                name="stock"
+                control={control}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="Current Stock"
+                    type="number"
+                    margin="normal"
+                    fullWidth
+                    InputProps={{
+                      readOnly: true, // للقراءة فقط
+                      endAdornment: (
+                        <Button
+                          variant="contained"
+                          size="small"
+                          onClick={() => setOpenAdjustment(true)} // هنا يتم استدعاء الدالة المعرفة أعلاه
+                          sx={{ minWidth: "fit-content", ml: 1 }}
+                        >
+                          Adjust
+                        </Button>
+                      ),
+                    }}
+                  />
+                )}
+              />
+            </Stack>
+
+            <StockAdjustmentDialog
+              open={openAdjustment}
+              onClose={() => setOpenAdjustment(false)}
+              product={product}
+              // نمرر الـ id مباشرة من المتغير الموجود في ملفك الأب
+              warehouseId={
+                currentStockEntry?.warehouse?.id || product?.warehouse_id
+              }
             />
             <Controller
               name="description"
@@ -311,7 +350,6 @@ const EditProductForm = ({ open, onClose, product }) => {
               )}
             />
             <Divider sx={{ my: 2 }}>Activation</Divider>
-
             <Controller
               name="is_active"
               control={control}
@@ -327,7 +365,6 @@ const EditProductForm = ({ open, onClose, product }) => {
                 />
               )}
             />
-
             {/* --- قسم المخزن الحالي (للعرض فقط) --- */}
             <Divider sx={{ my: 2 }}>Current Location</Divider>
             <TextField
@@ -342,7 +379,6 @@ const EditProductForm = ({ open, onClose, product }) => {
               disabled
               helperText="This is the fixed current location."
             />
-
             {/* --- قسم نقل المنتج (قابل للتعديل) --- */}
             <Controller
               name="warehouse"

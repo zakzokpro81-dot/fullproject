@@ -78,12 +78,27 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   ...theme.mixins.toolbar,
 }));
 
+// const basicJubs = [
+//   { text: "CategoryList", icon: <HomeOutlined />, path: "/CategoryList" },
+//   {
+//     text: "ProductTypeList",
+//     icon: <PeopleOutline />,
+//     path: "/ProductTypeList",
+//   },
+//   {
+//     text: "ProductTypeAttributesList",
+//     icon: <ContactsOutlined />,
+//     path: "/ProductTypeAttributesList",
+//   },
+//   { text: "AttributeList", icon: <ReceiptOutlined />, path: "/AttributeList" },
+// ];
+
 const basicJubs = [
-  { text: "CategoryList", icon: <HomeOutlined />, path: "/CategoryList" },
+  { text: "AccountList", icon: <HomeOutlined />, path: "/AccountList" },
   {
-    text: "ProductTypeList",
+    text: "InvoiceList",
     icon: <PeopleOutline />,
-    path: "/ProductTypeList",
+    path: "/InvoiceList",
   },
   {
     text: "ProductTypeAttributesList",
@@ -116,8 +131,16 @@ const basicJubs2 = [
 // ];
 
 const basicJubs3 = [
-  { text: "WarehouseStockList", icon: <HomeOutlined />, path: "/WarehouseStockList" },
-  { text: "StockMovementList", icon: <PeopleOutline />, path: "/StockMovementList" },
+  {
+    text: "WarehouseStockList",
+    icon: <HomeOutlined />,
+    path: "/WarehouseStockList",
+  },
+  {
+    text: "StockMovementList",
+    icon: <PeopleOutline />,
+    path: "/StockMovementList",
+  },
   { text: "ModelsList", icon: <ContactsOutlined />, path: "/ModelsList" },
   { text: "ProductsList", icon: <ReceiptOutlined />, path: "/ProductsList" },
 ];

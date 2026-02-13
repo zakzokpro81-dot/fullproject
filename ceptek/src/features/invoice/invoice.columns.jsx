@@ -1,41 +1,40 @@
-import { Chip, Stack, IconButton } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { Chip } from "@mui/material";
 
-export const invoiceColumns = (onEdit, onDelete) => [
-  { field: "id", headerName: "ID", width: 70 },
+export const invoiceColumns = [
+  { field: "id", headerName: "Inv #", width: 90 },
   {
     field: "customer_name",
     headerName: "Customer",
-    flex: 1.5,
-    // الوصول للاسم من خلال الكائن الذي يجلبه الـ API
-    valueGetter: (value, row) => row?.customers?.name || "N/A",
+    flex: 1,
+    valueGetter: (value, row) => row.customers?.name || "Cash Customer",
   },
   {
-    field: "invoice_date", // تأكد أن هذا الاسم يطابق العمود في قاعدة البيانات
-    headerName: "Date",
-    width: 150,
-    renderCell: (params) => {
-      // نستخدم params.row.invoice_date مباشرة لضمان القراءة
-      const dateVal = params.row?.invoice_date;
-      return dateVal ? new Date(dateVal).toLocaleDateString() : "N/A";
-    },
-  },
-  { field: "total_amount", headerName: "Total", width: 110, type: "number" },
-  { field: "paid_amount", headerName: "Paid", width: 110, type: "number" },
-  {
-    field: "status_name",
-    headerName: "Status",
+    field: "total_amount",
+    headerName: "Total",
     width: 120,
-    valueGetter: (value, row) => row?.invoice_statuses?.status_name || "N/A",
     renderCell: (params) => (
-      <Chip
-        label={params.value}
-        size="small"
-        color="primary"
-        variant="outlined"
-      />
+      <span style={{ fontWeight: "bold" }}>{params.value}</span>
     ),
   },
-  // ... باقي أعمدة الأزرار (Actions) كما هي لديك
+  {
+    field: "status",
+    headerName: "Status",
+    width: 130,
+    renderCell: (params) => {
+      const status = params.row.invoice_statuses?.status_name;
+      const color =
+        status === "Paid"
+          ? "success"
+          : status === "Partial"
+            ? "warning"
+            : "error";
+      return <Chip label={status} color={color} size="small" />;
+    },
+  },
+  {
+    field: "invoice_date",
+    headerName: "Date",
+    width: 180,
+    valueGetter: (value) => new Date(value).toLocaleString(),
+  },
 ];
