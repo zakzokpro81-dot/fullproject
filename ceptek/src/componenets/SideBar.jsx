@@ -108,9 +108,16 @@ const basicJubs2 = [
   { text: "PaymentList", icon: <ReceiptOutlined />, path: "/PaymentList" },
 ];
 
+// const basicJubs3 = [
+//   { text: "BrandList", icon: <HomeOutlined />, path: "/BrandList" },
+//   { text: "FamilyList", icon: <PeopleOutline />, path: "/FamilyList" },
+//   { text: "ModelsList", icon: <ContactsOutlined />, path: "/ModelsList" },
+//   { text: "ProductsList", icon: <ReceiptOutlined />, path: "/ProductsList" },
+// ];
+
 const basicJubs3 = [
-  { text: "BrandList", icon: <HomeOutlined />, path: "/BrandList" },
-  { text: "FamilyList", icon: <PeopleOutline />, path: "/FamilyList" },
+  { text: "WarehouseStockList", icon: <HomeOutlined />, path: "/WarehouseStockList" },
+  { text: "StockMovementList", icon: <PeopleOutline />, path: "/StockMovementList" },
   { text: "ModelsList", icon: <ContactsOutlined />, path: "/ModelsList" },
   { text: "ProductsList", icon: <ReceiptOutlined />, path: "/ProductsList" },
 ];

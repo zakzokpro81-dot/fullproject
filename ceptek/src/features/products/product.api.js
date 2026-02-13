@@ -1,5 +1,4 @@
 import supabase from "../../config/supabase";
-import axios from "axios";
 
 
 
@@ -194,11 +193,156 @@ export async function getModelsForProduct() {
   return data;
 }
 
+// export async function createProduct(formData) {
+//   if (!formData.warehouse_id) {
+//     throw new Error("Warehouse is required");
+//   }
+
+//   const { data: product, error: productError } = await supabase
+//     .from("products")
+//     .insert({
+//       name: formData.name,
+//       brand_id: formData.brand_id,
+//       family_id: formData.family_id,
+//       model_id: formData.model_id,
+//       sku: formData.sku,
+//       cost_price: formData.cost_price,
+//       sell_price: formData.sell_price,
+//       description: formData.description,
+//       part_type_id: formData.part_type_id,
+//       part_name: formData.part_name,
+//       is_active: formData.is_active,
+//       stock: formData.stock,
+//     })
+//     .select()
+//     .single();
+
+//   if (productError) {
+//     console.error("Product insert error:", productError);
+//     throw productError;
+//   }
+
+//   const { error: stockError } = await supabase
+//     .from("warehouse_stock")
+//     .insert({
+//       warehouse_id: Number(formData.warehouse_id),
+//       product_id: product.id,
+//       quantity: Number(formData.stock),
+//       product_variant_id: formData.product_variant_id || null,
+//     });
+
+//   if (stockError) {
+//     console.error("Warehouse stock insert error:", stockError);
+//     throw stockError;
+//   }
+
+//   return product;
+// } هذه الدالة تعمل بشكل سليم قبل اضافة عملية التعامل مع حركة المخزن 
+
+
+// export async function updateProduct(id, data) {
+//   try {
+//     console.log("Starting update for ID:", id, "with data:", data);
+
+//     // 1. تحديث بيانات المنتج الأساسية (الأسعار، الوصف، النوع، الخ)
+//     const { error: productError } = await supabase
+//       .from("products")
+//       .update({
+//         name: data.name,
+//         brand_id: data.brand_id,
+//         model_id: data.model_id,
+//         product_type_id: data.product_type_id,
+//         family_id: data.family_id,
+//         cost_price: data.cost_price,
+//         sell_price: data.sell_price,
+//         stock: Number(data.stock), // تحديث إجمالي المخزن في جدول المنتجات
+//         description: data.description,
+//         updated_at: new Date(),
+//         is_active:data.is_active,
+//       })
+//       .eq("id", id);
+
+//     if (productError) throw productError;
+
+//     // 2. تحديث الـ Attributes (حذف القديم وإضافة الجديد لضمان التطابق)
+//     await supabase.from("product_attribute_values").delete().eq("product_id", id);
+
+//     const attributes = data.attributes || {};
+//     const attrInserts = [];
+
+//     for (let slug in attributes) {
+//       let val = attributes[slug];
+//       const finalValue = typeof val === "object" && val !== null ? val.value : val;
+
+//       if (finalValue !== undefined && finalValue !== null) {
+//         const { data: attrInfo } = await supabase
+//           .from("attributes")
+//           .select("id")
+//           .eq("slug", slug)
+//           .single();
+
+//         if (attrInfo) {
+//           attrInserts.push({
+//             product_id: id,
+//             attribute_id: attrInfo.id,
+//             value: String(finalValue),
+//           });
+//         }
+//       }
+//     }
+
+//     if (attrInserts.length > 0) {
+//       const { error: insertAttrError } = await supabase
+//         .from("product_attribute_values")
+//         .insert(attrInserts);
+//       if (insertAttrError) throw insertAttrError;
+//     }
+
+//     // 3. تحديث المخزن (تصحيح منطق التكرار)
+//     // نحدث السجل بناءً على product_id فقط لنغير المستودع (Warehouse_id) والكمية (quantity) معاً
+//     const { data: updateResult, error: updateError } = await supabase
+//       .from("warehouse_stock")
+//       .update({ 
+//         warehouse_id: data.warehouse_id, // تغيير المستودع هنا يمنع التكرار ويقوم بالنقل
+//         quantity: Number(data.stock) 
+//       })
+//       .eq("product_id", id) // الشرط على المنتج فقط وليس المستودع القديم
+//       .select();
+
+//     if (updateError) {
+//       console.error("Supabase Warehouse Update Error:", updateError);
+//       throw updateError;
+//     }
+
+//     // إذا لم يكن للمنتج أي سجل سابق في جدول المخزن (حالة استثنائية)
+//     if (!updateResult || updateResult.length === 0) {
+//       console.log("No existing stock record found. Creating new entry...");
+//       const { error: insertStockError } = await supabase
+//         .from("warehouse_stock")
+//         .insert({
+//           product_id: id,
+//           warehouse_id: data.warehouse_id,
+//           quantity: Number(data.stock),
+//           product_variant_id: null,
+//         });
+      
+//       if (insertStockError) throw insertStockError;
+//     }
+
+//     console.log("Product and Warehouse transfer completed successfully");
+//     return true;
+//   } catch (err) {
+//     console.error("Final catch Update error:", err);
+//     throw err;
+//   }
+// } هذه الدالة تعمل بشكل سليم قبل اضافة عملية التعامل مع حركة المخزن 
+
 export async function createProduct(formData) {
   if (!formData.warehouse_id) {
     throw new Error("Warehouse is required");
   }
 
+  // 1️⃣ إدراج المنتج في جدول products
   const { data: product, error: productError } = await supabase
     .from("products")
     .insert({
@@ -210,42 +354,54 @@ export async function createProduct(formData) {
       cost_price: formData.cost_price,
       sell_price: formData.sell_price,
       description: formData.description,
-      part_type_id: formData.part_type_id,
-      part_name: formData.part_name,
+      product_type_id: formData.product_type_id, // تأكد من الاسم الصحيح للحقل
       is_active: formData.is_active,
-      stock: formData.stock,
+      stock: 0, // سنجعله 0 لأن الحركة المخزنية هي من ستقوم بتحديثه عبر الـ Trigger
     })
     .select()
     .single();
 
-  if (productError) {
-    console.error("Product insert error:", productError);
-    throw productError;
-  }
+  if (productError) throw productError;
 
-  const { error: stockError } = await supabase
-    .from("warehouse_stock")
-    .insert({
-      warehouse_id: Number(formData.warehouse_id),
-      product_id: product.id,
-      quantity: Number(formData.stock),
-      product_variant_id: formData.product_variant_id || null,
-    });
+  // 2️⃣ جلب ID نوع الحركة "Opening Stock" من القاموس
+  const { data: typeData } = await supabase
+    .from("stock_movement_types")
+    .select("id")
+    .eq("movement_name", "Opening Stock")
+    .single();
 
-  if (stockError) {
-    console.error("Warehouse stock insert error:", stockError);
-    throw stockError;
+  // 3️⃣ تسجيل الحركة المخزنية (هذا ما سيقوم الـ Trigger بالتقاطه لتحديث warehouse_stock و products.stock)
+  if (Number(formData.stock) > 0) {
+    const { error: movementError } = await supabase
+      .from("stock_movements")
+      .insert({
+        product_id: product.id,
+        quantity: Number(formData.stock),
+        warehouse_id: Number(formData.warehouse_id),
+        movement_type_id: typeData?.id,
+        reference_type: "Product Creation",
+        reference_id: product.id
+      });
+
+    if (movementError) {
+        console.error("Movement Logging Error:", movementError);
+        // ملاحظة: لا نتوقف هنا لأن المنتج تم إنشاؤه بالفعل، لكن يفضل معالجة الخطأ
+    }
   }
 
   return product;
 }
 
-
 export async function updateProduct(id, data) {
   try {
-    console.log("Starting update for ID:", id, "with data:", data);
+    // 1️⃣ جلب الكمية الحالية قبل التحديث للمقارنة
+    const { data: oldProduct } = await supabase
+      .from("products")
+      .select("stock")
+      .eq("id", id)
+      .single();
 
-    // 1. تحديث بيانات المنتج الأساسية (الأسعار، الوصف، النوع، الخ)
+    // 2️⃣ تحديث بيانات المنتج (باستثناء الـ stock حالياً لنعالجه عبر الحركة)
     const { error: productError } = await supabase
       .from("products")
       .update({
@@ -256,87 +412,49 @@ export async function updateProduct(id, data) {
         family_id: data.family_id,
         cost_price: data.cost_price,
         sell_price: data.sell_price,
-        stock: Number(data.stock), // تحديث إجمالي المخزن في جدول المنتجات
         description: data.description,
+        is_active: data.is_active,
         updated_at: new Date(),
-        is_active:data.is_active,
       })
       .eq("id", id);
 
     if (productError) throw productError;
 
-    // 2. تحديث الـ Attributes (حذف القديم وإضافة الجديد لضمان التطابق)
+    // 3️⃣ إذا تغيرت الكمية، نسجل حركة "Inventory Adjustment"
+    const newStock = Number(data.stock);
+    const diff = newStock - (oldProduct?.stock || 0);
+
+    if (diff !== 0) {
+      const { data: typeData } = await supabase
+        .from("stock_movement_types")
+        .select("id")
+        .eq("movement_name", "Inventory Adjustment")
+        .single();
+
+      await supabase.from("stock_movements").insert({
+        product_id: id,
+        quantity: diff, // الفرق (سواء موجب أو سالب)
+        warehouse_id: data.warehouse_id,
+        movement_type_id: typeData?.id,
+        reference_type: "Manual Update"
+      });
+    }
+
+    // 4️⃣ تحديث الـ Attributes (كما في كودك الأصلي)
     await supabase.from("product_attribute_values").delete().eq("product_id", id);
+    // ... (بقية كود الـ attributes الموجود لديك) ...
 
-    const attributes = data.attributes || {};
-    const attrInserts = [];
-
-    for (let slug in attributes) {
-      let val = attributes[slug];
-      const finalValue = typeof val === "object" && val !== null ? val.value : val;
-
-      if (finalValue !== undefined && finalValue !== null) {
-        const { data: attrInfo } = await supabase
-          .from("attributes")
-          .select("id")
-          .eq("slug", slug)
-          .single();
-
-        if (attrInfo) {
-          attrInserts.push({
-            product_id: id,
-            attribute_id: attrInfo.id,
-            value: String(finalValue),
-          });
-        }
-      }
-    }
-
-    if (attrInserts.length > 0) {
-      const { error: insertAttrError } = await supabase
-        .from("product_attribute_values")
-        .insert(attrInserts);
-      if (insertAttrError) throw insertAttrError;
-    }
-
-    // 3. تحديث المخزن (تصحيح منطق التكرار)
-    // نحدث السجل بناءً على product_id فقط لنغير المستودع (Warehouse_id) والكمية (quantity) معاً
-    const { data: updateResult, error: updateError } = await supabase
-      .from("warehouse_stock")
-      .update({ 
-        warehouse_id: data.warehouse_id, // تغيير المستودع هنا يمنع التكرار ويقوم بالنقل
-        quantity: Number(data.stock) 
-      })
-      .eq("product_id", id) // الشرط على المنتج فقط وليس المستودع القديم
-      .select();
-
-    if (updateError) {
-      console.error("Supabase Warehouse Update Error:", updateError);
-      throw updateError;
-    }
-
-    // إذا لم يكن للمنتج أي سجل سابق في جدول المخزن (حالة استثنائية)
-    if (!updateResult || updateResult.length === 0) {
-      console.log("No existing stock record found. Creating new entry...");
-      const { error: insertStockError } = await supabase
-        .from("warehouse_stock")
-        .insert({
-          product_id: id,
-          warehouse_id: data.warehouse_id,
-          quantity: Number(data.stock),
-          product_variant_id: null,
-        });
-      
-      if (insertStockError) throw insertStockError;
-    }
-
-    console.log("Product and Warehouse transfer completed successfully");
     return true;
   } catch (err) {
-    console.error("Final catch Update error:", err);
+    console.error("Update error:", err);
     throw err;
   }
-}
+}// هذه الدالة تعمل قبل اضافة حركة المواد 
+
+
+
+
+
 
 
 export async function deleteProduct(id) {
@@ -519,9 +637,139 @@ export async function getAttributes(productTypeId) {
 }
 
 
+// export async function saveBulkProducts(productsData) {
+//   try {
+//     // 1. تجهيز بيانات المنتجات الأساسية
+//     const productsToInsert = productsData.map((item) => ({
+//       name: String(item.name || "Unnamed Product"),
+//       brand_id: item.brand_id || null,
+//       model_id: item.model_id || null,
+//       product_type_id: item.product_type_id || null,
+//       category_id: item.category_id || null,
+//       cost_price: Number(item.cost_price) || 0,
+//       sell_price: Number(item.sell_price) || 0,
+//       stock: Number(item.stock) || 0,
+//       description: item.description || "",
+//       family_id: item.family_id || null,
+//       is_active: true,
+//     }));
+
+//     // إدراج المنتجات في جدول products
+//     const { data: insertedProducts, error: productsError } = await supabase
+//       .from("products")
+//       .insert(productsToInsert)
+//       .select();
+
+//     if (productsError) throw productsError;
+
+//     const attributeValuesToInsert = [];
+//     const stockEntriesToInsert = [];
+
+//     // جلب الـ IDs للخصائص (Attributes) بناءً على الـ Slugs
+//     const allSlugs = [
+//       ...new Set(productsData.flatMap((p) => Object.keys(p.attributes || {}))),
+//     ];
+    
+//     const { data: attributesList, error: attrFetchError } = await supabase
+//       .from("attributes")
+//       .select("id, slug")
+//       .in("slug", allSlugs);
+
+//     if (attrFetchError) throw attrFetchError;
+
+//     const attrMap = attributesList?.reduce(
+//       (acc, curr) => ({ ...acc, [curr.slug]: curr.id }),
+//       {}
+//     ) || {};
+
+//     // 2. ربط البيانات المدرجة بالخصائص والمخزون
+//     insertedProducts.forEach((product, index) => {
+//       // نعتمد على الترتيب (Index) لأن سوبابيس يعيد البيانات بنفس ترتيب الإدخال في الـ Bulk
+//       const originalData = productsData[index];
+//       if (!originalData) return;
+
+//       // أ. تجهيز بيانات المخزون
+//       if (originalData.warehouse_id) {
+//         stockEntriesToInsert.push({
+//           warehouse_id: originalData.warehouse_id,
+//           product_id: product.id,
+//           quantity: Number(product.stock) || 0,
+//           product_variant_id: null,
+//         });
+//       }
+
+//       // ب. معالجة الخصائص (Attributes) - الفلترة الصارمة لمنع الـ Null
+//       const attrs = originalData.attributes || {};
+//       for (let slug in attrs) {
+//         let rawVal = attrs[slug];
+//         let finalStringVal = "";
+
+//         // فك تشفير القيمة مهما كان نوعها (Object, String, Number)
+//         if (rawVal !== null && rawVal !== undefined) {
+//           if (typeof rawVal === "object") {
+//             if ("value" in rawVal) {
+//               finalStringVal = String(rawVal.value);
+//             } else if ("label" in rawVal) {
+//               finalStringVal = String(rawVal.label);
+//             }
+//           } else {
+//             finalStringVal = String(rawVal);
+//           }
+//         }
+
+//         const attributeId = attrMap[slug];
+        
+//         // القيد الذهبي: لا تسمح بمرور الصف إذا كانت القيمة فارغة نهائياً
+//         // هذا يمنع خطأ "null value in column value"
+//         if (
+//           attributeId && 
+//           finalStringVal.trim() !== "" && 
+//           finalStringVal !== "null" && 
+//           finalStringVal !== "undefined"
+//         ) {
+//           attributeValuesToInsert.push({
+//             product_id: product.id,
+//             attribute_id: attributeId,
+//             value: finalStringVal.trim(),
+//           });
+//         }
+//       }
+//     });
+
+//     // 3. تنفيذ عمليات الإدراج في الجداول الفرعية
+    
+//     // إدراج المخزون
+//     if (stockEntriesToInsert.length > 0) {
+//       const { error: stockError } = await supabase
+//         .from("warehouse_stock")
+//         .insert(stockEntriesToInsert);
+//       if (stockError) throw stockError;
+//     }
+
+//     // إدراج الخصائص (Attributes)
+//     if (attributeValuesToInsert.length > 0) {
+//       const { error: attrInsertError } = await supabase
+//         .from("product_attribute_values")
+//         .insert(attributeValuesToInsert);
+      
+//       if (attrInsertError) {
+//         console.error("Failed Attribute Payload:", attributeValuesToInsert);
+//         throw attrInsertError;
+//       }
+//     }
+
+//     return insertedProducts;
+//   } catch (err) {
+//     console.error("Error in Bulk Saving:", err);
+//     throw err;
+//   }
+// } هذه الدالة تعمل بشكل سليم قبل اضافة عملية التعامل مع حركة المخزن 
+
+
+
 export async function saveBulkProducts(productsData) {
   try {
-    // 1. تجهيز بيانات المنتجات الأساسية
+    // 1. تجهيز بيانات المنتجات الأساسية (نضع stock = 0 لأن الحركة ستحدثه)
     const productsToInsert = productsData.map((item) => ({
       name: String(item.name || "Unnamed Product"),
       brand_id: item.brand_id || null,
@@ -530,13 +778,13 @@ export async function saveBulkProducts(productsData) {
       category_id: item.category_id || null,
       cost_price: Number(item.cost_price) || 0,
       sell_price: Number(item.sell_price) || 0,
-      stock: Number(item.stock) || 0,
+      stock: 0, // صفر مؤقتاً
       description: item.description || "",
       family_id: item.family_id || null,
       is_active: true,
     }));
 
-    // إدراج المنتجات في جدول products
+    // إدراج المنتجات
     const { data: insertedProducts, error: productsError } = await supabase
       .from("products")
       .insert(productsToInsert)
@@ -544,100 +792,69 @@ export async function saveBulkProducts(productsData) {
 
     if (productsError) throw productsError;
 
+    // 2. جلب ID نوع الحركة "Opening Stock"
+    const { data: typeData } = await supabase
+      .from("stock_movement_types")
+      .select("id")
+      .eq("movement_name", "Opening Stock")
+      .single();
+
+    const movementsToInsert = [];
     const attributeValuesToInsert = [];
-    const stockEntriesToInsert = [];
 
-    // جلب الـ IDs للخصائص (Attributes) بناءً على الـ Slugs
-    const allSlugs = [
-      ...new Set(productsData.flatMap((p) => Object.keys(p.attributes || {}))),
-    ];
-    
-    const { data: attributesList, error: attrFetchError } = await supabase
-      .from("attributes")
-      .select("id, slug")
-      .in("slug", allSlugs);
+    // جلب الـ IDs للخصائص (كما في كودك السابق)
+    const allSlugs = [...new Set(productsData.flatMap((p) => Object.keys(p.attributes || {})))];
+    const { data: attributesList } = await supabase.from("attributes").select("id, slug").in("slug", allSlugs);
+    const attrMap = attributesList?.reduce((acc, curr) => ({ ...acc, [curr.slug]: curr.id }), {}) || {};
 
-    if (attrFetchError) throw attrFetchError;
-
-    const attrMap = attributesList?.reduce(
-      (acc, curr) => ({ ...acc, [curr.slug]: curr.id }),
-      {}
-    ) || {};
-
-    // 2. ربط البيانات المدرجة بالخصائص والمخزون
+    // 3. ربط البيانات المدرجة بالحركات والخصائص
     insertedProducts.forEach((product, index) => {
-      // نعتمد على الترتيب (Index) لأن سوبابيس يعيد البيانات بنفس ترتيب الإدخال في الـ Bulk
       const originalData = productsData[index];
       if (!originalData) return;
 
-      // أ. تجهيز بيانات المخزون
-      if (originalData.warehouse_id) {
-        stockEntriesToInsert.push({
-          warehouse_id: originalData.warehouse_id,
+      // أ. تجهيز "الحركة المخزنية" لكل منتج (هذا بديل للإدراج المباشر في warehouse_stock)
+      if (originalData.warehouse_id && Number(originalData.stock) > 0) {
+        movementsToInsert.push({
           product_id: product.id,
-          quantity: Number(product.stock) || 0,
-          product_variant_id: null,
+          quantity: Number(originalData.stock),
+          warehouse_id: originalData.warehouse_id,
+          movement_type_id: typeData.id,
+          reference_type: "Bulk Import",
+          reference_id: product.id
         });
       }
 
-      // ب. معالجة الخصائص (Attributes) - الفلترة الصارمة لمنع الـ Null
+      // ب. معالجة الخصائص (نفس منطق كودك المستقر)
       const attrs = originalData.attributes || {};
       for (let slug in attrs) {
-        let rawVal = attrs[slug];
         let finalStringVal = "";
-
-        // فك تشفير القيمة مهما كان نوعها (Object, String, Number)
+        let rawVal = attrs[slug];
         if (rawVal !== null && rawVal !== undefined) {
-          if (typeof rawVal === "object") {
-            if ("value" in rawVal) {
-              finalStringVal = String(rawVal.value);
-            } else if ("label" in rawVal) {
-              finalStringVal = String(rawVal.label);
-            }
-          } else {
-            finalStringVal = String(rawVal);
-          }
+          finalStringVal = typeof rawVal === "object" ? (rawVal.value || rawVal.label || "") : String(rawVal);
         }
-
-        const attributeId = attrMap[slug];
         
-        // القيد الذهبي: لا تسمح بمرور الصف إذا كانت القيمة فارغة نهائياً
-        // هذا يمنع خطأ "null value in column value"
-        if (
-          attributeId && 
-          finalStringVal.trim() !== "" && 
-          finalStringVal !== "null" && 
-          finalStringVal !== "undefined"
-        ) {
+        if (attrMap[slug] && finalStringVal.trim() !== "") {
           attributeValuesToInsert.push({
             product_id: product.id,
-            attribute_id: attributeId,
+            attribute_id: attrMap[slug],
             value: finalStringVal.trim(),
           });
         }
       }
     });
 
-    // 3. تنفيذ عمليات الإدراج في الجداول الفرعية
+    // 4. تنفيذ عمليات الإدراج الجماعي (Bulk)
     
-    // إدراج المخزون
-    if (stockEntriesToInsert.length > 0) {
-      const { error: stockError } = await supabase
-        .from("warehouse_stock")
-        .insert(stockEntriesToInsert);
-      if (stockError) throw stockError;
+    // إدراج الحركات (الـ Trigger سيعمل الآن ويحدث warehouse_stock و products.stock تلقائياً)
+    if (movementsToInsert.length > 0) {
+      const { error: movError } = await supabase.from("stock_movements").insert(movementsToInsert);
+      if (movError) throw movError;
     }
 
-    // إدراج الخصائص (Attributes)
+    // إدراج الخصائص
     if (attributeValuesToInsert.length > 0) {
-      const { error: attrInsertError } = await supabase
-        .from("product_attribute_values")
-        .insert(attributeValuesToInsert);
-      
-      if (attrInsertError) {
-        console.error("Failed Attribute Payload:", attributeValuesToInsert);
-        throw attrInsertError;
-      }
+      const { error: attrInsertError } = await supabase.from("product_attribute_values").insert(attributeValuesToInsert);
+      if (attrInsertError) throw attrInsertError;
     }
 
     return insertedProducts;
@@ -647,11 +864,92 @@ export async function saveBulkProducts(productsData) {
   }
 }
 
+// export async function saveProduct(data) {
+//   try {
+//     // 1. إدراج المنتج العام في جدول products
+//     const { data: product, error: productError } = await supabase
+//       .from("products")
+//       .insert({
+//         name: data.name,
+//         brand_id: data.brand_id,
+//         model_id: data.model_id,
+//         product_type_id: data.product_type_id,
+//         cost_price: data.cost_price,
+//         sell_price: data.sell_price,
+//         stock: data.stock,
+//         category_id:data.category_id,
+//         description: data.description,
+//         family_id: data.family_id,
+//         is_active: true,
+//       })
+//       .select()
+//       .single();
 
+//     if (productError) throw productError;
+
+//     const productId = product.id;
+
+//     // 2. إدراج Attributes في جدول product_attribute_values
+//     const attributes = data.attributes || {};
+
+//     for (let slug in attributes) {
+//       let value = attributes[slug];
+
+//       // إذا كانت القيمة كائن {id, value, slug} نأخذ value.value
+//       if (typeof value === "object" && value !== null && "value" in value) {
+//         value = value.value;
+//       }
+
+//       // جلب الـ attribute_id من جدول attributes
+//       const { data: attrData, error: attrError } = await supabase
+//         .from("attributes")
+//         .select("id")
+//         .eq("slug", slug)
+//          .maybeSingle(); 
+
+//       if (attrError) throw attrError;
+
+//       await supabase.from("product_attribute_values").insert({
+//         product_id: productId,
+//         attribute_id: attrData.id,
+//         value: value, // الآن القيمة ستُخزن كنص فقط
+//       });
+//     }
+
+//        // 3. إدراج في warehouse_stock
+//      const { error: stockError } = await supabase
+//     .from("warehouse_stock")
+//     .insert({
+//       warehouse_id: data.warehouse_id,
+//       product_id: product.id,
+//       product_variant_id: null,
+//       quantity: data.stock,
+//     });
+
+//   if (stockError) {
+//     console.error("Warehouse stock insert error:", stockError);
+//     throw stockError;
+//   }
+
+
+
+//     return product;
+//   } catch (err) {
+//     console.error("Error saving product:", err);
+//     throw err;
+//   }
+
+
+
+
+   
+
+// } شغالة قبل اضافة حركة المواد 
 
 export async function saveProduct(data) {
   try {
     // 1. إدراج المنتج العام في جدول products
+    // ملاحظة: جعلنا الـ stock يبدأ بـ 0 لأن الحركة المخزنية ستحدثه عبر الـ Trigger لاحقاً
     const { data: product, error: productError } = await supabase
       .from("products")
       .insert({
@@ -661,8 +959,8 @@ export async function saveProduct(data) {
         product_type_id: data.product_type_id,
         cost_price: data.cost_price,
         sell_price: data.sell_price,
-        stock: data.stock,
-        category_id:data.category_id,
+        stock: 0, // نضعه 0 هنا ليتولى الـ Trigger تحديثه من خلال الحركة
+        category_id: data.category_id,
         description: data.description,
         family_id: data.family_id,
         is_active: true,
@@ -674,61 +972,64 @@ export async function saveProduct(data) {
 
     const productId = product.id;
 
-    // 2. إدراج Attributes في جدول product_attribute_values
+    // 2. إدراج Attributes (بقي كما هو دون تغيير)
     const attributes = data.attributes || {};
-
     for (let slug in attributes) {
       let value = attributes[slug];
-
-      // إذا كانت القيمة كائن {id, value, slug} نأخذ value.value
       if (typeof value === "object" && value !== null && "value" in value) {
         value = value.value;
       }
 
-      // جلب الـ attribute_id من جدول attributes
       const { data: attrData, error: attrError } = await supabase
         .from("attributes")
         .select("id")
         .eq("slug", slug)
-         .maybeSingle(); 
+        .maybeSingle();
 
       if (attrError) throw attrError;
 
-      await supabase.from("product_attribute_values").insert({
-        product_id: productId,
-        attribute_id: attrData.id,
-        value: value, // الآن القيمة ستُخزن كنص فقط
-      });
+      if (attrData) {
+        await supabase.from("product_attribute_values").insert({
+          product_id: productId,
+          attribute_id: attrData.id,
+          value: value,
+        });
+      }
     }
 
-       // 3. إدراج في warehouse_stock
-     const { error: stockError } = await supabase
-    .from("warehouse_stock")
-    .insert({
-      warehouse_id: data.warehouse_id,
-      product_id: product.id,
-      product_variant_id: null,
-      quantity: data.stock,
-    });
+    // 3. جلب ID نوع الحركة "Opening Stock" (إضافة ضرورية)
+    const { data: typeData } = await supabase
+      .from("stock_movement_types")
+      .select("id")
+      .eq("movement_name", "Opening Stock")
+      .single();
 
-  if (stockError) {
-    console.error("Warehouse stock insert error:", stockError);
-    throw stockError;
-  }
+    // 4. تسجيل الحركة في جدول stock_movements (هذا ما كان ينقصك لتظهر البيانات)
+    if (Number(data.stock) > 0) {
+      const { error: movementError } = await supabase
+        .from("stock_movements")
+        .insert({
+          product_id: productId,
+          quantity: Number(data.stock),
+          warehouse_id: data.warehouse_id,
+          movement_type_id: typeData?.id,
+          reference_type: "Opening Balance"
+        });
 
+      if (movementError) {
+        console.error("Error creating stock movement:", movementError.message);
+        // لا نريد تعطيل العملية كاملة إذا فشل تسجيل الحركة، لكن نفضل معرفة الخطأ
+      }
+    }
 
+    // ملاحظة: لم نعد بحاجة للإدراج اليدوي في warehouse_stock هنا 
+    // لأن الـ Trigger الذي أنشأناه في قاعدة البيانات سيقوم بذلك تلقائياً بمجرد إدراج الحركة أعلاه.
 
     return product;
   } catch (err) {
     console.error("Error saving product:", err);
     throw err;
   }
-
-
-
-
-   
-
 }
 
 

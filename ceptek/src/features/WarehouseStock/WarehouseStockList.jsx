@@ -1,109 +1,156 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { Button, Dialog } from "@mui/material";
-
+import React, { useState, useMemo } from "react";
 import {
-    fetchWarehouseStocks,
-    createWarehouseStock,
-    updateWarehouseStock,
-    deleteWarehouseStock,
-} from "./warehouseStock.api";
-import { warehouseStockColumns } from "./warehouseStock.columns";
-import { WarehouseStockForm } from "./WarehouseStockForm";
+  Box,
+  Button,
+  Stack,
+  TextField,
+  Autocomplete,
+  Paper,
+  Typography,
+} from "@mui/material";
+import { DataGrid, GridToolbar } from "@mui/x-data-grid";
+import { useQuery } from "@tanstack/react-query";
+
+import { getWarehouseStock, getWarehouses, getBrands } from "./warehouseStock.api";
+import { stockColumns } from "./warehouseStock.columns";
+import ProductActionDialogs from "../../componenets/ProductActionDialogs";
 
 export function WarehouseStockList() {
-    const queryClient = useQueryClient();
+  const [searchText, setSearchText] = useState("");
+  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
-    // ✅ Query stocks
-    const { data: stocks = [], isLoading } = useQuery({
-        queryKey: ["warehouse_stock"],
-        queryFn: fetchWarehouseStocks,
+  const { data: stock = [], isLoading } = useQuery({
+    queryKey: ["warehouse_stock"],
+    queryFn: getWarehouseStock,
+  });
+
+  const { data: warehouses = [] } = useQuery({
+    queryKey: ["warehouses"],
+    queryFn: getWarehouses,
+  });
+
+  const { data: brands = [] } = useQuery({
+    queryKey: ["brands"],
+    queryFn: getBrands,
+  });
+
+  const filteredRows = useMemo(() => {
+    return stock.filter((row) => {
+      const matchesSearch =
+        row?.products?.name?.toLowerCase().includes(searchText.toLowerCase()) ||
+        row?.products?.sku?.toLowerCase().includes(searchText.toLowerCase());
+
+      const matchesWarehouse = selectedWarehouse
+        ? row?.warehouses?.id === selectedWarehouse.id
+        : true;
+
+      const matchesBrand = selectedBrand
+        ? row?.products?.brands?.id === selectedBrand.id
+        : true;
+
+      return matchesSearch && matchesWarehouse && matchesBrand;
     });
+  }, [stock, searchText, selectedWarehouse, selectedBrand]);
 
-    // ✅ Mutations
-    const createMutation = useMutation({
-        mutationFn: createWarehouseStock,
-        onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: ["warehouse_stock"] }),
-    });
-
-    const updateMutation = useMutation({
-        mutationFn: ({ id, payload }) => updateWarehouseStock(id, payload),
-        onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: ["warehouse_stock"] }),
-    });
-
-    const deleteMutation = useMutation({
-        mutationFn: deleteWarehouseStock,
-        onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: ["warehouse_stock"] }),
-    });
-
-    // Dialog & form state
-    const [openForm, setOpenForm] = useState(false);
-    const [editRow, setEditRow] = useState(null);
-
-    const handleEdit = (row) => {
-        setEditRow(row);
-        setOpenForm(true);
-    };
-
-    const handleDelete = (row) => {
-        if (
-            window.confirm(
-                `Delete stock of ${row.product_name} in ${row.warehouse_name}?`
-            )
-        ) {
-            deleteMutation.mutate(row.id);
-        }
-    };
-
-    const handleSave = (data) => {
-        if (editRow) {
-            updateMutation.mutate({ id: editRow.id, payload: data });
-            setEditRow(null);
-        } else {
-            createMutation.mutate(data);
-        }
-        setOpenForm(false);
-    };
-
-    // Map rows for DataGrid
-    const rows = stocks.map((item) => ({
-        id: item.id,
-        product_name: item.product_id?.name || "",
-        warehouse_name: item.warehouse_id?.name || "",
-        quantity: item.quantity,
-        product_variant_id: item.product_variant_id?.id || null,
-    }));
-
-    return (
-        <>
-            <Button variant="contained" onClick={() => setOpenForm(true)}>
-                Add Stock
-            </Button>
-
-            <Dialog
-                open={openForm}
-                onClose={() => setOpenForm(false)}
-                fullWidth
-                maxWidth="md"
-            >
-                <WarehouseStockForm onSave={handleSave} defaultValues={editRow} />
-            </Dialog>
-
-            <div style={{ height: 500, width: "100%", marginTop: 16 }}>
-                <DataGrid
-                    rows={rows}
-                    columns={warehouseStockColumns(handleEdit, handleDelete)}
-                    loading={isLoading}
-                    components={{ Toolbar: GridToolbar }}
-                    sx={{ width: "100%" }}
-                    pageSizeOptions={[5, 10, 20, 50, 100]} // ✅ تم إضافة 100 لتجنب تحذير MUI
-                    initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-                />
-            </div>
-        </>
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
     );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredRows.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredRows.map((r) => r.id));
+    }
+  };
+
+  const handleDelete = (row) => {
+    setDeleteTarget(row);
+  };
+
+  const columns = stockColumns(
+    handleDelete,
+    selectedIds,
+    toggleSelect,
+    filteredRows,
+    toggleSelectAll
+  );
+
+  return (
+    <Box sx={{ p: 3 }}>
+      <Typography variant="h5" mb={2}>
+        Stock Management
+      </Typography>
+
+      {/* Filters */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Stack direction="row" spacing={2}>
+          <TextField
+            label="Search"
+            fullWidth
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+
+          <Autocomplete
+            options={warehouses}
+            getOptionLabel={(option) => option.name || ""}
+            value={selectedWarehouse}
+            onChange={(e, value) => setSelectedWarehouse(value)}
+            renderInput={(params) => (
+              <TextField {...params} label="Warehouse" />
+            )}
+            sx={{ minWidth: 200 }}
+          />
+
+          <Autocomplete
+            options={brands}
+            getOptionLabel={(option) => option.name || ""}
+            value={selectedBrand}
+            onChange={(e, value) => setSelectedBrand(value)}
+            renderInput={(params) => <TextField {...params} label="Brand" />}
+            sx={{ minWidth: 200 }}
+          />
+
+          <Button variant="contained">
+            Add Stock Movement
+          </Button>
+        </Stack>
+      </Paper>
+
+      {/* DataGrid */}
+      <Paper sx={{ height: 600 }}>
+        <DataGrid
+          rows={filteredRows}
+          columns={columns}
+          loading={isLoading}
+          disableRowSelectionOnClick
+          slots={{ toolbar: GridToolbar }}
+          slotProps={{
+            toolbar: { quickFilterAlwaysVisible: true },
+          }}
+          sx={{ width: "100%" }}
+        />
+      </Paper>
+
+      {/* Delete Dialog */}
+      <ProductActionDialogs
+        open={Boolean(deleteTarget)}
+        onClose={() => setDeleteTarget(null)}
+        title="Delete Stock Item"
+        description={`Are you sure you want to delete stock for: ${
+          deleteTarget?.products?.name || ""
+        }`}
+        onConfirm={() => {
+          // لاحقاً نربطها بـ mutation
+          setDeleteTarget(null);
+        }}
+      />
+    </Box>
+  );
 }

@@ -33,6 +33,7 @@ import { CustomerTypeList } from "../src/features/customerTypes/CustomerTypeList
 import { PaymentList } from "../src/features/customerPayments/PaymentList";
 import { InvoiceList } from "../src/features/invoice/InvoiceList";
 import { InvoiceItemsList } from "../src/features/invoiceItem/InvoiceItemsList";
+import {StockMovementList} from "./features/StockMovement/StockMovementList";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter(
@@ -62,6 +63,7 @@ const router = createBrowserRouter(
       <Route path="/PaymentList" element={<PaymentList />} />
       <Route path="/InvoiceList" element={<InvoiceList />} />
       <Route path="/InvoiceItemsList" element={<InvoiceItemsList />} />
+      <Route path="/StockMovementList" element={<StockMovementList />} />
     </Route>,
   ),
 );

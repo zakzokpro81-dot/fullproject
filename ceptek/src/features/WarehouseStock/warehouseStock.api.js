@@ -1,68 +1,45 @@
-import  supabase  from "../../config/supabase";
+import supabase from "../../config/supabase";
 
-// جلب كل السجلات
-export async function fetchWarehouseStocks() {
+
+export const getWarehouseStock = async () => {
     const { data, error } = await supabase
         .from("warehouse_stock")
         .select(`
       id,
       quantity,
-      warehouse:warehouse_id(name),
-      product:product_id(name, brand(id, name), model(id, name))
-    `)
-        .order("id", { ascending: true });
+      products (
+        id,
+        name,
+        sku,
+        brands (
+          id,
+          name
+        )
+      ),
+      warehouses (
+        id,
+        name
+      )
+    `);
 
     if (error) throw error;
     return data;
-}
+};
 
-// إضافة سجل جديد
-export async function createWarehouseStock(payload) {
-    const { data, error } = await supabase
-        .from("warehouse_stock")
-        .insert([payload])
-        .select();
-    if (error) throw error;
-    return data;
-}
-
-// تعديل سجل
-export async function updateWarehouseStock(id, payload) {
-    const { data, error } = await supabase
-        .from("warehouse_stock")
-        .update(payload)
-        .eq("id", id)
-        .select();
-    if (error) throw error;
-    return data;
-}
-
-// حذف سجل
-export async function deleteWarehouseStock(id) {
-    const { data, error } = await supabase
-        .from("warehouse_stock")
-        .delete()
-        .eq("id", id);
-    if (error) throw error;
-    return data;
-}
-
-// جلب كل المستودعات للمستعمل في dropdown
-export async function fetchWarehouses() {
+export const getWarehouses = async () => {
     const { data, error } = await supabase
         .from("warehouses")
-        .select("id, name")
-        .order("name");
-    if (error) throw error;
-    return data;
-}
+        .select("id, name");
 
-// جلب كل المنتجات للمستعمل في autocomplete
-export async function fetchProducts() {
-    const { data, error } = await supabase
-        .from("products")
-        .select("id, name, brand(id, name), model(id, name)")
-        .order("name");
     if (error) throw error;
     return data;
-}
+};
+
+export const getBrands = async () => {
+    const { data, error } = await supabase
+        .from("brands")
+        .select("id, name");
+
+    if (error) throw error;
+    return data;
+};
