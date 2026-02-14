@@ -5,7 +5,7 @@ export const invoiceColumns = [
   {
     field: "customer_name",
     headerName: "Customer",
-    flex: 1,
+    width: 150,
     valueGetter: (value, row) => row.customers?.name || "Cash Customer",
   },
   {
@@ -16,6 +16,17 @@ export const invoiceColumns = [
       <span style={{ fontWeight: "bold" }}>{params.value}</span>
     ),
   },
+  // أضف هذا العمود لمصفوفة invoiceColumns
+{
+  field: "account_name", // هذا الاسم يجب أن يطابق ما يرسله الـ API
+  headerName: "Box / Account",
+  width: 150,
+  renderCell: (params) => (
+    <span style={{ color: "#1a237e", fontWeight: "500" }}>
+      {params.value || "No Account"}
+    </span>
+  ),
+},
   {
     field: "status",
     headerName: "Status",
