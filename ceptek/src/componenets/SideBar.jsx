@@ -101,9 +101,9 @@ const basicJubs = [
     path: "/InvoiceList",
   },
   {
-    text: "ProductTypeAttributesList",
+    text: "OrderList",
     icon: <ContactsOutlined />,
-    path: "/ProductTypeAttributesList",
+    path: "/OrderList",
   },
   { text: "AttributeList", icon: <ReceiptOutlined />, path: "/AttributeList" },
 ];

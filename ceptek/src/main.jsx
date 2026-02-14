@@ -36,6 +36,7 @@ import { InvoiceItemsList } from "../src/features/invoiceItem/InvoiceItemsList";
 import { StockMovementList } from "./features/StockMovement/StockMovementList";
 import { AccountList } from "./features/accounts/AccountList";
 import { InvoiceList } from "./features/invoice/InvoiceList";
+import { OrderList } from "./features/orders/OrderList";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter(
@@ -68,6 +69,7 @@ const router = createBrowserRouter(
       <Route path="/StockMovementList" element={<StockMovementList />} />
       <Route path="/AccountList" element={<AccountList />} />
       <Route path="/InvoiceList" element={<InvoiceList />} />
+      <Route path="/OrderList" element={<OrderList />} />
     </Route>,
   ),
 );
