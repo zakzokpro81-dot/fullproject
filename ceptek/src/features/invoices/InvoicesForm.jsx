@@ -14,12 +14,12 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { invoiceSchema } from "./invoice.schema";
+import { invoicesSchema } from "./invoices.schema";
 import {
   createInvoice,
   updateInvoice,
   getInvoiceStatuses,
-} from "./invoice.api";
+} from "./invoices.api";
 import { getCustomers } from "../customers/customer.api";
 
 export default function InvoiceForm({ open, onClose, initialData }) {
@@ -32,7 +32,7 @@ export default function InvoiceForm({ open, onClose, initialData }) {
     formState: { errors },
     reset,
   } = useForm({
-    resolver: zodResolver(invoiceSchema),
+    resolver: zodResolver(invoicesSchema),
     defaultValues: initialData || {
       customer_id: "",
       invoice_date: new Date().toISOString().split("T")[0],

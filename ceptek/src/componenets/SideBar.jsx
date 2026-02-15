@@ -1,53 +1,32 @@
+import React, { useEffect, useState } from "react";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import { styled, useTheme } from "@mui/material/styles";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+
+import MuiDrawer from "@mui/material/Drawer";
+import List from "@mui/material/List";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import InboxIcon from "@mui/icons-material/MoveToInbox";
-import MailIcon from "@mui/icons-material/Mail";
+import Collapse from "@mui/material/Collapse";
 
-import MuiDrawer from "@mui/material/Drawer";
-import List from "@mui/material/List";
 import {
-  ContactsOutlined,
   HomeOutlined,
   PeopleOutline,
+  ContactsOutlined,
   ReceiptOutlined,
+  ExpandLess,
+  ExpandMore,
 } from "@mui/icons-material";
+
 import { Avatar, Tooltip, Typography } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { grey } from "@mui/material/colors";
 
 const drawerWidth = 240;
-
-const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => prop !== "open",
-})(({ theme }) => ({
-  width: drawerWidth,
-  flexShrink: 0,
-  whiteSpace: "nowrap",
-  boxSizing: "border-box",
-  variants: [
-    {
-      props: ({ open }) => open,
-      style: {
-        ...openedMixin(theme),
-        "& .MuiDrawer-paper": openedMixin(theme),
-      },
-    },
-    {
-      props: ({ open }) => !open,
-      style: {
-        ...closedMixin(theme),
-        "& .MuiDrawer-paper": closedMixin(theme),
-      },
-    },
-  ],
-}));
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
@@ -69,389 +48,306 @@ const closedMixin = (theme) => ({
     width: `calc(${theme.spacing(8)} + 1px)`,
   },
 });
+
+const Drawer = styled(MuiDrawer, {
+  shouldForwardProp: (prop) => prop !== "open",
+})(({ theme, open }) => ({
+  width: drawerWidth,
+  flexShrink: 0,
+  whiteSpace: "nowrap",
+  boxSizing: "border-box",
+  ...(open && {
+    ...openedMixin(theme),
+    "& .MuiDrawer-paper": openedMixin(theme),
+  }),
+  ...(!open && {
+    ...closedMixin(theme),
+    "& .MuiDrawer-paper": closedMixin(theme),
+  }),
+}));
+
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
   justifyContent: "flex-end",
   padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
   ...theme.mixins.toolbar,
 }));
 
-// const basicJubs = [
-//   { text: "CategoryList", icon: <HomeOutlined />, path: "/CategoryList" },
-//   {
-//     text: "ProductTypeList",
-//     icon: <PeopleOutline />,
-//     path: "/ProductTypeList",
-//   },
-//   {
-//     text: "ProductTypeAttributesList",
-//     icon: <ContactsOutlined />,
-//     path: "/ProductTypeAttributesList",
-//   },
-//   { text: "AttributeList", icon: <ReceiptOutlined />, path: "/AttributeList" },
-// ];
+// ================= MENU STRUCTURE =================
 
-const basicJubs = [
-  { text: "AccountList", icon: <HomeOutlined />, path: "/AccountList" },
-  {
-    text: "InvoiceList",
-    icon: <PeopleOutline />,
-    path: "/InvoiceList",
-  },
-  {
-    text: "OrderList",
+
+
+const menuGroups = [
+  // {
+  //   id: "model",
+  //   title: "Brands & Models",
+  //   color: "#4a770f",
+  //   icon: <HomeOutlined />,
+  //   children: [
+      
+  //   ],
+  // },
+   {
+    id: "products",
+    title: "Products & Stock",
+    color: "#ed6c02",
     icon: <ContactsOutlined />,
-    path: "/OrderList",
+    children: [
+      { text: "ProductsList", path: "/ProductsList", icon: <HomeOutlined /> },
+      { text: "BulkAddProducts", path: "/BulkAddProducts", icon: <HomeOutlined /> },
+      { text: "WarehouseStockList", path: "/WarehouseStockList", icon: <HomeOutlined /> },
+      { text: "StockMovementList", path: "/StockMovementList", icon: <HomeOutlined /> },
+      
+    ],
   },
-  { text: "AttributeList", icon: <ReceiptOutlined />, path: "/AttributeList" },
-];
-
-const basicJubs2 = [
   {
-    text: "AttributeOptionList",
+    id: "accounts",
+    title: "Accounts & Customers",
+    color: "#1976d2",
     icon: <HomeOutlined />,
-    path: "/AttributeOptionList",
-  },
-  { text: "CustomerList", icon: <PeopleOutline />, path: "/CustomerList" },
-  {
-    text: "CustomerTypeList",
-    icon: <ContactsOutlined />,
-    path: "/CustomerTypeList",
-  },
-  { text: "PaymentList", icon: <ReceiptOutlined />, path: "/PaymentList" },
-];
-
-// const basicJubs3 = [
-//   { text: "BrandList", icon: <HomeOutlined />, path: "/BrandList" },
-//   { text: "FamilyList", icon: <PeopleOutline />, path: "/FamilyList" },
-//   { text: "ModelsList", icon: <ContactsOutlined />, path: "/ModelsList" },
-//   { text: "ProductsList", icon: <ReceiptOutlined />, path: "/ProductsList" },
-// ];
-
-const basicJubs3 = [
-  {
-    text: "WarehouseStockList",
-    icon: <HomeOutlined />,
-    path: "/WarehouseStockList",
+    children: [
+      { text: "AccountList", path: "/AccountList", icon: <PeopleOutline /> },
+      { text: "CustomerList", path: "/CustomerList", icon: <ContactsOutlined /> },
+      { text: "CustomerTypeList", path: "/CustomerTypeList", icon: <ReceiptOutlined /> },
+      { text: "InvoiceList", path: "/InvoiceList", icon: <ReceiptOutlined /> },
+      { text: "InvoicesList", path: "/InvoicesList", icon: <ReceiptOutlined /> },
+      { text: "InvoiceItemsList", path: "/InvoiceItemsList", icon: <ReceiptOutlined /> },
+      { text: "PaymentList", path: "/PaymentList", icon: <ReceiptOutlined /> },
+    ],
   },
   {
-    text: "StockMovementList",
+    id: "orders",
+    title: "Orders",
+    color: "#2e7d32",
     icon: <PeopleOutline />,
-    path: "/StockMovementList",
+    children: [
+      { text: "OrderList", path: "/OrderList", icon: <ReceiptOutlined /> },
+    ],
   },
-  { text: "ModelsList", icon: <ContactsOutlined />, path: "/ModelsList" },
-  { text: "ProductsList", icon: <ReceiptOutlined />, path: "/ProductsList" },
-];
-
-const basicJubs4 = [
-  { text: "BulkAddProducts", icon: <HomeOutlined />, path: "/BulkAddProducts" },
-  { text: "WarehousesList", icon: <PeopleOutline />, path: "/WarehousesList" },
-  { text: "InvoiceList", icon: <ContactsOutlined />, path: "/InvoiceList" },
+ 
   {
-    text: "InvoiceItemsList",
+    id: "attributes",
+    title: "Attributes & Models",
+    color: "#9c27b0",
     icon: <ReceiptOutlined />,
-    path: "/InvoiceItemsList",
+    children: [
+      { text: "BrandList", path: "/BrandList", icon: <PeopleOutline /> },
+      { text: "FamilyList", path: "/FamilyList", icon: <ContactsOutlined /> },
+      { text: "ModelsList", path: "/ModelsList", icon: <ReceiptOutlined /> },
+      { text: "WarehousesList", path: "/WarehousesList", icon: <HomeOutlined /> },
+      { text: "AttributeList", path: "/AttributeList", icon: <ReceiptOutlined /> },
+      { text: "AttributeOptionList", path: "/AttributeOptionList", icon: <ReceiptOutlined /> },
+      
+    ],
   },
 ];
 
-export function SideBar({ open, handleDrawerClose }) {
+
+// ================= COMPONENT =================
+
+export function SideBar({ open, handleDrawerClose, setOpen }) {
   const theme = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
+const [openGroup, setOpenGroup] = React.useState(null);
+  const [openGroups, setOpenGroups] = useState({});
+  const [hoverOpen, setHoverOpen] = useState(false);
+
+  const isDrawerOpen = open || hoverOpen;
+
+  // فتح القسم تلقائياً حسب route الحالي
+  useEffect(() => {
+    const newOpenGroups = {};
+
+    menuGroups.forEach((group) => {
+      const match = group.children.some(
+        (item) => item.path === location.pathname
+      );
+      if (match) {
+        newOpenGroups[group.id] = true;
+      }
+    });
+
+    setOpenGroups((prev) => ({ ...prev, ...newOpenGroups }));
+  }, [location.pathname]);
+
+  const toggleGroup = (id) => {
+    setOpenGroups((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
+
+
+
+const handleGroupHover = (groupId) => {
+  setOpenGroup(groupId);
+};
+
+
   return (
-    <Drawer variant="permanent" open={open}>
-      <DrawerHeader>
-        <IconButton onClick={handleDrawerClose}>
-          {theme.direction === "rtl" ? (
-            <ChevronRightIcon />
-          ) : (
-            <ChevronLeftIcon />
-          )}
-        </IconButton>
-      </DrawerHeader>
-      <Avatar
-        sx={{
-          mx: "auto",
-          width: open ? "88px" : "44px",
-          transition: "0.25s",
-          height: open ? "88px" : "44px",
-          border: "2px solid grey",
-          my: 1,
-        }}
-        src="../src/images/zek.jpeg"
-      />
-      <Typography
-        align="center"
-        sx={{ fontSize: open ? "17" : 0, transition: "0.25s" }}
-      >
-        CepTek
-      </Typography>
-      <Typography
-        align="center"
-        sx={{
-          fontSize: open ? "17" : 0,
-          transition: "0.25s",
-          color: theme.palette.info.main,
-        }}
-      >
-        Admin
-      </Typography>
-      <Divider />
-      <List>
-        {basicJubs.map((item) => (
-          <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
-            <Tooltip title={open ? null : item.text} placement="left">
-              <ListItemButton
-                onClick={() => {
-                  navigate(item.path);
-                }}
-                sx={[
-                  {
-                    minHeight: 48,
-                    px: 2.5,
-                    bgcolor:
-                      location.pathname === item.path
-                        ? theme.palette.mode === "dark"
-                          ? grey[800]
-                          : grey[400]
-                        : null,
-                  },
-                  open
-                    ? {
-                        justifyContent: "initial",
-                      }
-                    : {
-                        justifyContent: "center",
-                      },
-                ]}
-              >
-                <ListItemIcon
-                  sx={[
-                    {
-                      minWidth: 0,
-                      justifyContent: "center",
-                    },
-                    open
-                      ? {
-                          mr: 3,
-                        }
-                      : {
-                          mr: "auto",
-                        },
-                  ]}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  sx={[
-                    open
-                      ? {
-                          opacity: 1,
-                        }
-                      : {
-                          opacity: 0,
-                        },
-                  ]}
-                />
-              </ListItemButton>
-            </Tooltip>
-          </ListItem>
-        ))}
-      </List>
+    <Drawer
+  variant="permanent"
+  open={isDrawerOpen}
+  onMouseEnter={() => setHoverOpen(true)}
+  onMouseLeave={() => setHoverOpen(false)}
+>
+  <DrawerHeader>
+    <IconButton onClick={handleDrawerClose}>
+      {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+    </IconButton>
+  </DrawerHeader>
 
-      <Divider />
-      <List>
-        {basicJubs2.map((item) => (
-          <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
-            <Tooltip title={open ? null : item.text} placement="left">
-              <ListItemButton
-                onClick={() => {
-                  navigate(item.path);
-                }}
-                sx={[
-                  {
-                    minHeight: 48,
-                    px: 2.5,
-                    bgcolor:
-                      location.pathname === item.path
-                        ? theme.palette.mode === "dark"
-                          ? grey[800]
-                          : grey[400]
-                        : null,
-                  },
-                  open
-                    ? {
-                        justifyContent: "initial",
-                      }
-                    : {
-                        justifyContent: "center",
-                      },
-                ]}
-              >
-                <ListItemIcon
-                  sx={[
-                    {
-                      minWidth: 0,
-                      justifyContent: "center",
-                    },
-                    open
-                      ? {
-                          mr: 3,
-                        }
-                      : {
-                          mr: "auto",
-                        },
-                  ]}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  sx={[
-                    open
-                      ? {
-                          opacity: 1,
-                        }
-                      : {
-                          opacity: 0,
-                        },
-                  ]}
-                />
-              </ListItemButton>
-            </Tooltip>
-          </ListItem>
-        ))}
-      </List>
+  <Avatar
+    sx={{
+      mx: "auto",
+      width: isDrawerOpen ? "88px" : "44px",
+      height: isDrawerOpen ? "88px" : "44px",
+      transition: "0.25s",
+      border: "2px solid #1976d2",
+      my: 1,
+    }}
+    src="../src/images/zek.jpeg"
+  />
 
-      <Divider />
+  <Typography align="center" sx={{ fontSize: isDrawerOpen ? "17px" : 0 }}>
+    CepTek
+  </Typography>
+  <Typography
+    align="center"
+    sx={{
+      fontSize: isDrawerOpen ? "14px" : 0,
+      color: theme.palette.info.main,
+    }}
+  >
+    Admin
+  </Typography>
 
-      <List>
-        {basicJubs3.map((item) => (
-          <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
-            <Tooltip title={open ? null : item.text} placement="left">
-              <ListItemButton
-                onClick={() => {
-                  navigate(item.path);
+  <Divider sx={{ my: 1 }} />
+<List>
+  {menuGroups.map((group) => {
+    const isOpen = openGroup === group.id;
+
+    return (
+      <React.Fragment key={group.id}>
+        <Tooltip title={isDrawerOpen ? "" : group.title} placement="right">
+          <ListItem disablePadding sx={{ display: "block" }}>
+            <ListItemButton
+              onMouseEnter={() => handleGroupHover(group.id)}
+              sx={{
+                minHeight: 52,
+                mx: 1,
+                my: 0.7,
+                borderRadius: 2,
+                justifyContent: isDrawerOpen ? "initial" : "center",
+
+                // اللون الأساسي الخاص بكل مجموعة
+                bgcolor: isOpen ? group.color : `${group.color}22`,
+                color: isOpen ? "#fff" : group.color,
+
+                boxShadow: isOpen
+                  ? "0 0 10px rgba(0,0,0,0.25)"
+                  : "0 0 4px rgba(0,0,0,0.15)",
+
+                transition: "all 0.25s ease",
+
+                "&:hover": {
+                  bgcolor: group.color,
+                  color: "#fff",
+                  transform: "translateX(4px)",
+                  boxShadow: "0 0 15px rgba(0,0,0,0.35)",
+                  backgroundImage:
+                    "linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0))",
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  minWidth: 0,
+                  mr: isDrawerOpen ? 2 : "auto",
+                  justifyContent: "center",
+                  color: "inherit",
                 }}
-                sx={[
-                  {
-                    minHeight: 48,
-                    px: 2.5,
-                    bgcolor:
-                      location.pathname === item.path
-                        ? theme.palette.mode === "dark"
-                          ? grey[800]
-                          : grey[400]
-                        : null,
-                  },
-                  open
-                    ? {
-                        justifyContent: "initial",
-                      }
-                    : {
-                        justifyContent: "center",
-                      },
-                ]}
               >
-                <ListItemIcon
-                  sx={[
-                    {
-                      minWidth: 0,
-                      justifyContent: "center",
-                    },
-                    open
-                      ? {
-                          mr: 3,
-                        }
-                      : {
-                          mr: "auto",
-                        },
-                  ]}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  sx={[
-                    open
-                      ? {
-                          opacity: 1,
-                        }
-                      : {
-                          opacity: 0,
-                        },
-                  ]}
-                />
-              </ListItemButton>
-            </Tooltip>
-          </ListItem>
-        ))}
-      </List>
-      <List>
-        {basicJubs4.map((item) => (
-          <ListItem key={item.text} disablePadding sx={{ display: "block" }}>
-            <Tooltip title={open ? null : item.text} placement="left">
-              <ListItemButton
-                onClick={() => {
-                  navigate(item.path);
+                {group.icon}
+              </ListItemIcon>
+
+              <ListItemText
+                primary={group.title}
+                sx={{
+                  opacity: isDrawerOpen ? 1 : 0,
+                  fontWeight: "bold",
+                  letterSpacing: "0.5px",
                 }}
-                sx={[
-                  {
-                    minHeight: 48,
-                    px: 2.5,
-                    bgcolor:
-                      location.pathname === item.path
-                        ? theme.palette.mode === "dark"
-                          ? grey[800]
-                          : grey[400]
-                        : null,
-                  },
-                  open
-                    ? {
-                        justifyContent: "initial",
-                      }
-                    : {
-                        justifyContent: "center",
-                      },
-                ]}
-              >
-                <ListItemIcon
-                  sx={[
-                    {
-                      minWidth: 0,
-                      justifyContent: "center",
-                    },
-                    open
-                      ? {
-                          mr: 3,
-                        }
-                      : {
-                          mr: "auto",
-                        },
-                  ]}
-                >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.text}
-                  sx={[
-                    open
-                      ? {
-                          opacity: 1,
-                        }
-                      : {
-                          opacity: 0,
-                        },
-                  ]}
-                />
-              </ListItemButton>
-            </Tooltip>
+              />
+
+              {isDrawerOpen && (isOpen ? <ExpandLess /> : <ExpandMore />)}
+            </ListItemButton>
           </ListItem>
-        ))}
-      </List>
-      <Divider />
-    </Drawer>
+        </Tooltip>
+
+        <Collapse in={isOpen && isDrawerOpen} timeout="auto">
+          <List component="div" disablePadding>
+            {group.children.map((item) => {
+              const isActive = location.pathname === item.path;
+
+              return (
+                <ListItem key={item.text} disablePadding>
+                  <ListItemButton
+                    onClick={() => navigate(item.path)}
+                    sx={{
+                      pl: 6,
+                      mx: 1,
+                      my: 0.4,
+                      borderRadius: 2,
+
+                      bgcolor: isActive
+                        ? `${group.color}cc`
+                        : "transparent",
+
+                      color: isActive
+                        ? "#fff"
+                        : theme.palette.text.secondary,
+
+                      transition: "all 0.2s ease",
+
+                      "&:hover": {
+                        bgcolor: `${group.color}aa`,
+                        color: "#fff",
+                        transform: "translateX(6px)",
+                      },
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 32,
+                        color: "inherit",
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+
+                    <ListItemText
+                      primary={item.text}
+                      sx={{ fontSize: "0.9rem" }}
+                    />
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
+          </List>
+        </Collapse>
+
+        <Divider sx={{ my: 1, opacity: 0.3 }} />
+      </React.Fragment>
+    );
+  })}
+</List>
+
+
+
+</Drawer>
+
   );
 }

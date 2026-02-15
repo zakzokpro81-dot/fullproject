@@ -2,7 +2,7 @@ import { Chip, Stack, IconButton } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-export const invoiceColumns = (onEdit, onDelete) => [
+export  const invoicesColumns = (onEdit, onDelete) => [
   { field: "id", headerName: "ID", width: 70 },
   {
     field: "customer_name",

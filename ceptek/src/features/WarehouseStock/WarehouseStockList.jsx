@@ -7,13 +7,17 @@ import {
   Autocomplete,
   Paper,
   Typography,
+  Dialog ,
+  DialogTitle ,
+  DialogContent ,
 } from "@mui/material";
 import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { useQuery } from "@tanstack/react-query";
-
-import { getWarehouseStock, getWarehouses, getBrands } from "./warehouseStock.api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {WarehouseStockForm}  from "./WarehouseStockForm"
+import { getWarehouseStock, getWarehouses, getBrands ,updateStockAction} from "./warehouseStock.api";
 import { stockColumns } from "./warehouseStock.columns";
 import ProductActionDialogs from "../../componenets/ProductActionDialogs";
+import ProductDetailsDrawer from "../orders/ProductDetailsDrawer";
 
 export function WarehouseStockList() {
   const [searchText, setSearchText] = useState("");
@@ -21,6 +25,12 @@ export function WarehouseStockList() {
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const queryClient = useQueryClient();
+
+     const [detailDrawerOpen, setDetailDrawerOpen] = React.useState(false);
+      const [selectedProductId, setSelectedProductId] = React.useState(null);
 
   const { data: stock = [], isLoading } = useQuery({
     queryKey: ["warehouse_stock"],
@@ -36,6 +46,27 @@ export function WarehouseStockList() {
     queryKey: ["brands"],
     queryFn: getBrands,
   });
+
+  // داخل WarehouseStockList
+
+const mutation = useMutation({
+    mutationFn: updateStockAction,
+    onSuccess: (data) => {
+        console.log("تم الحفظ بنجاح:", data);
+        queryClient.invalidateQueries(["warehouse_stock"]);
+        setIsFormOpen(false); // هذا السطر لن يعمل إلا إذا لم يحدث Error في الدالة أعلاه
+    },
+    onError: (err) => {
+        console.error("فشلت العملية:", err);
+    }
+});
+
+
+const handleSaveStock = async (data) => {
+    // استخدم mutateAsync بدلاً من mutate
+    return await mutation.mutateAsync(data);
+};
+
 
   const filteredRows = useMemo(() => {
     return stock.filter((row) => {
@@ -83,10 +114,14 @@ export function WarehouseStockList() {
 
   return (
     <Box sx={{ p: 3 }}>
+      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
       <Typography variant="h5" mb={2}>
         Stock Management
       </Typography>
-
+      <Button variant="contained" onClick={() => setIsFormOpen(true)} >
+            Add Stock Movement
+          </Button>
+          </Stack>
       {/* Filters */}
       <Paper sx={{ p: 2, mb: 2 }}>
         <Stack direction="row" spacing={2}>
@@ -117,27 +152,55 @@ export function WarehouseStockList() {
             sx={{ minWidth: 200 }}
           />
 
-          <Button variant="contained">
-            Add Stock Movement
-          </Button>
+          
         </Stack>
       </Paper>
 
       {/* DataGrid */}
       <Paper sx={{ height: 600 }}>
-        <DataGrid
-          rows={filteredRows}
-          columns={columns}
-          loading={isLoading}
-          disableRowSelectionOnClick
-          slots={{ toolbar: GridToolbar }}
-          slotProps={{
-            toolbar: { quickFilterAlwaysVisible: true },
-          }}
-          sx={{ width: "100%" }}
-        />
+       <DataGrid
+  rows={filteredRows}
+  columns={columns}
+  loading={isLoading}
+  // التعديل هنا 👇
+  onRowClick={(params) => {
+    // params.row يحتوي على بيانات السطر بالكامل
+    // تأكد من مسار المعرف (id) بناءً على بنية البيانات لديك
+    const productId = params.row?.products?.id; 
+    
+    if (productId) {
+      setSelectedProductId(productId);
+      setDetailDrawerOpen(true);
+    }
+  }}
+  slots={{ toolbar: GridToolbar }}
+  slotProps={{
+    toolbar: { quickFilterAlwaysVisible: true },
+  }}
+  sx={{ 
+    width: "100%",
+    '& .MuiDataGrid-row:hover': { cursor: 'pointer' } // اختيارية: لتحويل الماوس لشكل يد عند التمرير
+  }}
+/>
       </Paper>
 
+<Dialog 
+        open={isFormOpen} 
+        onClose={() => setIsFormOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle sx={{ fontWeight: 'bold' }}>Add / Update Stock</DialogTitle>
+        <DialogContent dividers>
+          <WarehouseStockForm 
+           onSave={(data) => mutation.mutateAsync(data)} 
+  defaultValues={{}}
+          />
+        </DialogContent>
+      </Dialog>
+
+
+      
       {/* Delete Dialog */}
       <ProductActionDialogs
         open={Boolean(deleteTarget)}
@@ -151,6 +214,15 @@ export function WarehouseStockList() {
           setDeleteTarget(null);
         }}
       />
+
+
+      <ProductDetailsDrawer
+                      detailDrawerOpen={detailDrawerOpen}
+                      setDetailDrawerOpen={setDetailDrawerOpen}
+                      selectedProductId={selectedProductId}
+                  />
+
+
     </Box>
   );
 }

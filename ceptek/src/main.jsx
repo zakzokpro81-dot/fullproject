@@ -51,7 +51,6 @@ const router = createBrowserRouter(
       <Route path="/ProductsList" element={<ProductsList />} />
       <Route path="/WarehousesList" element={<WarehousesList />} />
       <Route path="/WarehouseStockList" element={<WarehouseStockList />} />
-      <Route path="/BulkProductCreate" element={<BulkProductCreate />} />
       <Route path="/BulkAddProducts" element={<BulkAddProducts />} />
       <Route path="/CategoryList" element={<CategoryList />} />
       <Route path="/ProductTypeList" element={<ProductTypeList />} />
@@ -65,10 +64,10 @@ const router = createBrowserRouter(
       <Route path="/CustomerTypeList" element={<CustomerTypeList />} />
       <Route path="/PaymentList" element={<PaymentList />} />
       <Route path="/InvoiceItemsList" element={<InvoiceItemsList />} />
-      <Route path="/InvoiceItemsList" element={<InvoiceItemsList />} />
       <Route path="/StockMovementList" element={<StockMovementList />} />
       <Route path="/AccountList" element={<AccountList />} />
       <Route path="/InvoiceList" element={<InvoiceList />} />
+      <Route path="/InvoicesList" element={<InvoicesList />} />
       <Route path="/OrderList" element={<OrderList />} />
     </Route>,
   ),

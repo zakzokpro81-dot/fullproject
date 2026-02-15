@@ -50,9 +50,8 @@ export default function InvoiceForm({ open, onClose }) {
         setErrorMessage(message);
         setErrorDialogOpen(true);
     };
-    // حساب الإجمالي الكلي من المصفوفة
 
-    // 2. جلب البيانات بنفس المنطق الذي يعمل لديك
+    // 2. جلب البيانات
     const { data: accounts } = useQuery({ queryKey: ["accounts"], queryFn: getAccounts });
 
     const { data: warehouses } = useQuery({
@@ -73,33 +72,42 @@ export default function InvoiceForm({ open, onClose }) {
     });
 
     const { data: products } = useQuery({
-        queryKey: ["productsForInvoice"],
+        queryKey: ["productsForInvoice", watchWarehouse],
         queryFn: async () => {
             const { data, error } = await supabase
                 .from("products")
-                .select("id, name, sku, sell_price")
-                .eq("is_active", true);
+                .select(`
+                    id, name, sku, sell_price,
+                    warehouse_stock!inner ( quantity )
+                `)
+                .eq("is_active", true)
+                .eq("warehouse_stock.warehouse_id", watchWarehouse);
+            
             if (error) throw error;
             return data;
-        }
+        },
+        enabled: !!watchWarehouse
     });
 
-    // 3. منطق القيم الافتراضية للمخازن (نفس كودك الأصلي)
+    // 3. منطق القيم الافتراضية للمخازن
     React.useEffect(() => {
         if (warehouses && warehouses.length > 0 && !watchWarehouse) {
             setValue("warehouse_id", warehouses[0].id);
         }
     }, [warehouses, setValue, watchWarehouse]);
 
-    // دالة إضافة منتج للسلة عند البحث أو الباركود
+    // دالة إضافة منتج للسلة (معدلة لربط product_id بشكل صحيح)
     const handleProductSelect = (product) => {
         if (!product) return;
 
-        // التحقق إذا كان المنتج موجود مسبقاً لزيادة الكمية فقط (اختياري ولكن أفضل)
         const existingIndex = fields.findIndex(item => item.product_id === product.id);
+
         if (existingIndex > -1) {
-            const currentQty = watch(`items.${existingIndex}.quantity`);
-            setValue(`items.${existingIndex}.quantity`, Number(currentQty) + 1);
+            const currentQty = Number(watch(`items.${existingIndex}.quantity`)) || 0;
+            setValue(`items.${existingIndex}.quantity`, currentQty + 1);
+            
+            const price = Number(watch(`items.${existingIndex}.unit_price`)) || 0;
+            setValue(`items.${existingIndex}.total`, (currentQty + 1) * price);
             return;
         }
 
@@ -111,6 +119,7 @@ export default function InvoiceForm({ open, onClose }) {
             total: Number(product.sell_price) || 0
         });
     };
+
     const mutation = useMutation({
         mutationFn: createInvoiceAction,
         onSuccess: () => {
@@ -119,24 +128,35 @@ export default function InvoiceForm({ open, onClose }) {
             reset();
         },
         onError: (err) => {
-            // استبدال alert بمربع الحوار
             showError("Sale process failed: " + err.message);
         },
     });
 
-  const onSubmit = (data) => {
-  // مثال: فحص إذا كانت السلة فارغة
-  if (data.items.length === 0) {
-    showError("Your cart is empty. Please add at least one product.");
-    return;
-  }
-  
-  // إذا كان كل شيء تمام، نفذ الـ mutation
-  mutation.mutate(data);
-};
+    const onSubmit = (data) => {
+        const totalAmount = data.items.reduce(
+            (sum, item) => sum + (Number(item.quantity) * Number(item.unit_price)),
+            0
+        );
 
+        let status;
+        const paid = Number(data.paid_amount);
 
+        if (paid === 0) {
+            status = "Unpaid";
+        } else if (paid >= totalAmount) {
+            status = "Paid";
+        } else {
+            status = "Partial";
+        }
 
+        const payload = {
+            ...data,
+            total_amount: totalAmount,
+            status_name: status
+        };
+
+        mutation.mutate(payload);
+    };
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -145,7 +165,6 @@ export default function InvoiceForm({ open, onClose }) {
                 <DialogContent dividers>
                     <Stack spacing={3}>
 
-                        {/* الحقول الأساسية مرتبة عمودياً */}
                         <TextField
                             select
                             fullWidth
@@ -173,7 +192,12 @@ export default function InvoiceForm({ open, onClose }) {
 
                         <Autocomplete
                             options={products || []}
-                            getOptionLabel={(option) => `${option.name} (${option.sku})`}
+                            getOptionLabel={(option) => {
+                                // تعديل مسار الوصول للكمية بناءً على بيانات الكونسول (warehouse_stock ككائن وليس مصفوفة)
+                                const stock = option.warehouse_stock?.quantity ?? 0;
+                                const sku = option.sku ? `[${option.sku}]` : "";
+                                return `${option.name} ${sku} - Stock: (${stock})`;
+                            }}
                             onChange={(_, val) => handleProductSelect(val)}
                             renderInput={(params) => (
                                 <TextField {...params} label="Search Product or Scan Barcode" autoFocus
@@ -182,7 +206,6 @@ export default function InvoiceForm({ open, onClose }) {
                             )}
                         />
 
-                        {/* جدول المنتجات الديناميكي */}
                         <TableContainer component={Paper} variant="outlined">
                             <Table size="small">
                                 <TableHead sx={{ bgcolor: '#f5f5f5' }}>
@@ -195,55 +218,56 @@ export default function InvoiceForm({ open, onClose }) {
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {fields.map((field, index) => (
-                                        <TableRow key={field.id}>
-                                            <TableCell>{field.product_name}</TableCell>
-                                            <TableCell>
-                                                <TextField
-                                                    type="number"
-                                                    size="small"
-                                                    // إضافة { valueAsNumber: true } تضمن إرسالها كـ Number
-                                                    {...register(`items.${index}.quantity`, { valueAsNumber: true })}
-                                                    onChange={(e) => {
-                                                        const q = Number(e.target.value);
-                                                        const p = watch(`items.${index}.unit_price`);
-                                                        setValue(`items.${index}.total`, q * p);
-                                                        // تحديث القيمة في الفورم كـ Number
-                                                        setValue(`items.${index}.quantity`, q);
-                                                    }}
-                                                />
-                                            </TableCell>
-                                            <TableCell align="center">{watch(`items.${index}.unit_price`)}</TableCell>
-                                            <TableCell align="center" sx={{ fontWeight: 'bold' }}>
-                                                {(watch(`items.${index}.quantity`) * watch(`items.${index}.unit_price`)).toFixed(2)}
-                                            </TableCell>
-                                            <TableCell>
-                                                <IconButton onClick={() => remove(index)} color="error"><DeleteIcon /></IconButton>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
+                                    {fields.map((field, index) => {
+                                        const qty = watch(`items.${index}.quantity`) || 0;
+                                        const price = watch(`items.${index}.unit_price`) || 0;
+                                        const rowTotal = Number(qty) * Number(price);
+
+                                        return (
+                                            <TableRow key={field.id}>
+                                                <TableCell>{field.product_name}</TableCell>
+                                                <TableCell>
+                                                    <TextField
+                                                        type="number"
+                                                        size="small"
+                                                        {...register(`items.${index}.quantity`, {
+                                                            valueAsNumber: true,
+                                                            min: 1
+                                                        })}
+                                                    />
+                                                </TableCell>
+                                                <TableCell align="center">{Number(price).toFixed(2)}</TableCell>
+                                                <TableCell align="center" sx={{ fontWeight: 'bold' }}>
+                                                    {rowTotal.toFixed(2)}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <IconButton onClick={() => remove(index)} color="error">
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        );
+                                    })}
                                 </TableBody>
                             </Table>
                         </TableContainer>
 
                         <Divider>Payment Details</Divider>
 
-                       <TextField
-    select
-    fullWidth
-    label="Payment Account"
-    // نستخدم القيمة المختارة أو القيمة الافتراضية 1
-    value={watchAccount || 1}
-    {...register("account_id")}
-    error={!!errors.account_id}
->
-    {accounts?.map((a) => (
-        <MenuItem key={a.id} value={a.id}>
-            {/* هنا قمنا بتنظيف الرقم ليظهر بخانتين عشريتين فقط */}
-            {a.name} ({Number(a.balance).toFixed(2)})
-        </MenuItem>
-    ))}
-</TextField>
+                        <TextField
+                            select
+                            fullWidth
+                            label="Payment Account"
+                            value={watchAccount || 1}
+                            {...register("account_id")}
+                            error={!!errors.account_id}
+                        >
+                            {accounts?.map((a) => (
+                                <MenuItem key={a.id} value={a.id}>
+                                    {a.name} ({Number(a.balance).toFixed(2)})
+                                </MenuItem>
+                            ))}
+                        </TextField>
 
                         <TextField label="Paid Amount" type="number" {...register("paid_amount")} fullWidth />
 
@@ -257,51 +281,38 @@ export default function InvoiceForm({ open, onClose }) {
                 <DialogActions sx={{ p: 2 }}>
                     <Button onClick={onClose} color="inherit">Cancel</Button>
                     <Button
-                        type="submit"  // هذا السطر هو المحرك للـ form
+                        type="submit"
                         variant="contained"
                         disabled={mutation.isPending}
                         sx={{ px: 6 }}
                     >
                         {mutation.isPending ? "Saving..." : "Confirm & Save"}
-                       
                     </Button>
                 </DialogActions>
             </Box>
 
-
-              {/* Error Dialog Box */ }
-    <Dialog
-        open={errorDialogOpen}
-        onClose={() => setErrorDialogOpen(false)}
-        PaperProps={{ sx: { borderRadius: 3, px: 2 } }}
-    >
-        <DialogTitle sx={{ color: 'error.main', fontWeight: 'bold' }}>
-            Attention Needed
-        </DialogTitle>
-        <DialogContent>
-            <Typography>{errorMessage}</Typography>
-        </DialogContent>
-        <DialogActions sx={{ pb: 2 }}>
-            <Button
-                onClick={() => setErrorDialogOpen(false)}
-                variant="contained"
-                color="error"
-                fullWidth
+            <Dialog
+                open={errorDialogOpen}
+                onClose={() => setErrorDialogOpen(false)}
+                PaperProps={{ sx: { borderRadius: 3, px: 2 } }}
             >
-                Understood
-            </Button>
-        </DialogActions>
-    </Dialog>
-
-
+                <DialogTitle sx={{ color: 'error.main', fontWeight: 'bold' }}>
+                    Attention Needed
+                </DialogTitle>
+                <DialogContent>
+                    <Typography>{errorMessage}</Typography>
+                </DialogContent>
+                <DialogActions sx={{ pb: 2 }}>
+                    <Button
+                        onClick={() => setErrorDialogOpen(false)}
+                        variant="contained"
+                        color="error"
+                        fullWidth
+                    >
+                        Understood
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Dialog>
-
-
-
-      
-
     );
-
-
-    
 }

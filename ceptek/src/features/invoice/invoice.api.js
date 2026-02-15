@@ -127,12 +127,46 @@ export const getInvoices = async () => {
 
   if (error) throw new Error(error.message);
 
-  // هنا التصليح: نستخدم spread operator (...) للحفاظ على كل الحقول الأصلية
+
+
   return data.map((inv) => ({
-    ...inv, // هذه تجلب كل الحقول الأصلية (id, total_amount, status_id, etc.)
-    customer_name: inv.customers?.name || "Unknown",
-    // تأكد أن الحقل أدناه يطابق ما يتوقعه ملف invoice.columns.js (سواء status_name أو status)
-    status_name: inv.invoice_statuses?.status_name || "N/A",
-    account_name: inv.payments?.[0]?.accounts?.name || "Credit Sale" 
+  id: inv.id,
+  total_amount: inv.total_amount,
+  invoice_date: inv.invoice_date,
+  customer_name: inv.customers?.name || "Cash Customer",
+  status_name: inv.invoice_statuses?.status_name || "Unpaid",
+  account_name: inv.payments?.[0]?.accounts?.name || "Credit Sale",
+}));
+
+
+};
+
+
+export const getInvoiceDetails = async (invoiceId) => {
+  const { data, error } = await supabase
+    .from("invoice_items")
+    .select(`
+      id,
+      quantity,
+      unit_price,
+      total_price,
+      product:product_id ( 
+        id, 
+        name, 
+        sku 
+      )
+    `)
+    .eq("invoice_id", invoiceId);
+
+  if (error) {
+    console.error("Error fetching invoice items:", error);
+    throw error;
+  }
+
+  // معالجة البيانات لضمان أن المنتج كائن وليس مصفوفة
+  return data.map((item) => ({
+    ...item,
+    // بما أن product_id هو Foreign Key لـ products، Supabase قد يرجعه ككائن أو مصفوفة
+    product: Array.isArray(item.product) ? item.product[0] : item.product
   }));
 };

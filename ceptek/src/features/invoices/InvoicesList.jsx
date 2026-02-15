@@ -11,9 +11,9 @@ import { DataGrid } from "@mui/x-data-grid";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
 
-import { getInvoices, deleteInvoice } from "./invoice.api";
-import { invoiceColumns } from "./invoice.columns";
-import InvoiceForm from "./InvoiceForm";
+import { getInvoices, deleteInvoice } from "./invoices.api";
+import { invoicesColumns } from "./invoices.columns";
+import InvoiceForm from "./InvoicesForm";
 import ProductActionDialogs from "../../componenets/ProductActionDialogs";
 
 export function InvoicesList() {
@@ -53,7 +53,7 @@ export function InvoicesList() {
   const rows = data?.data || [];
 
   // إعداد الأعمدة مع تمرير دوال التحكم
-  const columns = invoiceColumns(
+  const columns = invoicesColumns(
     (inv) => {
       setSelectedInvoice(inv);
       setOpenForm(true);

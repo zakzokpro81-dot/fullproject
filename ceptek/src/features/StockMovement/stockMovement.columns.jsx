@@ -1,7 +1,6 @@
-import { Chip } from "@mui/material";
+import { Chip, Typography, Box } from "@mui/material";
 
 export const stockMovementColumns = [
-  // { field: "id", headerName: "ID", width: 70 },
   {
     field: "product_name",
     headerName: "Product",
@@ -12,22 +11,40 @@ export const stockMovementColumns = [
     field: "sku",
     headerName: "SKU",
     width: 120,
-    // تم التعديل هنا ليقرأ من حقل sku داخل جدول products
     valueGetter: (value, row) => row?.products?.sku || "N/A",
   },
   {
     field: "quantity",
     headerName: "Qty",
     width: 100,
+    renderCell: (params) => {
+      // 1. تحديد أنواع الحركات التي تعتبر "خرج" (أحمر) بناءً على الـ IDs الخاصة بك
+      // 2: out, 7: Sales, 9: Purchase Return, 12: Damaged
+      const outgoingIds = [2, 7, 9, 12];
+      const isOutgoing = outgoingIds.includes(params.row.movement_type_id);
+      const value = params.value || 0;
+
+      return (
+        <Typography
+          sx={{
+            color: isOutgoing ? "error.main" : "success.main",
+            fontWeight: "bold",
+          }}
+        >
+          {isOutgoing ? `-${Math.abs(value)}` : `+${Math.abs(value)}`}
+        </Typography>
+      );
+    },
+  },
+  {
+    field: "unit_cost",
+    headerName: "Unit Cost", // تم تعديل المسمى ليصبح أوضح
+    width: 120,
+    // إصلاح جلب السعر: التأكد من أنه يقرأ مباشرة من الصف
     renderCell: (params) => (
-      <span
-        style={{
-          color: params.value > 0 ? "green" : "red",
-          fontWeight: "bold",
-        }}
-      >
-        {params.value > 0 ? `+${params.value}` : params.value}
-      </span>
+      <Typography>
+        {params.row.unit_cost ? `${params.row.unit_cost.toLocaleString()} $` : "0.00 $"}
+      </Typography>
     ),
   },
   {
@@ -36,44 +53,38 @@ export const stockMovementColumns = [
     width: 150,
     valueGetter: (value, row) => row?.warehouses?.name || "N/A",
   },
-
   {
     field: "movement_type",
     headerName: "Type",
     width: 150,
-    valueGetter: (value, row) =>
-      row?.stock_movement_types?.movement_name || "N/A",
-    renderCell: (params) => (
-      <Chip label={params.value} size="small" variant="outlined" color="info" />
-    ),
+    valueGetter: (value, row) => row?.stock_movement_types?.movement_name || "N/A",
+    renderCell: (params) => {
+      const outgoingIds = [2, 7, 9, 12];
+      const isOutgoing = outgoingIds.includes(params.row.movement_type_id);
+      return (
+        <Chip 
+          label={params.value} 
+          size="small" 
+          variant="filled" 
+          color={isOutgoing ? "error" : "success"} // تلوين الـ Chip أيضاً
+          sx={{ fontWeight: 'bold', textTransform: 'capitalize' }}
+        />
+      );
+    },
   },
-  {
-    field: "description",
-    headerName: "description",
-    width: 150,
-    valueGetter: (value, row) => row?.description || "N/A",
-  },
-
   {
     field: "created_at",
     headerName: "Date",
     width: 180,
-    // تحسين معالجة التاريخ لضمان عدم ظهور Invalid Date
     valueGetter: (value, row) => {
       if (!row.created_at) return "N/A";
       const date = new Date(row.created_at);
-      return isNaN(date.getTime()) ? "N/A" : date.toLocaleString();
+      return isNaN(date.getTime()) ? "N/A" : date.toLocaleString('en-GB');
     },
   },
   {
-    field: "reference",
-    headerName: "Reference",
-    width: 150,
-    // سنقوم بدمج النوع مع الـ ID ليعطي شكلاً احترافياً
-    valueGetter: (value, row) => {
-      const type = row?.reference_type || "";
-      const id = row?.reference_id || "";
-      return type ? `${type} #${id}` : "N/A";
-    },
-  },
+    field: "description",
+    headerName: "Description",
+    width: 180,
+  }
 ];

@@ -5,6 +5,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet"; // أيقونة الصندوق
 import { useQuery } from "@tanstack/react-query";
+import InvoiceDetailsDrawer from "./InvoiceDetailsDrawer";
 
 // استيراد الدوال والأعمدة الخاصة بالموديول
 import { getInvoices, getDailySummary } from "./invoice.api"; // أضفنا دالة الملخص
@@ -14,6 +15,7 @@ import InvoiceForm from "./InvoiceForm";
 export function InvoiceList() {
   // حالة التحكم في فتح وإغلاق نافذة البيع (الـ POS)
   const [openForm, setOpenForm] = React.useState(false);
+const [selectedInvoice, setSelectedInvoice] = React.useState(null);
 
   // جلب بيانات الفواتير باستخدام React Query
   const { data, isLoading, isError, error } = useQuery({
@@ -92,6 +94,9 @@ export function InvoiceList() {
           rows={data || []}
           columns={invoiceColumns} // بقيت كما هي لضمان عدم حدوث أخطاء
           loading={isLoading}
+           onRowClick={(params) => {
+    setSelectedInvoice(params.row);
+  }}
           pageSizeOptions={[10, 25, 50]}
           initialState={{
             pagination: {
@@ -108,6 +113,11 @@ export function InvoiceList() {
           }}
         />
       </Paper>
+          <InvoiceDetailsDrawer
+  invoice={selectedInvoice}
+  onClose={() => setSelectedInvoice(null)}
+/>
+
 
       {/* استدعاء الفورم (نافذة البيع) */}
       <InvoiceForm open={openForm} onClose={() => setOpenForm(false)} />

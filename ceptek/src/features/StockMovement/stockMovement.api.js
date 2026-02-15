@@ -60,11 +60,14 @@ export const createStockMovement = async (movement) => {
     .from("stock_movements")
     .insert([{
       product_id: movement.product_id,
-      quantity: movement.quantity,
       warehouse_id: movement.warehouse_id,
+      quantity: movement.quantity,
+      // الربط الصحيح: نأخذ السعر من الفورم ونضعه في حقل الجدول unit_cost
+      //unit_cost: Number(movement.cost_price || 0),
+      unit_cost: movement.unit_cost || 0, 
       movement_type_id: movement.movement_type_id,
-      reference_type: movement.reference_type,
-      product_variant_id: null // نرسلها null لأن الجدول لا يوجد له بيانات حالياً
+      reference_type: movement.reference_type || "Manual",
+      product_variant_id: null
     }])
     .select();
 

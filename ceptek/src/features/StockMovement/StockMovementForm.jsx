@@ -10,8 +10,10 @@ import {
   Stack,
   Box,
   Autocomplete,
+  Snackbar,
+  Alert
 } from "@mui/material";
-import { useForm, Controller } from "react-hook-form"; // أضفنا Controller
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { stockMovementSchema } from "./stockMovement.schema";
@@ -24,55 +26,52 @@ import supabase from "../../config/supabase";
 
 export default function StockMovementForm({ open, onClose }) {
   const queryClient = useQueryClient();
+  
+  // دالة لتطبيع النصوص (تركي/عربي) للبحث
   function normalizeText(text) {
     if (!text) return "";
-    const map = {
-      ç: "c",
-      ğ: "g",
-      ı: "i",
-      İ: "i",
-      ö: "o",
-      ş: "s",
-      ü: "u",
-      Ç: "c",
-      Ğ: "g",
-      I: "i",
-      Ö: "o",
-      Ş: "s",
-      Ü: "u",
-    };
+    const map = { ç: "c", ğ: "g", ı: "i", İ: "i", ö: "o", ş: "s", ü: "u", Ç: "c", Ğ: "g", I: "i", Ö: "o", Ş: "s", Ü: "u" };
     return text.replace(/[çğıİöşüÇĞIÖŞÜ]/g, (m) => map[m]).toLowerCase();
   }
+
   const {
     register,
     handleSubmit,
-    control, // مطلوب للـ Autocomplete
+    control,
     formState: { errors },
     reset,
+    resetField, // أضفناها لتنظيف حقل معين عند الخطأ
+    watch,
   } = useForm({
     resolver: zodResolver(stockMovementSchema),
     defaultValues: {
       quantity: 0,
-      reference_type: "Manual Adjustment",
+      unit_cost: 0,
+      reference_type: "",
+      product_id: "",
+      movement_type_id: ""
     },
   });
 
-  // الاستعلامات (Queries) كما هي
-  const { data: types } = useQuery({
-    queryKey: ["movTypes"],
-    queryFn: getMovementTypes,
+  // حالة التنبيه الموحدة
+  const [alertState, setAlertState] = React.useState({ 
+    open: false, 
+    message: "", 
+    severity: "error" 
   });
-  const { data: warehouses } = useQuery({
-    queryKey: ["warehouses"],
-    queryFn: getWarehouses,
-  });
+
+  const handleCloseAlert = () => setAlertState((prev) => ({ ...prev, open: false }));
+
+  // الاستعلامات
+  const { data: types } = useQuery({ queryKey: ["movTypes"], queryFn: getMovementTypes });
+  const { data: warehouses } = useQuery({ queryKey: ["warehouses"], queryFn: getWarehouses });
   const { data: products } = useQuery({
     queryKey: ["productsForMovement"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, sku")
-        .eq("is_active", true)
+        .select("id, name, sku, status, stock")
+        .neq("status", "inactive")
         .order("name");
       if (error) throw error;
       return data;
@@ -83,24 +82,50 @@ export default function StockMovementForm({ open, onClose }) {
     mutationFn: createStockMovement,
     onSuccess: () => {
       queryClient.invalidateQueries(["stockMovements"]);
-      queryClient.invalidateQueries(["products"]); // تحديث المخزن في القائمة الرئيسية
+      queryClient.invalidateQueries(["products"]);
       onClose();
       reset();
     },
     onError: (err) => {
-      alert("Error saving movement: " + err.message);
+      setAlertState({ open: true, message: "Error saving: " + err.message, severity: "error" });
     },
   });
 
   const onSubmit = (data) => {
-    // تأكد من تحويل القيم لأرقام إذا كان السكيما يتطلب ذلك
+    const selectedProduct = products?.find((p) => p.id === data.product_id);
+    const movementType = Number(data.movement_type_id);
+
+    // 1. منع الشراء لمواد التصفية (IDs: 1, 3)
+    const isPurchase = [1, 3].includes(movementType);
+    if (isPurchase && selectedProduct?.status === "phase_out") {
+      setAlertState({
+        open: true,
+        message: `The product "${selectedProduct.name}" is in Liquidation. Purchasing is blocked.`,
+        severity: "warning",
+      });
+      return;
+    }
+
+    // 2. منع البيع لمواد "الشراء فقط" (IDs: 2, 4)
+    const isSale = [2, 4].includes(movementType);
+    if (isSale && selectedProduct?.status === "purchase_only") {
+      setAlertState({
+        open: true,
+        message: `The product "${selectedProduct.name}" is for 'Purchase Only'. Sales blocked.`,
+        severity: "error",
+      });
+      return;
+    }
+
     const payload = {
       ...data,
       product_id: Number(data.product_id),
       warehouse_id: Number(data.warehouse_id),
-      movement_type_id: Number(data.movement_type_id),
+      movement_type_id: movementType,
       quantity: Number(data.quantity),
+      unit_cost: parseFloat(data.unit_cost),
     };
+
     mutation.mutate(payload);
   };
 
@@ -110,42 +135,87 @@ export default function StockMovementForm({ open, onClose }) {
       <Box component="form" onSubmit={handleSubmit(onSubmit)}>
         <DialogContent dividers>
           <Stack spacing={3}>
-            {/* حل مشكلة البحث: استخدام Autocomplete */}
+            
             <Controller
               name="product_id"
               control={control}
-              render={({ field }) => (
+              render={({ field: { onChange, value }, fieldState: { error } }) => (
                 <Autocomplete
-                  options={products || []} // المنتجات القادمة من جدول products
-                  // نحدد أن البحث والعرض يعتمد فقط على حقل name
-                  getOptionLabel={(option) => option?.name || ""}
-                  // نربط القيمة المختارة بالـ id
-                  value={products?.find((p) => p.id === field.value) || null}
-                  onChange={(_, val) => field.onChange(val?.id || "")}
+                  options={products || []}
+                  value={products?.find((p) => p.id === value) || null}
+                  onChange={(_, newValue) => onChange(newValue ? newValue.id : "")}
+                  getOptionLabel={(option) => option.name || ""}
                   isOptionEqualToValue={(option, val) => option.id === val?.id}
-                  // الفلترة الصارمة (Strict Filtering)
                   filterOptions={(options, state) => {
                     const search = normalizeText(state.inputValue).trim();
-                    if (!search) return options;
-
+                    const isPurchase = [1, 3].includes(Number(watch("movement_type_id")));
                     return options.filter((product) => {
-                      const productName = normalizeText(product.name);
-                      // الفلترة: يجب أن يحتوي الاسم على كلمة البحث تماماً
-                      return productName.includes(search);
+                      const matchesSearch = normalizeText(product.name).includes(search);
+                      if (isPurchase && product.status === 'phase_out') return false;
+                      return matchesSearch;
                     });
                   }}
                   renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Search Product Name"
-                      error={!!errors.product_id}
-                      helperText={errors.product_id?.message}
-                      fullWidth
-                    />
+                    <TextField {...params} label="Search Product" fullWidth error={!!error} helperText={error?.message} />
                   )}
+               renderOption={(props, option) => {
+  // نقوم باستخراج الـ key من الـ props لضمان عدم تكراره أو تضاربه
+  const { key, ...optionProps } = props;
+
+  return (
+    <li key={key} {...optionProps}>
+      <Stack 
+        direction="row" 
+        justifyContent="space-between" 
+        alignItems="center" 
+        width="100%"
+        sx={{ px: 1 }}
+      >
+        <Box component="span">{option.name}</Box>
+        
+        {/* ملصق حالة التصفية بشكل أوضح */}
+        {option.status === 'phase_out' && (
+          <Box 
+            component="span" 
+            sx={{ 
+              color: 'orange', 
+              fontSize: '0.7rem', 
+              fontWeight: 'bold',
+              border: '1px solid orange',
+              borderRadius: '4px',
+              px: 0.5,
+              ml: 1
+            }}
+          >
+            Liquidation
+          </Box>
+        )}
+
+        {/* ملصق حالة الشراء فقط في حال أضفتها مستقبلاً */}
+        {option.status === 'purchase_only' && (
+          <Box 
+            component="span" 
+            sx={{ 
+              color: '#0288d1', 
+              fontSize: '0.7rem', 
+              fontWeight: 'bold',
+              border: '1px solid #0288d1',
+              borderRadius: '4px',
+              px: 0.5,
+              ml: 1
+            }}
+          >
+            Incoming
+          </Box>
+        )}
+      </Stack>
+    </li>
+  );
+}}
                 />
               )}
             />
+
             <TextField
               select
               label="Warehouse"
@@ -155,9 +225,7 @@ export default function StockMovementForm({ open, onClose }) {
               defaultValue=""
             >
               {warehouses?.map((w) => (
-                <MenuItem key={w.id} value={w.id}>
-                  {w.name}
-                </MenuItem>
+                <MenuItem key={w.id} value={w.id}>{w.name}</MenuItem>
               ))}
             </TextField>
 
@@ -170,9 +238,7 @@ export default function StockMovementForm({ open, onClose }) {
               defaultValue=""
             >
               {types?.map((t) => (
-                <MenuItem key={t.id} value={t.id}>
-                  {t.movement_name}
-                </MenuItem>
+                <MenuItem key={t.id} value={t.id}>{t.movement_name}</MenuItem>
               ))}
             </TextField>
 
@@ -182,33 +248,40 @@ export default function StockMovementForm({ open, onClose }) {
               {...register("quantity")}
               error={!!errors.quantity}
               fullWidth
-              helperText={
-                errors.quantity
-                  ? errors.quantity.message
-                  : "Use negative for deductions"
-              }
+              helperText={errors.quantity?.message || "Use negative for deductions"}
             />
 
             <TextField
-              label="Reference Note"
-              {...register("reference_type")}
+              label="Unit Cost"
+              type="number"
+              {...register("unit_cost")}
+              error={!!errors.unit_cost}
               fullWidth
             />
+
+            <TextField label="Reference Note" {...register("reference_type")} fullWidth />
           </Stack>
         </DialogContent>
+
         <DialogActions>
-          <Button onClick={onClose} color="inherit">
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={mutation.isPending}
-          >
+          <Button onClick={onClose} color="inherit">Cancel</Button>
+          <Button type="submit" variant="contained" disabled={mutation.isPending}>
             {mutation.isPending ? "Saving..." : "Save Movement"}
           </Button>
         </DialogActions>
       </Box>
+
+      {/* التنبيه الاحترافي */}
+      <Snackbar
+        open={alertState.open}
+        autoHideDuration={6000}
+        onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert onClose={handleCloseAlert} severity={alertState.severity} variant="filled" sx={{ width: "100%" }}>
+          {alertState.message}
+        </Alert>
+      </Snackbar>
     </Dialog>
   );
 }
