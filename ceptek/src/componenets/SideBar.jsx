@@ -76,8 +76,6 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 
 // ================= MENU STRUCTURE =================
 
-
-
 const menuGroups = [
   // {
   //   id: "model",
@@ -85,20 +83,36 @@ const menuGroups = [
   //   color: "#4a770f",
   //   icon: <HomeOutlined />,
   //   children: [
-      
+
   //   ],
   // },
-   {
+  {
     id: "products",
     title: "Products & Stock",
     color: "#ed6c02",
     icon: <ContactsOutlined />,
     children: [
       { text: "ProductsList", path: "/ProductsList", icon: <HomeOutlined /> },
-      { text: "BulkAddProducts", path: "/BulkAddProducts", icon: <HomeOutlined /> },
-      { text: "WarehouseStockList", path: "/WarehouseStockList", icon: <HomeOutlined /> },
-      { text: "StockMovementList", path: "/StockMovementList", icon: <HomeOutlined /> },
-      
+      {
+        text: "BulkAddProducts",
+        path: "/BulkAddProducts",
+        icon: <HomeOutlined />,
+      },
+      {
+        text: "WarehouseStockList",
+        path: "/WarehouseStockList",
+        icon: <HomeOutlined />,
+      },
+      {
+        text: "StockMovementList",
+        path: "/StockMovementList",
+        icon: <HomeOutlined />,
+      },
+      {
+        text: "ProductsPage",
+        path: "/ProductsPage",
+        icon: <HomeOutlined />,
+      },
     ],
   },
   {
@@ -108,11 +122,27 @@ const menuGroups = [
     icon: <HomeOutlined />,
     children: [
       { text: "AccountList", path: "/AccountList", icon: <PeopleOutline /> },
-      { text: "CustomerList", path: "/CustomerList", icon: <ContactsOutlined /> },
-      { text: "CustomerTypeList", path: "/CustomerTypeList", icon: <ReceiptOutlined /> },
+      {
+        text: "CustomerList",
+        path: "/CustomerList",
+        icon: <ContactsOutlined />,
+      },
+      {
+        text: "CustomerTypeList",
+        path: "/CustomerTypeList",
+        icon: <ReceiptOutlined />,
+      },
       { text: "InvoiceList", path: "/InvoiceList", icon: <ReceiptOutlined /> },
-      { text: "InvoicesList", path: "/InvoicesList", icon: <ReceiptOutlined /> },
-      { text: "InvoiceItemsList", path: "/InvoiceItemsList", icon: <ReceiptOutlined /> },
+      {
+        text: "InvoicesList",
+        path: "/InvoicesList",
+        icon: <ReceiptOutlined />,
+      },
+      {
+        text: "InvoiceItemsList",
+        path: "/InvoiceItemsList",
+        icon: <ReceiptOutlined />,
+      },
       { text: "PaymentList", path: "/PaymentList", icon: <ReceiptOutlined /> },
     ],
   },
@@ -125,7 +155,7 @@ const menuGroups = [
       { text: "OrderList", path: "/OrderList", icon: <ReceiptOutlined /> },
     ],
   },
- 
+
   {
     id: "attributes",
     title: "Attributes & Models",
@@ -135,14 +165,34 @@ const menuGroups = [
       { text: "BrandList", path: "/BrandList", icon: <PeopleOutline /> },
       { text: "FamilyList", path: "/FamilyList", icon: <ContactsOutlined /> },
       { text: "ModelsList", path: "/ModelsList", icon: <ReceiptOutlined /> },
-      { text: "WarehousesList", path: "/WarehousesList", icon: <HomeOutlined /> },
-      { text: "AttributeList", path: "/AttributeList", icon: <ReceiptOutlined /> },
-      { text: "AttributeOptionList", path: "/AttributeOptionList", icon: <ReceiptOutlined /> },
-      
+      {
+        text: "WarehousesList",
+        path: "/WarehousesList",
+        icon: <HomeOutlined />,
+      },
+      {
+        text: "AttributeList",
+        path: "/AttributeList",
+        icon: <ReceiptOutlined />,
+      },
+      {
+        text: "AttributeOptionList",
+        path: "/AttributeOptionList",
+        icon: <ReceiptOutlined />,
+      },
+      {
+        text: "ProductTypeList",
+        path: "/ProductTypeList",
+        icon: <ReceiptOutlined />,
+      },
+      {
+        text: "CategoryList",
+        path: "/CategoryList",
+        icon: <ReceiptOutlined />,
+      },
     ],
   },
 ];
-
 
 // ================= COMPONENT =================
 
@@ -150,7 +200,7 @@ export function SideBar({ open, handleDrawerClose, setOpen }) {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-const [openGroup, setOpenGroup] = React.useState(null);
+  const [openGroup, setOpenGroup] = React.useState(null);
   const [openGroups, setOpenGroups] = useState({});
   const [hoverOpen, setHoverOpen] = useState(false);
 
@@ -162,7 +212,7 @@ const [openGroup, setOpenGroup] = React.useState(null);
 
     menuGroups.forEach((group) => {
       const match = group.children.some(
-        (item) => item.path === location.pathname
+        (item) => item.path === location.pathname,
       );
       if (match) {
         newOpenGroups[group.id] = true;
@@ -179,175 +229,175 @@ const [openGroup, setOpenGroup] = React.useState(null);
     }));
   };
 
-
-
-const handleGroupHover = (groupId) => {
-  setOpenGroup(groupId);
-};
-
+  const handleGroupHover = (groupId) => {
+    setOpenGroup(groupId);
+  };
 
   return (
     <Drawer
-  variant="permanent"
-  open={isDrawerOpen}
-  onMouseEnter={() => setHoverOpen(true)}
-  onMouseLeave={() => setHoverOpen(false)}
->
-  <DrawerHeader>
-    <IconButton onClick={handleDrawerClose}>
-      {theme.direction === "rtl" ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-    </IconButton>
-  </DrawerHeader>
+      variant="permanent"
+      open={isDrawerOpen}
+      onMouseEnter={() => setHoverOpen(true)}
+      onMouseLeave={() => setHoverOpen(false)}
+    >
+      <DrawerHeader>
+        <IconButton onClick={handleDrawerClose}>
+          {theme.direction === "rtl" ? (
+            <ChevronRightIcon />
+          ) : (
+            <ChevronLeftIcon />
+          )}
+        </IconButton>
+      </DrawerHeader>
 
-  <Avatar
-    sx={{
-      mx: "auto",
-      width: isDrawerOpen ? "88px" : "44px",
-      height: isDrawerOpen ? "88px" : "44px",
-      transition: "0.25s",
-      border: "2px solid #1976d2",
-      my: 1,
-    }}
-    src="../src/images/zek.jpeg"
-  />
+      <Avatar
+        sx={{
+          mx: "auto",
+          width: isDrawerOpen ? "88px" : "44px",
+          height: isDrawerOpen ? "88px" : "44px",
+          transition: "0.25s",
+          border: "2px solid #1976d2",
+          my: 1,
+        }}
+        src="../src/images/zek.jpeg"
+      />
 
-  <Typography align="center" sx={{ fontSize: isDrawerOpen ? "17px" : 0 }}>
-    CepTek
-  </Typography>
-  <Typography
-    align="center"
-    sx={{
-      fontSize: isDrawerOpen ? "14px" : 0,
-      color: theme.palette.info.main,
-    }}
-  >
-    Admin
-  </Typography>
+      <Typography align="center" sx={{ fontSize: isDrawerOpen ? "17px" : 0 }}>
+        CepTek
+      </Typography>
+      <Typography
+        align="center"
+        sx={{
+          fontSize: isDrawerOpen ? "14px" : 0,
+          color: theme.palette.info.main,
+        }}
+      >
+        Admin
+      </Typography>
 
-  <Divider sx={{ my: 1 }} />
-<List>
-  {menuGroups.map((group) => {
-    const isOpen = openGroup === group.id;
+      <Divider sx={{ my: 1 }} />
+      <List>
+        {menuGroups.map((group) => {
+          const isOpen = openGroup === group.id;
 
-    return (
-      <React.Fragment key={group.id}>
-        <Tooltip title={isDrawerOpen ? "" : group.title} placement="right">
-          <ListItem disablePadding sx={{ display: "block" }}>
-            <ListItemButton
-              onMouseEnter={() => handleGroupHover(group.id)}
-              sx={{
-                minHeight: 52,
-                mx: 1,
-                my: 0.7,
-                borderRadius: 2,
-                justifyContent: isDrawerOpen ? "initial" : "center",
-
-                // اللون الأساسي الخاص بكل مجموعة
-                bgcolor: isOpen ? group.color : `${group.color}22`,
-                color: isOpen ? "#fff" : group.color,
-
-                boxShadow: isOpen
-                  ? "0 0 10px rgba(0,0,0,0.25)"
-                  : "0 0 4px rgba(0,0,0,0.15)",
-
-                transition: "all 0.25s ease",
-
-                "&:hover": {
-                  bgcolor: group.color,
-                  color: "#fff",
-                  transform: "translateX(4px)",
-                  boxShadow: "0 0 15px rgba(0,0,0,0.35)",
-                  backgroundImage:
-                    "linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0))",
-                },
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: isDrawerOpen ? 2 : "auto",
-                  justifyContent: "center",
-                  color: "inherit",
-                }}
+          return (
+            <React.Fragment key={group.id}>
+              <Tooltip
+                title={isDrawerOpen ? "" : group.title}
+                placement="right"
               >
-                {group.icon}
-              </ListItemIcon>
-
-              <ListItemText
-                primary={group.title}
-                sx={{
-                  opacity: isDrawerOpen ? 1 : 0,
-                  fontWeight: "bold",
-                  letterSpacing: "0.5px",
-                }}
-              />
-
-              {isDrawerOpen && (isOpen ? <ExpandLess /> : <ExpandMore />)}
-            </ListItemButton>
-          </ListItem>
-        </Tooltip>
-
-        <Collapse in={isOpen && isDrawerOpen} timeout="auto">
-          <List component="div" disablePadding>
-            {group.children.map((item) => {
-              const isActive = location.pathname === item.path;
-
-              return (
-                <ListItem key={item.text} disablePadding>
+                <ListItem disablePadding sx={{ display: "block" }}>
                   <ListItemButton
-                    onClick={() => navigate(item.path)}
+                    onMouseEnter={() => handleGroupHover(group.id)}
                     sx={{
-                      pl: 6,
+                      minHeight: 52,
                       mx: 1,
-                      my: 0.4,
+                      my: 0.7,
                       borderRadius: 2,
+                      justifyContent: isDrawerOpen ? "initial" : "center",
 
-                      bgcolor: isActive
-                        ? `${group.color}cc`
-                        : "transparent",
+                      // اللون الأساسي الخاص بكل مجموعة
+                      bgcolor: isOpen ? group.color : `${group.color}22`,
+                      color: isOpen ? "#fff" : group.color,
 
-                      color: isActive
-                        ? "#fff"
-                        : theme.palette.text.secondary,
+                      boxShadow: isOpen
+                        ? "0 0 10px rgba(0,0,0,0.25)"
+                        : "0 0 4px rgba(0,0,0,0.15)",
 
-                      transition: "all 0.2s ease",
+                      transition: "all 0.25s ease",
 
                       "&:hover": {
-                        bgcolor: `${group.color}aa`,
+                        bgcolor: group.color,
                         color: "#fff",
-                        transform: "translateX(6px)",
+                        transform: "translateX(4px)",
+                        boxShadow: "0 0 15px rgba(0,0,0,0.35)",
+                        backgroundImage:
+                          "linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0))",
                       },
                     }}
                   >
                     <ListItemIcon
                       sx={{
-                        minWidth: 32,
+                        minWidth: 0,
+                        mr: isDrawerOpen ? 2 : "auto",
+                        justifyContent: "center",
                         color: "inherit",
                       }}
                     >
-                      {item.icon}
+                      {group.icon}
                     </ListItemIcon>
 
                     <ListItemText
-                      primary={item.text}
-                      sx={{ fontSize: "0.9rem" }}
+                      primary={group.title}
+                      sx={{
+                        opacity: isDrawerOpen ? 1 : 0,
+                        fontWeight: "bold",
+                        letterSpacing: "0.5px",
+                      }}
                     />
+
+                    {isDrawerOpen && (isOpen ? <ExpandLess /> : <ExpandMore />)}
                   </ListItemButton>
                 </ListItem>
-              );
-            })}
-          </List>
-        </Collapse>
+              </Tooltip>
 
-        <Divider sx={{ my: 1, opacity: 0.3 }} />
-      </React.Fragment>
-    );
-  })}
-</List>
+              <Collapse in={isOpen && isDrawerOpen} timeout="auto">
+                <List component="div" disablePadding>
+                  {group.children.map((item) => {
+                    const isActive = location.pathname === item.path;
 
+                    return (
+                      <ListItem key={item.text} disablePadding>
+                        <ListItemButton
+                          onClick={() => navigate(item.path)}
+                          sx={{
+                            pl: 6,
+                            mx: 1,
+                            my: 0.4,
+                            borderRadius: 2,
 
+                            bgcolor: isActive
+                              ? `${group.color}cc`
+                              : "transparent",
 
-</Drawer>
+                            color: isActive
+                              ? "#fff"
+                              : theme.palette.text.secondary,
 
+                            transition: "all 0.2s ease",
+
+                            "&:hover": {
+                              bgcolor: `${group.color}aa`,
+                              color: "#fff",
+                              transform: "translateX(6px)",
+                            },
+                          }}
+                        >
+                          <ListItemIcon
+                            sx={{
+                              minWidth: 32,
+                              color: "inherit",
+                            }}
+                          >
+                            {item.icon}
+                          </ListItemIcon>
+
+                          <ListItemText
+                            primary={item.text}
+                            sx={{ fontSize: "0.9rem" }}
+                          />
+                        </ListItemButton>
+                      </ListItem>
+                    );
+                  })}
+                </List>
+              </Collapse>
+
+              <Divider sx={{ my: 1, opacity: 0.3 }} />
+            </React.Fragment>
+          );
+        })}
+      </List>
+    </Drawer>
   );
 }

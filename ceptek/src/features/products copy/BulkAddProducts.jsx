@@ -10,7 +10,6 @@ import {
   Stack,
   IconButton,
   InputAdornment,
-  Grid,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
 import {
@@ -26,9 +25,6 @@ import InventoryIcon from "@mui/icons-material/Inventory";
 import BulkProductTable from "./BulkProductTable";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ProductActionDialogs from "../../componenets/ProductActionDialogs"; // تأكد من مسار الملف الصحيح
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
 const SECTION_STYLE = {
   p: 3,
   borderRadius: 2,
@@ -37,16 +33,6 @@ const SECTION_STYLE = {
   boxShadow: "0px 2px 4px rgba(0,0,0,0.05)",
   bgcolor: "background.paper",
   width: "100%",
-};
-
-const fieldStyle = {
-  "& .MuiInputBase-root": {
-    fontSize: "0.85rem",
-    backgroundColor: "#fff",
-  },
-  "& .MuiInputLabel-root": {
-    fontSize: "0.85rem",
-  },
 };
 
 const FIELD_PROPS = {
@@ -66,11 +52,6 @@ export function BulkAddProducts() {
       warehouse: null,
     },
   });
-  const [trackingData, setTrackingData] = useState(""); // لتخزين الـ IMEIs كبيانات نصية مؤقتة
-  const TRACKING_TYPES = {
-    SERIAL: 1, // الرقم التسلسلي / IMEI
-    QUANTITY: 2, // الكمية العادية
-  };
 
   const [rows, setRows] = useState([]);
   const [openSaveConfirm, setOpenSaveConfirm] = useState(false);
@@ -113,8 +94,6 @@ export function BulkAddProducts() {
       "stock",
       "description",
       "warehouse_name",
-      "imei",
-      "serial_number",
     ];
 
     fields.forEach((f) => {
@@ -152,25 +131,6 @@ export function BulkAddProducts() {
     },
   });
 
-  const [unitsList, setUnitsList] = useState([{ imei: "", serial_number: "" }]);
-
-  // دالة لإضافة سطر جديد
-  const addUnitField = () => {
-    setUnitsList([...unitsList, { imei: "", serial_number: "" }]);
-  };
-
-  // دالة لتحديث قيمة حقل معين
-  const updateUnitField = (index, field, value) => {
-    const newUnits = [...unitsList];
-    newUnits[index][field] = value;
-    setUnitsList(newUnits);
-  };
-
-  // دالة لحذف سطر
-  const removeUnitField = (index) => {
-    setUnitsList(unitsList.filter((_, i) => i !== index));
-  };
-
   const handleConfirmSave = () => {
     const productsData = rows.map((row) => {
       // تقليد منطق الـ API الفردي في استخراج الـ attributes
@@ -195,6 +155,7 @@ export function BulkAddProducts() {
           }
         });
       }
+
       return {
         name: row.name || "",
         brand_id: row.brand_id || null,
@@ -208,21 +169,6 @@ export function BulkAddProducts() {
         description: row.description || "",
         warehouse_id: row.warehouse_id || warehouses[0]?.id || null,
         attributes: cleanedAttributes, // ترسل الآن كـ { color: "Red" } وليس كـ { color: {value: "Red"} }
-
-        // داخل handleConfirmSave عند إنشاء المصفوفة:
-        units:
-          row.imei || row.serial_number
-            ? [
-                {
-                  imei: row.imei || null,
-                  serial_number: row.serial_number || null, // إضافة هذا السطر
-                  warehouse_id: row.warehouse_id || null,
-                  purchase_price: Number(row.cost_price),
-                  sell_price: Number(row.sell_price),
-                  status: "available",
-                },
-              ]
-            : [],
       };
     });
 
@@ -247,7 +193,7 @@ export function BulkAddProducts() {
     }
 
     setRows((prev) =>
-      prev.map((row, index) => {
+      prev.map((row) => {
         const edited = row.manuallyEditedFields || [];
         const newRow = { ...row };
 
@@ -261,16 +207,6 @@ export function BulkAddProducts() {
         if (!edited.includes("warehouse_name")) {
           newRow.warehouse_name = allValues.warehouse?.name || "";
           newRow.warehouse_id = allValues.warehouse?.id || null;
-        }
-        const correspondingUnit = unitsList[index];
-
-        if (correspondingUnit) {
-          if (!edited.includes("imei")) {
-            newRow.imei = correspondingUnit.imei;
-          }
-          if (!edited.includes("serial_number")) {
-            newRow.serial_number = correspondingUnit.serial_number;
-          }
         }
 
         const mergedAttrs = { ...(row.attributes || {}) };
@@ -290,29 +226,7 @@ export function BulkAddProducts() {
     allValues.stock,
     allValues.description,
     allValues.warehouse,
-    JSON.stringify(allValues),
-    JSON.stringify(unitsList),
-    JSON.stringify(watchedAttributes),
   ]);
-
-  const applySpecificFieldToRow = (index, fieldName) => {
-    const valueFromTop = unitsList[index]?.[fieldName] || "";
-
-    setRows((prev) => {
-      const newRows = [...prev];
-      if (newRows[index]) {
-        newRows[index] = {
-          ...newRows[index],
-          [fieldName]: valueFromTop,
-          // حذف الحماية عن هذا الحقل في هذا الصف تحديداً
-          manuallyEditedFields: (
-            newRows[index].manuallyEditedFields || []
-          ).filter((f) => f !== fieldName),
-        };
-      }
-      return newRows;
-    });
-  };
 
   // --- وظائف الصاعقة كسر الحماية ---
   const applyFieldToAll = (fieldName) => {
@@ -341,15 +255,6 @@ export function BulkAddProducts() {
           up.warehouse_id = allValues.warehouse?.id || null;
           pKey = "warehouse_name";
         }
-        if (fieldName === "imei") {
-          up.imei = unitsList[0]?.imei || "";
-          pKey = "imei";
-        }
-        if (fieldName === "serial_number") {
-          up.serial_number = unitsList[0]?.serial_number || "";
-          pKey = "serial_number";
-        }
-
         return {
           ...row,
           ...up,
@@ -375,11 +280,43 @@ export function BulkAddProducts() {
     );
   };
 
+  // const handleInsertBulk = useCallback(
+  //   (selectedModels) => {
+  //     const currentWarehouse = watch("warehouse");
+  //     // 1. تحضير السمات العلوية الحالية
+  //     const topAttrs = {};
+  //     if (watchedAttributes) {
+  //       Object.entries(watchedAttributes).forEach(([k, v]) => {
+  //         topAttrs[k] = v && typeof v === "object" ? (v.value ?? v.id) : v;
+  //       });
+  //     }
+
+  //     // 2. إنشاء الصفوف مع حقن القيم العلوية مباشرة
+  //     const newEntries = selectedModels.map((model) => ({
+  //       id: Math.random().toString(36).substr(2, 9),
+  //       name: model.label,
+  //       part_name: watchedProductType?.name || "",
+  //       // حقن القيم العلوية هنا يضمن ظهورها فوراً عند الإدراج
+  //       warehouse_name:
+  //         allValues.warehouse?.name || currentWarehouse?.name || "",
+  //       warehouse_id: allValues.warehouse?.id || currentWarehouse?.id || null,
+  //       sell_price: Number(allValues.sellPrice) || 0,
+  //       cost_price: Number(allValues.costPrice) || 0,
+  //       stock: Number(allValues.stock) || 0,
+  //       description: allValues.description || "",
+  //       attributes: { ...topAttrs }, // استخدام السمات المعالجة
+  //       manuallyEditedFields: [], // تبدأ فارغة لتسمح للمزامنة اللاحقة بالعمل
+  //     }));
+
+  //     setRows((prev) => [...prev, ...newEntries]);
+  //   },
+  //   [watchedProductType, allValues, watchedAttributes],
+  // ); // تأكد من إضافة الاعتمادات هنا
   const handleInsertBulk = useCallback(
     (selectedModels) => {
       const currentWarehouse = watch("warehouse");
 
-      // 1. تحضير السمات (Attributes) العلوية
+      // 1. تحضير السمات العلوية الحالية
       const topAttrs = {};
       if (watchedAttributes) {
         Object.entries(watchedAttributes).forEach(([k, v]) => {
@@ -387,89 +324,33 @@ export function BulkAddProducts() {
         });
       }
 
-      const isSerialMode =
-        watchedProductType?.tracking_type_id === TRACKING_TYPES.SERIAL;
-      const newEntries = [];
+      // 2. إنشاء الصفوف مع حقن (category & productType) داخل كل row
+      const newEntries = selectedModels.map((model) => ({
+        id: Math.random().toString(36).substr(2, 9),
+        name: model.label,
+        model_id: model.id, // تأكد أن الموديل يحمل الـ id
+        brand_id: model.brand_id,
+        part_name: watchedProductType?.name || "",
 
-      selectedModels.forEach((model) => {
-        if (isSerialMode) {
-          // نأخذ الوحدات التي تم ملؤها فقط
-          const validUnits = unitsList.filter(
-            (u) => u.imei.trim() !== "" || u.serial_number.trim() !== "",
-          );
+        // الكائنات المطلوبة لعمل الـ Autocomplete داخل الجدول
+        category: watchedCategory, // <--- هذا هو السطر الناقص
+        productType: watchedProductType, // <--- وهذا أيضاً
 
-          // إذا كانت القائمة فارغة، نضيف سطراً فارغاً واحداً للموديل (للمرونة)
-          const unitsToProcess =
-            validUnits.length > 0
-              ? validUnits
-              : [{ imei: "", serial_number: "" }];
-
-          unitsToProcess.forEach((unit) => {
-            newEntries.push({
-              id: Math.random().toString(36).substr(2, 9),
-              name: model.label,
-              model_id: model.id,
-              brand_id: model.brand_id,
-              part_name: watchedProductType?.name || "",
-              category: watchedCategory,
-              productType: watchedProductType,
-
-              // البيانات المستمدة من قائمة الوحدات العلوية
-              imei: unit.imei.trim(),
-              serial_number: unit.serial_number.trim(),
-              stock: 1,
-
-              warehouse_name:
-                allValues.warehouse?.name || currentWarehouse?.name || "",
-              warehouse_id:
-                allValues.warehouse?.id || currentWarehouse?.id || null,
-              sell_price: Number(allValues.sellPrice) || 0,
-              cost_price: Number(allValues.costPrice) || 0,
-              description: allValues.description || "",
-              attributes: { ...topAttrs },
-
-              // --- الجزء الهام للمزامنة ---
-              // نترك هذه المصفوفة فارغة عند الإضافة لكي تعتبر الحقول "تابعة" للأب
-              // وتتأثر بأي تغيير علوي تلقائياً حتى يقوم المستخدم بتعديل الخلية بنفسه
-              manuallyEditedFields: [],
-            });
-          });
-        } else {
-          // الوضع العادي (كميات)
-          newEntries.push({
-            id: Math.random().toString(36).substr(2, 9),
-            name: model.label,
-            model_id: model.id,
-            brand_id: model.brand_id,
-            part_name: watchedProductType?.name || "",
-            category: watchedCategory,
-            productType: watchedProductType,
-            imei: null,
-            serial_number: null,
-            stock: Number(allValues.stock) || 0,
-            warehouse_name:
-              allValues.warehouse?.name || currentWarehouse?.name || "",
-            warehouse_id:
-              allValues.warehouse?.id || currentWarehouse?.id || null,
-            sell_price: Number(allValues.sellPrice) || 0,
-            cost_price: Number(allValues.costPrice) || 0,
-            description: allValues.description || "",
-            attributes: { ...topAttrs },
-            manuallyEditedFields: [],
-          });
-        }
-      });
+        warehouse_name:
+          allValues.warehouse?.name || currentWarehouse?.name || "",
+        warehouse_id: allValues.warehouse?.id || currentWarehouse?.id || null,
+        sell_price: Number(allValues.sellPrice) || 0,
+        cost_price: Number(allValues.costPrice) || 0,
+        stock: Number(allValues.stock) || 0,
+        description: allValues.description || "",
+        attributes: { ...topAttrs },
+        manuallyEditedFields: [],
+      }));
 
       setRows((prev) => [...prev, ...newEntries]);
     },
-    [
-      watchedProductType,
-      watchedCategory,
-      allValues,
-      watchedAttributes,
-      unitsList, // ضروري جداً لكي تشعر الدالة بتغيرات الـ IMEI العلوية
-      watch,
-    ],
+    // أضف watchedCategory و watchedProductType للمصفوفة لضمان تحديث القيم
+    [watchedProductType, watchedCategory, allValues, watchedAttributes, watch],
   );
 
   const handleRowUpdate = (newRow, oldRow) => {
@@ -628,129 +509,6 @@ export function BulkAddProducts() {
                 </Box>
               ))}
             </Box>
-          </Paper>
-        )}
-
-        {/* --- قسم الـ IMEI الديناميكي --- */}
-        {/* --- قسم وحدات المنتج الديناميكي --- */}
-        {console.log("hi", watchedProductType?.tracking_type_id)}
-        {watchedProductType?.tracking_type_id === 3 && (
-          <Paper sx={SECTION_STYLE}>
-            <Typography
-              variant="subtitle2"
-              sx={{
-                mb: 2,
-                color: "primary.main",
-                display: "flex",
-                alignItems: "center",
-                gap: 1,
-                fontWeight: "bold",
-              }}
-            >
-              <Box
-                sx={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: "50%",
-                  bgcolor: "primary.main",
-                }}
-              />
-              Unit Details (IMEI & Serial Numbers)
-            </Typography>
-
-            <Stack spacing={2}>
-              {unitsList.map((unit, index) => (
-                <Grid
-                  container
-                  spacing={2}
-                  key={index}
-                  alignItems="center"
-                  sx={{ mb: 1 }}
-                >
-                  {/* حقل IMEI */}
-                  <Grid item xs={5}>
-                    <TextField
-                      {...FIELD_PROPS}
-                      label={`IMEI ${index + 1}`}
-                      value={unit.imei}
-                      onChange={(e) =>
-                        updateUnitField(index, "imei", e.target.value)
-                      }
-                      sx={fieldStyle}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() =>
-                                applySpecificFieldToRow(index, "imei")
-                              }
-                              title="Force sync this IMEI to the table row below"
-                            >
-                              <FlashOnIcon fontSize="small" />
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-
-                  {/* حقل Serial Number */}
-                  <Grid item xs={5}>
-                    <TextField
-                      {...FIELD_PROPS}
-                      label={`Serial ${index + 1}`}
-                      value={unit.serial_number}
-                      onChange={(e) =>
-                        updateUnitField(index, "serial_number", e.target.value)
-                      }
-                      sx={fieldStyle}
-                      InputProps={{
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() =>
-                                applySpecificFieldToRow(index, "serial_number")
-                              }
-                              title="Force sync this Serial to the table row below"
-                            >
-                              <FlashOnIcon fontSize="small" />
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  </Grid>
-
-                  {/* أزرار الإضافة والحذف */}
-                  <Grid item xs={2}>
-                    <Stack direction="row" spacing={1}>
-                      {index === unitsList.length - 1 && (
-                        <IconButton
-                          color="primary"
-                          onClick={addUnitField}
-                          size="small"
-                        >
-                          <AddCircleIcon />
-                        </IconButton>
-                      )}
-                      {unitsList.length > 1 && (
-                        <IconButton
-                          color="error"
-                          onClick={() => removeUnitField(index)}
-                          size="small"
-                        >
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      )}
-                    </Stack>
-                  </Grid>
-                </Grid>
-              ))}
-            </Stack>
           </Paper>
         )}
 

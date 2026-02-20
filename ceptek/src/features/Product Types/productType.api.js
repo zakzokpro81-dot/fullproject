@@ -4,24 +4,81 @@ import supabase from "../../config/supabase";
 const TABLE_NAME = "product_types";
 
 // جلب جميع أنواع المنتجات مع التصنيف التابع لها
+// export const getProductTypes = async () => {
+//     const { data, error } = await supabase
+//         .from(TABLE_NAME)
+//         .select(`
+//       *,
+//       product_categories (
+//         id,
+//         name
+//       )
+//     `)
+//         .order("id", { ascending: false });
+
+//     if (error) {
+//         throw new Error(error.message);
+//     }
+
+//     return data;
+// };
+
+
 export const getProductTypes = async () => {
-    const { data, error } = await supabase
-        .from(TABLE_NAME)
-        .select(`
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .select(`
       *,
       product_categories (
         id,
         name
+      ),
+      variant_strategies (
+        id,
+        name
+      ),
+      tracking_types (
+        id,
+        name
       )
     `)
-        .order("id", { ascending: false });
+    .order("id", { ascending: false });
 
-    if (error) {
-        throw new Error(error.message);
-    }
+  if (error) {
+    throw new Error(error.message);
+  }
 
-    return data;
+  return data;
 };
+
+
+export const getTrackingTypes = async () => {
+  const { data, error } = await supabase
+    .from("tracking_types")
+    .select("id, name")
+    .order("id", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
+
+export const getVariantStrategiesFromDB = async () => {
+  const { data, error } = await supabase
+    .from("variant_strategies")
+    .select("id, name, code")
+    .order("id");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+};
+
 
 // إضافة نوع منتج جديد
 export const createProductType = async (productType) => {
@@ -67,3 +124,6 @@ export const deleteProductType = async (id) => {
 
     return id;
 };
+
+
+

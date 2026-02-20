@@ -615,118 +615,9 @@ export async function getAttributes(productTypeId) {
 
 
 
-// export async function saveBulkProducts(productsData) {
-//   try {
-//     // 1. تجهيز بيانات المنتجات الأساسية (نضع stock = 0 لأن الحركة ستحدثه)
-//     const productsToInsert = productsData.map((item) => ({
-//       name: String(item.name || "Unnamed Product"),
-//       brand_id: item.brand_id || null,
-//       model_id: item.model_id || null,
-//       product_type_id: item.product_type_id || null,
-//       category_id: item.category_id || null,
-//       cost_price: Number(item.cost_price) || 0,
-//       sell_price: Number(item.sell_price) || 0,
-//       stock: 0, // صفر مؤقتاً
-//       description: item.description || "",
-//       family_id: item.family_id || null,
-//       is_active: true,
-//     }));
-
-//     // إدراج المنتجات
-//     const { data: insertedProducts, error: productsError } = await supabase
-//       .from("products")
-//       .insert(productsToInsert)
-//       .select();
-
-//     if (productsError) throw productsError;
-
-//     // 2. جلب ID نوع الحركة "Opening Stock"
-//     const { data: typeData } = await supabase
-//       .from("stock_movement_types")
-//       .select("id")
-//       .eq("movement_name", "Opening Stock")
-//       .single();
-
-//     const movementsToInsert = [];
-//     const attributeValuesToInsert = [];
-
-//     // جلب الـ IDs للخصائص (كما في كودك السابق)
-//     const allSlugs = [...new Set(productsData.flatMap((p) => Object.keys(p.attributes || {})))];
-//     const { data: attributesList } = await supabase.from("attributes").select("id, slug").in("slug", allSlugs);
-//     const attrMap = attributesList?.reduce((acc, curr) => ({ ...acc, [curr.slug]: curr.id }), {}) || {};
-
-//     // 3. ربط البيانات المدرجة بالحركات والخصائص
-//     insertedProducts.forEach((product, index) => {
-     
-//       const originalData = productsData[index];
-      
-//       if (!originalData) return;
-
-//       // أ. تجهيز "الحركة المخزنية" لكل منتج (هذا بديل للإدراج المباشر في warehouse_stock)
-//       if (originalData.warehouse_id && Number(originalData.stock) > 0) {
-//         movementsToInsert.push({
-//           product_id: product.id,
-//           quantity: Number(originalData.stock),
-//           warehouse_id: originalData.warehouse_id,
-//           movement_type_id: typeData.id,
-//           reference_type: "Bulk Import",
-//           reference_id: product.id
-//         });
-//       }
-
-//       // ب. معالجة الخصائص (نفس منطق كودك المستقر)
-//       const attrs = originalData.attributes || {};
-//       for (let slug in attrs) {
-//         let finalStringVal = "";
-//         let rawVal = attrs[slug];
-//         if (rawVal !== null && rawVal !== undefined) {
-//           finalStringVal = typeof rawVal === "object" ? (rawVal.value || rawVal.label || "") : String(rawVal);
-//         }
-        
-//         if (attrMap[slug] && finalStringVal.trim() !== "") {
-//           attributeValuesToInsert.push({
-//             product_id: product.id,
-//             attribute_id: attrMap[slug],
-//           //  value: finalStringVal.trim(),
-//           });
-//         }
-//       }
-//     });
-
-//     // 4. تنفيذ عمليات الإدراج الجماعي (Bulk)
-    
-//     // إدراج الحركات (الـ Trigger سيعمل الآن ويحدث warehouse_stock و products.stock تلقائياً)
-//     if (movementsToInsert.length > 0) {
-//       const { error: movError } = await supabase.from("stock_movements").insert(movementsToInsert);
-//       if (movError) throw movError;
-//     }
-
-//     // إدراج الخصائص
-//     if (attributeValuesToInsert.length > 0) {
-//       const { error: attrInsertError } = await supabase.from("product_attribute_values").insert(attributeValuesToInsert);
-//       if (attrInsertError) throw attrInsertError;
-//     }
-    
-   
-    
-
-
-//     return insertedProducts;
-//   } catch (err) {
-//     console.error("Error in Bulk Saving:", err);
-//     throw err;
-//   }
-// }
-
-   
-
-// } شغالة قبل اضافة حركة المواد 
-
-
-
 export async function saveBulkProducts(productsData) {
   try {
-    // 1. تجهيز بيانات المنتجات الأساسية
+    // 1. تجهيز بيانات المنتجات الأساسية (نضع stock = 0 لأن الحركة ستحدثه)
     const productsToInsert = productsData.map((item) => ({
       name: String(item.name || "Unnamed Product"),
       brand_id: item.brand_id || null,
@@ -735,12 +626,13 @@ export async function saveBulkProducts(productsData) {
       category_id: item.category_id || null,
       cost_price: Number(item.cost_price) || 0,
       sell_price: Number(item.sell_price) || 0,
-      stock: 0, 
+      stock: 0, // صفر مؤقتاً
       description: item.description || "",
       family_id: item.family_id || null,
       is_active: true,
     }));
 
+    // إدراج المنتجات
     const { data: insertedProducts, error: productsError } = await supabase
       .from("products")
       .insert(productsToInsert)
@@ -757,40 +649,22 @@ export async function saveBulkProducts(productsData) {
 
     const movementsToInsert = [];
     const attributeValuesToInsert = [];
-    const productItemsToInsert = []; 
 
+    // جلب الـ IDs للخصائص (كما في كودك السابق)
     const allSlugs = [...new Set(productsData.flatMap((p) => Object.keys(p.attributes || {})))];
     const { data: attributesList } = await supabase.from("attributes").select("id, slug").in("slug", allSlugs);
     const attrMap = attributesList?.reduce((acc, curr) => ({ ...acc, [curr.slug]: curr.id }), {}) || {};
 
-    // 3. ربط البيانات المدرجة بالحركات والخصائص والنسخ
+    // 3. ربط البيانات المدرجة بالحركات والخصائص
     insertedProducts.forEach((product, index) => {
       const originalData = productsData[index];
       if (!originalData) return;
 
-      // أ. معالجة النسخ في جدول product_units
-      if (originalData.units && originalData.units.length > 0) {
-        originalData.units.forEach(unit => {
-          productItemsToInsert.push({
-            product_id: product.id,
-            imei: unit.imei || null,
-            serial_number: unit.serial_number || null,
-            warehouse_id: originalData.warehouse_id,
-            status: 'available',
-            purchase_price: product.cost_price,
-          });
-        });
-      }
-
-      // ب. تجهيز الحركة المخزنية
-      const finalQty = (originalData.units && originalData.units.length > 0) 
-                        ? originalData.units.length 
-                        : Number(originalData.stock || 0);
-
-      if (originalData.warehouse_id && finalQty > 0) {
+      // أ. تجهيز "الحركة المخزنية" لكل منتج (هذا بديل للإدراج المباشر في warehouse_stock)
+      if (originalData.warehouse_id && Number(originalData.stock) > 0) {
         movementsToInsert.push({
           product_id: product.id,
-          quantity: finalQty,
+          quantity: Number(originalData.stock),
           warehouse_id: originalData.warehouse_id,
           movement_type_id: typeData.id,
           reference_type: "Bulk Import",
@@ -798,7 +672,7 @@ export async function saveBulkProducts(productsData) {
         });
       }
 
-      // ج. معالجة الخصائص
+      // ب. معالجة الخصائص (نفس منطق كودك المستقر)
       const attrs = originalData.attributes || {};
       for (let slug in attrs) {
         let finalStringVal = "";
@@ -818,18 +692,14 @@ export async function saveBulkProducts(productsData) {
     });
 
     // 4. تنفيذ عمليات الإدراج الجماعي (Bulk)
-
-    // إدراج النسخ في الجدول الصحيح product_units
-    if (productItemsToInsert.length > 0) {
-      const { error: itemsErr } = await supabase.from("product_units").insert(productItemsToInsert);
-      if (itemsErr) throw itemsErr;
-    }
-
+    
+    // إدراج الحركات (الـ Trigger سيعمل الآن ويحدث warehouse_stock و products.stock تلقائياً)
     if (movementsToInsert.length > 0) {
       const { error: movError } = await supabase.from("stock_movements").insert(movementsToInsert);
       if (movError) throw movError;
     }
 
+    // إدراج الخصائص
     if (attributeValuesToInsert.length > 0) {
       const { error: attrInsertError } = await supabase.from("product_attribute_values").insert(attributeValuesToInsert);
       if (attrInsertError) throw attrInsertError;
@@ -841,6 +711,10 @@ export async function saveBulkProducts(productsData) {
     throw err;
   }
 }
+
+   
+
+// } شغالة قبل اضافة حركة المواد 
 
 export async function saveProduct(data) {
   try {
@@ -888,32 +762,10 @@ export async function saveProduct(data) {
         await supabase.from("product_attribute_values").insert({
           product_id: productId,
           attribute_id: attrData.id,
-        //  value: value,
+          value: value,
         });
       }
     }
-
-    // --- الجزء الجديد: إدراج نسخ المنتج (IMEI / Serial) ---
-    // نفترض أن المصفوفة تأتي باسم data.units بناءً على كود الفورم السابق
-    if (data.units && data.units.length > 0) {
-      const unitsToInsert = data.units.map(unit => ({
-        product_id: productId,
-        imei: unit.imei || null,
-        serial_number: unit.serial_number || null,
-        warehouse_id: data.warehouse_id || unit.warehouse_id,
-        status: 'available', // الحالة الافتراضية
-        purchase_price: data.cost_price,
-        sell_price: data.sell_price
-      }));
-
-      const { error: unitsError } = await supabase
-        .from("product_items") // تأكد من اسم الجدول (ربما product_units أو items)
-        .insert(unitsToInsert);
-
-      if (unitsError) throw unitsError;
-    }
-
-
 
     // 3. جلب ID نوع الحركة "Opening Stock" (إضافة ضرورية)
     const { data: typeData } = await supabase
