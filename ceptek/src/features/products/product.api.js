@@ -844,18 +844,43 @@ export async function saveBulkProducts(productsData) {
 
 export async function saveProduct(data) {
   try {
-    // 1. إدراج المنتج العام في جدول products
-    // ملاحظة: جعلنا الـ stock يبدأ بـ 0 لأن الحركة المخزنية ستحدثه عبر الـ Trigger لاحقاً
+
+
+    // 1. تجميع الـ display_name ديناميكياً
+    // نبدأ باسم الموديل المختار (الموجود في data.name)
+    let displayNameParts = [data.name]; 
+
+    // إضافة الخصائص المحددة (مثل اللون، الذاكرة، إلخ) إذا وجدت
+    if (data.attributes) {
+      Object.values(data.attributes).forEach(attr => {
+        let val = "";
+        if (typeof attr === "object" && attr !== null) {
+          val = attr.value || attr.name; // إذا كان كائن نأخذ القيمة
+        } else {
+          val = attr; // إذا كانت قيمة مباشرة
+        }
+        
+        if (val && val.trim !== "" && val !== "undefined") {
+          displayNameParts.push(val);
+        }
+      });
+    }
+
+    // دمج الأجزاء بمسافات (مثال: iPhone 11 Pro Max Black 256GB)
+    const finalDisplayName = displayNameParts.join(" ").trim();
+
+    // 2. إدراج المنتج في جدول products مع إضافة الـ display_name
     const { data: product, error: productError } = await supabase
       .from("products")
       .insert({
         name: data.name,
+        display_name: finalDisplayName, // الحقل الجديد هنا
         brand_id: data.brand_id,
         model_id: data.model_id,
         product_type_id: data.product_type_id,
         cost_price: data.cost_price,
         sell_price: data.sell_price,
-        stock: 0, // نضعه 0 هنا ليتولى الـ Trigger تحديثه من خلال الحركة
+        stock: 0, 
         category_id: data.category_id,
         description: data.description,
         family_id: data.family_id,
@@ -865,6 +890,29 @@ export async function saveProduct(data) {
       .single();
 
     if (productError) throw productError;
+
+
+    // 1. إدراج المنتج العام في جدول products
+    // ملاحظة: جعلنا الـ stock يبدأ بـ 0 لأن الحركة المخزنية ستحدثه عبر الـ Trigger لاحقاً
+    // const { data: product, error: productError } = await supabase
+    //   .from("products")
+    //   .insert({
+    //     name: data.name,
+    //     brand_id: data.brand_id,
+    //     model_id: data.model_id,
+    //     product_type_id: data.product_type_id,
+    //     cost_price: data.cost_price,
+    //     sell_price: data.sell_price,
+    //     stock: 0, // نضعه 0 هنا ليتولى الـ Trigger تحديثه من خلال الحركة
+    //     category_id: data.category_id,
+    //     description: data.description,
+    //     family_id: data.family_id,
+    //     is_active: true,
+    //   })
+    //   .select()
+    //   .single();
+
+    // if (productError) throw productError;
 
     const productId = product.id;
 
@@ -888,7 +936,7 @@ export async function saveProduct(data) {
         await supabase.from("product_attribute_values").insert({
           product_id: productId,
           attribute_id: attrData.id,
-        //  value: value,
+  
         });
       }
     }
