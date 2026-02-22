@@ -17,7 +17,8 @@ export const attributeColumns = (
     sortable: false,
     disableColumnMenu: true,
     renderHeader: () => {
-      const allSelected = rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+      const allSelected =
+        rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
       return (
         <Checkbox
           checked={allSelected}

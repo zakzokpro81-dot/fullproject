@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { Box, Button, Typography, Alert, TextField, Paper, Stack } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  Alert,
+  TextField,
+  Paper,
+  Stack,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
 import { useAttributeQuery, useAttributeMutations } from "./attributes.hooks";
@@ -24,7 +32,8 @@ export function AttributeList() {
     setSelectedItem(null);
   }
 
-  const { messageDialog, showMessageDialog, closeMessageDialog } = useMessageDialog();
+  const { messageDialog, showMessageDialog, closeMessageDialog } =
+    useMessageDialog();
   const {
     rows,
     rowCount,
@@ -40,7 +49,12 @@ export function AttributeList() {
     setFilters,
   } = useAttributeQuery();
 
-  const { createMutation, updateMutation, deleteMutation, deleteMultipleMutation } = useAttributeMutations({
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    deleteMultipleMutation,
+  } = useAttributeMutations({
     onSuccess: handleCloseForm,
     showMessageDialog,
   });
@@ -120,12 +134,19 @@ export function AttributeList() {
     selectedIds,
     toggleSelect,
     rows,
-    toggleSelectAll
+    toggleSelectAll,
   );
 
   return (
     <Paper sx={{ p: 2 }}>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
         <Typography variant="h5" component="h2">
           Attributes
         </Typography>

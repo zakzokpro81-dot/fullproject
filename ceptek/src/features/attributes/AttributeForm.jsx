@@ -1,8 +1,15 @@
 import { useEffect } from "react";
 import {
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, Switch, FormControlLabel,
-  CircularProgress, MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Switch,
+  FormControlLabel,
+  CircularProgress,
+  MenuItem,
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -38,7 +45,9 @@ export default function AttributeForm({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{mode === "edit" ? "Edit Attribute" : "Add Attribute"}</DialogTitle>
+      <DialogTitle>
+        {mode === "edit" ? "Edit Attribute" : "Add Attribute"}
+      </DialogTitle>
       <DialogContent dividers>
         <TextField
           {...register("name")}
@@ -69,27 +78,35 @@ export default function AttributeForm({
           <MenuItem value="boolean">Boolean</MenuItem>
         </TextField>
         <FormControlLabel
-          control={<Switch
-            checked={watch("has_options")}
-            onChange={(e) => setValue("has_options", e.target.checked)}
-          />}
+          control={
+            <Switch
+              checked={watch("has_options")}
+              onChange={(e) => setValue("has_options", e.target.checked)}
+            />
+          }
           label="Has Options"
         />
         <FormControlLabel
-          control={<Switch
-            checked={watch("is_active")}
-            onChange={(e) => setValue("is_active", e.target.checked)}
-          />}
+          control={
+            <Switch
+              checked={watch("is_active")}
+              onChange={(e) => setValue("is_active", e.target.checked)}
+            />
+          }
           label="Active"
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose} disabled={isPending}>Cancel</Button>
+        <Button onClick={onClose} disabled={isPending}>
+          Cancel
+        </Button>
         <Button
           variant="contained"
           onClick={handleSubmit(onSubmit)}
           disabled={isPending}
-          startIcon={isPending ? <CircularProgress size={20} color="inherit" /> : null}
+          startIcon={
+            isPending ? <CircularProgress size={20} color="inherit" /> : null
+          }
         >
           {isPending ? "Saving..." : "Save"}
         </Button>

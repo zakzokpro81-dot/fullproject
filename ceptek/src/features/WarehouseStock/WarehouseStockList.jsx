@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Box, Button, Typography, Alert, TextField, Paper } from "@mui/material";
+import {
+  Box,
+  Button,
+  Typography,
+  Alert,
+  TextField,
+  Paper,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
 import {
@@ -29,7 +36,8 @@ export function WarehouseStockList() {
     setSelectedItem(null);
   }
 
-  const { messageDialog, showMessageDialog, closeMessageDialog } = useMessageDialog();
+  const { messageDialog, showMessageDialog, closeMessageDialog } =
+    useMessageDialog();
 
   // ── Data hooks ────────────────────────────────────────────────────────────
   const {
@@ -47,8 +55,15 @@ export function WarehouseStockList() {
 
   const { warehouses, products } = useWarehouseStockFormOptions();
 
-  const { createMutation, updateMutation, deleteMutation, deleteMultipleMutation } =
-    useWarehouseStockMutations({ onSuccess: handleCloseForm, showMessageDialog });
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    deleteMultipleMutation,
+  } = useWarehouseStockMutations({
+    onSuccess: handleCloseForm,
+    showMessageDialog,
+  });
 
   // ── Handlers ─────────────────────────────────────────────────────────────
   const handleOpenAdd = () => {
@@ -92,7 +107,8 @@ export function WarehouseStockList() {
   };
 
   const toggleSelectAll = () => {
-    const allSelected = rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+    const allSelected =
+      rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
     if (allSelected) {
       setSelectedIds(new Set());
     } else {
@@ -120,7 +136,12 @@ export function WarehouseStockList() {
   return (
     <Box>
       {/* ── Header ── */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h5">Warehouse Stock</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (

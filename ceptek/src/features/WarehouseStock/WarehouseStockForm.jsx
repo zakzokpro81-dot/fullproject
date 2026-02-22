@@ -11,7 +11,10 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { warehouseStockSchema, warehouseStockDefaults } from "./warehouseStock.schema";
+import {
+  warehouseStockSchema,
+  warehouseStockDefaults,
+} from "./warehouseStock.schema";
 
 /**
  * Add / Edit dialog form for Warehouse Stock entries.
@@ -50,7 +53,8 @@ export default function WarehouseStockForm({
     if (mode === "edit" && initialData) {
       reset({
         product_id: initialData.products?.id ?? initialData.product_id ?? 0,
-        warehouse_id: initialData.warehouses?.id ?? initialData.warehouse_id ?? 0,
+        warehouse_id:
+          initialData.warehouses?.id ?? initialData.warehouse_id ?? 0,
         quantity: initialData.quantity ?? 1,
         unit_cost: initialData.unit_cost ?? 0,
       });
@@ -134,7 +138,9 @@ export default function WarehouseStockForm({
           variant="contained"
           onClick={handleSubmit(onSubmit)}
           disabled={isPending}
-          startIcon={isPending ? <CircularProgress size={20} color="inherit" /> : null}
+          startIcon={
+            isPending ? <CircularProgress size={20} color="inherit" /> : null
+          }
         >
           {isPending ? "Saving..." : "Save"}
         </Button>

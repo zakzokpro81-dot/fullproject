@@ -51,8 +51,12 @@ export function ModelsList() {
     families,
   } = useModelQuery();
 
-  const { createMutation, updateMutation, deleteMutation, deleteMultipleMutation } =
-    useModelMutations({ onSuccess: handleCloseForm, showMessageDialog });
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    deleteMultipleMutation,
+  } = useModelMutations({ onSuccess: handleCloseForm, showMessageDialog });
 
   // ── Handlers ──
   const handleOpenAdd = () => {
@@ -124,7 +128,12 @@ export function ModelsList() {
   return (
     <Box>
       {/* ── Header ── */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h5">Models</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (

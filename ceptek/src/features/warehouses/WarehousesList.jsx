@@ -49,8 +49,12 @@ export function WarehouseList() {
     setSearchText,
   } = useWarehouseQuery();
 
-  const { createMutation, updateMutation, deleteMutation, deleteMultipleMutation } =
-    useWarehouseMutations({ onSuccess: handleCloseForm, showMessageDialog });
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    deleteMultipleMutation,
+  } = useWarehouseMutations({ onSuccess: handleCloseForm, showMessageDialog });
 
   // ── Handlers ──
   const handleOpenAdd = () => {
@@ -122,7 +126,12 @@ export function WarehouseList() {
   return (
     <Box>
       {/* ── Header ── */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h5">Warehouses</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (
