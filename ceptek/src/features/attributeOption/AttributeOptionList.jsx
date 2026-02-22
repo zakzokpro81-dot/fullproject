@@ -1,136 +1,275 @@
-import * as React from "react";
+import { useState } from "react";
 import {
-    Box,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Typography,
-    Stack,
+  Box,
+  Button,
+  Typography,
+  Stack,
+  TextField,
+  Paper,
+  MenuItem,
+  Alert,
 } from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { DataGrid } from "@mui/x-data-grid";
 
-import { getAttributeOptions, deleteAttributeOption ,getAttributes } from "./attributeOption.api";
-
+import {
+  useAttributeOptionQuery,
+  useAttributeOptionMutations,
+  useAttributesQuery,
+} from "./attributeOption.hooks";
 import { attributeOptionColumns } from "./attributeOption.columns";
 import AttributeOptionForm from "./AttributeOptionForm";
+import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
+import MessageDialog from "../../components/MessageDialog";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
 
-export  function AttributeOptionList() {
-    const queryClient = useQueryClient();
+export function AttributeOptionList() {
+  // --- UI State ---
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [openForm, setOpenForm] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [openDeleteSelected, setOpenDeleteSelected] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [mode, setMode] = useState("add"); // "add" | "edit"
 
-    const [openForm, setOpenForm] = React.useState(false);
-    const [editingRow, setEditingRow] = React.useState(null);
+  const { messageDialog, showMessageDialog, closeMessageDialog } =
+    useMessageDialog();
 
-    const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
-    const [selectedRow, setSelectedRow] = React.useState(null);
+  // --- Hooks ---
+  const handleCloseForm = () => {
+    setOpenForm(false);
+    setSelectedItem(null);
+  };
 
-    // جلب Attribute Options
-    const { data: attributeOptions = [], isLoading } = useQuery({
-        queryKey: ["attribute-options"],
-        queryFn: getAttributeOptions,
+  const {
+    rows,
+    rowCount,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    paginationModel,
+    setPaginationModel,
+    searchText,
+    setSearchText,
+    attributeId,
+    setAttributeId,
+  } = useAttributeOptionQuery();
+
+  const { data: attributes = [] } = useAttributesQuery();
+
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    deleteMultipleMutation,
+  } = useAttributeOptionMutations({
+    onSuccess: handleCloseForm,
+    showMessageDialog,
+  });
+
+  // --- Handlers ---
+  const handleOpenAdd = () => {
+    setMode("add");
+    setSelectedItem(null);
+    setOpenForm(true);
+  };
+
+  const handleOpenEdit = (row) => {
+    setMode("edit");
+    setSelectedItem(row);
+    setOpenForm(true);
+  };
+
+  const handleFormSubmit = (data) => {
+    if (mode === "add") {
+      createMutation.mutate(data);
+    } else {
+      updateMutation.mutate({ id: selectedItem.id, data });
+    }
+  };
+
+  const handleDeleteClick = (row) => {
+    setSelectedItem(row);
+    setOpenDelete(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!selectedItem) return;
+    deleteMutation.mutate(selectedItem.id, {
+      onSettled: () => {
+        setOpenDelete(false);
+        setSelectedItem(null);
+      },
     });
+  };
 
-    // جلب Attributes (للاستخدام في الفورم لاحقًا)
-    const { data: attributes = [] } = useQuery({
-        queryKey: ["attributes"],
-        queryFn: getAttributes,
+  const handleDeleteSelectedConfirm = () => {
+    if (selectedIds.size === 0) return;
+    deleteMultipleMutation.mutate(Array.from(selectedIds), {
+      onSettled: () => {
+        setOpenDeleteSelected(false);
+        setSelectedIds(new Set());
+      },
     });
+  };
 
-    // حذف
-    const deleteMutation = useMutation({
-        mutationFn: deleteAttributeOption,
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["attribute-options"] });
-            handleCloseDeleteDialog();
-        },
-    });
+  const handlePaginationChange = (newModel) => {
+    setSelectedIds(new Set());
+    setPaginationModel(newModel);
+  };
 
-    const handleOpenAdd = () => {
-        setEditingRow(null);
-        setOpenForm(true);
-    };
+  const toggleSelect = (id) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedIds(next);
+  };
 
-    const handleOpenEdit = (row) => {
-        setEditingRow(row);
-        setOpenForm(true);
-    };
+  const toggleSelectAll = () => {
+    const allSelected =
+      rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
 
-    const handleCloseForm = () => {
-        setOpenForm(false);
-        setEditingRow(null);
-    };
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(rows.map((r) => r.id)));
+    }
+  };
 
-    const handleOpenDeleteDialog = (row) => {
-        setSelectedRow(row);
-        setOpenDeleteDialog(true);
-    };
+  const columns = attributeOptionColumns(
+    handleOpenEdit,
+    handleDeleteClick,
+    selectedIds,
+    toggleSelect,
+    rows,
+    toggleSelectAll,
+  );
 
-    const handleCloseDeleteDialog = () => {
-        setOpenDeleteDialog(false);
-        setSelectedRow(null);
-    };
-
-    const handleConfirmDelete = () => {
-        if (!selectedRow) return;
-        deleteMutation.mutate(selectedRow.id);
-    };
-
-    const columns = attributeOptionColumns(handleOpenEdit, handleOpenDeleteDialog);
-
-    return (
-        <Box sx={{ width: "100%" }}>
-            <Stack direction="row" justifyContent="space-between" mb={2}>
-                <Typography variant="h5">Attribute Options</Typography>
-                <Button variant="contained" onClick={handleOpenAdd}>
-                    Add Attribute Option
-                </Button>
-            </Stack>
-
-            <DataGrid
-                rows={attributeOptions}
-                columns={columns}
-                loading={isLoading}
-                autoHeight
-                slots={{ toolbar: GridToolbar }}
-                slotProps={{
-                    toolbar: { quickFilterAlwaysVisible: true },
-                }}
-                sx={{ width: "100%" }}
-                getRowId={(row) => row.id}
-            />
-
-            {/* Form Dialog */}
-            <Dialog open={openForm} onClose={handleCloseForm} fullWidth maxWidth="sm">
-                <DialogTitle>
-                    {editingRow ? "Edit Attribute Option" : "Add Attribute Option"}
-                </DialogTitle>
-                <DialogContent>
-                    <AttributeOptionForm
-                        defaultValues={editingRow}
-                        attributes={attributes}
-                        onClose={handleCloseForm}
-                    />
-                </DialogContent>
-            </Dialog>
-
-            {/* Delete Confirmation Dialog */}
-            <Dialog open={openDeleteDialog} onClose={handleCloseDeleteDialog}>
-                <DialogTitle>Confirm Delete</DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Are you sure you want to delete:
-                        <strong> {selectedRow?.value}</strong> ?
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseDeleteDialog}>Cancel</Button>
-                    <Button color="error" onClick={handleConfirmDelete}>
-                        Delete
-                    </Button>
-                </DialogActions>
-            </Dialog>
+  return (
+    <Box sx={{ p: 3 }}>
+      {/* ── Header ── */}
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
+        <Typography variant="h5">Attribute Options</Typography>
+        <Box display="flex" gap={1}>
+          {selectedIds.size > 0 && (
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => setOpenDeleteSelected(true)}
+            >
+              Delete Selected ({selectedIds.size})
+            </Button>
+          )}
+          <Button variant="contained" onClick={handleOpenAdd}>
+            Add Attribute Option
+          </Button>
         </Box>
-    );
+      </Box>
+
+      {/* ── Search + Attribute Filter ── */}
+      <Paper sx={{ p: 2, mb: 2 }}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+          <TextField
+            select
+            label="Filter by Attribute"
+            size="small"
+            sx={{ minWidth: 200 }}
+            value={attributeId}
+            onChange={(e) => {
+              setAttributeId(e.target.value);
+              setPaginationModel((prev) => ({ ...prev, page: 0 }));
+            }}
+          >
+            <MenuItem value="">Show All Attributes</MenuItem>
+            {attributes.map((attr) => (
+              <MenuItem key={attr.id} value={attr.id}>
+                {attr.name} ({attr.data_type})
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            label="Search"
+            variant="outlined"
+            size="small"
+            fullWidth
+            sx={{ maxWidth: 400 }}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+          />
+        </Stack>
+      </Paper>
+
+      {/* ── Error Banner ── */}
+      {isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Failed to load data: {error?.message || "Unknown error"}
+        </Alert>
+      )}
+
+      {/* ── Data Grid ── */}
+      <Paper sx={{ height: 650, width: "100%" }}>
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          rowCount={rowCount}
+          loading={isLoading || isFetching}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationChange}
+          disableSelectionOnClick
+          pageSizeOptions={[10, 25, 50]}
+          sx={{ width: "100%" }}
+        />
+      </Paper>
+
+      {/* Dialogs */}
+      <AttributeOptionForm
+        open={openForm}
+        mode={mode}
+        initialData={selectedItem}
+        onClose={handleCloseForm}
+        onSubmit={handleFormSubmit}
+        isPending={createMutation.isPending || updateMutation.isPending}
+        attributes={attributes}
+      />
+
+      <ConfirmDeleteDialog
+        open={openDelete}
+        itemName={selectedItem?.value || ""}
+        onClose={() => {
+          setOpenDelete(false);
+          setSelectedItem(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        isPending={deleteMutation.isPending}
+      />
+
+      <ConfirmDeleteDialog
+        open={openDeleteSelected}
+        itemName={`${selectedIds.size} selected items`}
+        onClose={() => setOpenDeleteSelected(false)}
+        onConfirm={handleDeleteSelectedConfirm}
+        isPending={deleteMultipleMutation.isPending}
+      />
+
+      <MessageDialog
+        open={messageDialog.open}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        severity={messageDialog.severity}
+        onClose={closeMessageDialog}
+      />
+
+      <ScrollToTopButton />
+    </Box>
+  );
 }

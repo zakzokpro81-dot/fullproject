@@ -1,70 +1,104 @@
 import supabase from "../../config/supabase";
 
-// اسم الجدول في قاعدة البيانات
+export const PRODUCTTYPE_QUERY_KEY = "productTypes";
+
 const TABLE_NAME = "product_types";
 
-// جلب جميع أنواع المنتجات مع التصنيف التابع لها
-// export const getProductTypes = async () => {
-//     const { data, error } = await supabase
-//         .from(TABLE_NAME)
-//         .select(`
-//       *,
-//       product_categories (
-//         id,
-//         name
-//       )
-//     `)
-//         .order("id", { ascending: false });
+export async function getProductTypes({
+  page = 0,
+  pageSize = 10,
+  searchText = "",
+  filters = {},
+} = {}) {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
 
-//     if (error) {
-//         throw new Error(error.message);
-//     }
-
-//     return data;
-// };
-
-
-export const getProductTypes = async () => {
-  const { data, error } = await supabase
+  let query = supabase
     .from(TABLE_NAME)
     .select(`
       *,
-      product_categories (
-        id,
-        name
-      ),
-      variant_strategies (
-        id,
-        name
-      ),
-      tracking_types (
-        id,
-        name
-      )
-    `)
-    .order("id", { ascending: false });
+      product_categories (id, name),
+      variant_strategies (id, name),
+      tracking_types (id, name)
+    `, { count: "exact" })
+    .order("name", { ascending: true })
+    .range(from, to);
 
-  if (error) {
-    throw new Error(error.message);
+  if (searchText) {
+    query = query.or(
+      `name.ilike.%${searchText}%,slug.ilike.%${searchText}%`
+    );
   }
 
+  // Apply filters
+  if (filters.tracking_type_id) {
+    query = query.eq("tracking_type_id", filters.tracking_type_id);
+  }
+  if (filters.variant_strategy_id) {
+    query = query.eq("variant_strategy_id", filters.variant_strategy_id);
+  }
+  if (filters.category_id) {
+    query = query.eq("category_id", filters.category_id);
+  }
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { data, count };
+}
+
+export async function createProductType(payload) {
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .insert(payload)
+    .select()
+    .single();
+
+  if (error) throw error;
   return data;
-};
+}
 
+export async function updateProductType(id, payload) {
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .update(payload)
+    .eq("id", id)
+    .select()
+    .single();
 
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteProductType(id) {
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+  return true;
+}
+
+export async function deleteProductTypes(ids) {
+  const { error } = await supabase
+    .from(TABLE_NAME)
+    .delete()
+    .in("id", ids);
+
+  if (error) throw error;
+  return true;
+}
+
+// These functions are for populating form dropdowns and can be fetched once.
 export const getTrackingTypes = async () => {
   const { data, error } = await supabase
     .from("tracking_types")
     .select("id, name")
     .order("id", { ascending: true });
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw error;
   return data;
 };
-
 
 export const getVariantStrategiesFromDB = async () => {
   const { data, error } = await supabase
@@ -72,57 +106,8 @@ export const getVariantStrategiesFromDB = async () => {
     .select("id, name, code")
     .order("id");
 
-  if (error) {
-    throw new Error(error.message);
-  }
-
+  if (error) throw error;
   return data;
-};
-
-
-// إضافة نوع منتج جديد
-export const createProductType = async (productType) => {
-    const { data, error } = await supabase
-        .from(TABLE_NAME)
-        .insert([productType])
-        .select()
-        .single();
-
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    return data;
-};
-
-// تعديل نوع منتج
-export const updateProductType = async ({ id, ...productType }) => {
-    const { data, error } = await supabase
-        .from(TABLE_NAME)
-        .update(productType)
-        .eq("id", id)
-        .select()
-        .single();
-
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    return data;
-};
-
-// حذف نوع منتج
-export const deleteProductType = async (id) => {
-    const { error } = await supabase
-        .from(TABLE_NAME)
-        .delete()
-        .eq("id", id);
-
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    return id;
 };
 
 

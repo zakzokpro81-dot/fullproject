@@ -1,22 +1,24 @@
-//Zod schema لتعريف شكل البيانات المطلوبة للفورم (validation).
 // family.schema.js
 // Zod schema للفورم الخاص بـ Families
-// يتحقق من صحة البيانات قبل الإرسال
-
 
 import { z } from "zod";
 
 export const familySchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  brand: z.number({
-    required_error: "Brand is required",
-    invalid_type_error: "Brand must be a number",
-  }),
- product_type_id: z.coerce.number({
-    required_error: "Product type is required",
-    invalid_type_error: "Product type must be a number",
-  }).min(1, "Please select a product type"),
-  
-  slug: z.string().min(1, "Slug is required"),
-  is_active: z.boolean().optional(),
+  name: z.string().min(1, "Name is required").trim(),
+  slug: z.string().min(1, "Slug is required").trim(),
+  brand: z.coerce.number().positive("Brand is required"),
+  product_type_id: z.coerce.number().positive("Product type is required"),
+  is_active: z.boolean().default(true),
 });
+
+/**
+ * Blank form state — single source of truth for all default values.
+ * Used by FamilyForm so defaults stay in sync with the schema.
+ */
+export const familyDefaults = {
+  name: "",
+  slug: "",
+  brand: "",
+  product_type_id: "",
+  is_active: true,
+};

@@ -1,87 +1,99 @@
-// هذا الملف يحتوي على تعريف أعمدة DataGrid الخاصة بالموديلات
-// مثل:
-// id, name, brand, family, actions
-// لا يحتوي على منطق الجلب أو الحذف
-// فقط تعريف شكل الجدول
+// model.columns.jsx
+// تعريف أعمدة DataGrid للموديلات — لا API imports
 
-
-import { IconButton, Stack } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
+import { IconButton, Stack, Checkbox } from "@mui/material";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 import DeleteIcon from "@mui/icons-material/Delete";
-export const modelColumns = (onEdit, onDelete) => [
-    // {
-    //     field: "id",
-    //     headerName: "ID",
-    //     width: 80,
-    // },
-    {
-        field: "brand",
-        headerName: "Brand",
-        flex: 1,
-        renderCell: (params) => {
-            return params.row?.families?.brands?.name || "";
-        },
+
+export const modelColumns = (
+  onEdit,
+  onDelete,
+  selectedIds,
+  toggleSelect,
+  rows = [],
+  toggleSelectAll,
+) => [
+  // ── Checkbox selection column ──
+  {
+    field: "select",
+    headerName: "",
+    width: 60,
+    sortable: false,
+    disableColumnMenu: true,
+    renderHeader: () => {
+      const allSelected =
+        rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+      return (
+        <Checkbox
+          checked={allSelected}
+          indeterminate={selectedIds.size > 0 && !allSelected}
+          onClick={(e) => e.stopPropagation()}
+          onChange={toggleSelectAll}
+        />
+      );
     },
-    {
-        field: "family",
-        headerName: "Family",
-        flex: 1,
-        renderCell: (params) => {
-            return params.row?.families?.name || "";
-        },
-    },
-    {
-        field: "name",
-        headerName: "Model Name",
-        flex: 1,
-    },
-     {
-        field: "is_active",
-        headerName: "Active",
-        width: 120,
-        renderCell: (params) => (params.value ? "Yes" : "No"),
-    },
+    renderCell: (params) => (
+      <Checkbox
+        checked={selectedIds.has(params.row.id)}
+        onClick={(e) => e.stopPropagation()}
+        onChange={() => toggleSelect(params.row.id)}
+      />
+    ),
+  },
+  // ── Data columns ──
+  {
+    field: "brand",
+    headerName: "Brand",
+    flex: 1,
+    renderCell: (params) => params.row?.families?.brands?.name || "",
+  },
+  {
+    field: "family",
+    headerName: "Family",
+    flex: 1,
+    renderCell: (params) => params.row?.families?.name || "",
+  },
+  {
+    field: "name",
+    headerName: "Model Name",
+    flex: 1,
+  },
+  {
+    field: "is_active",
+    headerName: "Active",
+    width: 120,
+    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+  },
 
-    {
-        field: "actions",
-        headerName: "Actions",
-        width: 180,
-        renderCell: (params) => (
-
-
-
-
-                <Stack direction="row" spacing={1}>
-                <IconButton onClick={() => onEdit(params.row)}>
-                    <EditIcon />
-                </IconButton>
-                <IconButton onClick={() => onDelete(params.row)}>
-                    <DeleteIcon />
-                </IconButton>
-            </Stack>
-
-
-
-
-
-            // <Stack direction="row" spacing={1}>
-            //     <Button
-            //         size="small"
-            //         variant="outlined"
-            //         onClick={() => onEdit(params.row)}
-            //     >
-            //         Edit
-            //     </Button>
-
-            //     <Button
-            //         size="small"
-            //         color="error"
-            //         variant="outlined"
-            //         onClick={() => onDelete(params.row)}
-            //     >
-            //         Delete
-            //     </Button>
-            // </Stack>
-        ),
-    },
+  // ── Actions column ──
+  {
+    field: "actions",
+    headerName: "Actions",
+    width: 160,
+    sortable: false,
+    filterable: false,
+    disableExport: true,
+    renderCell: (params) => (
+      <Stack direction="row" spacing={1}>
+        <IconButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(params.row);
+          }}
+          color="error"
+        >
+          <EditNoteIcon />
+        </IconButton>
+        <IconButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(params.row);
+          }}
+          color="primary"
+        >
+          <DeleteIcon />
+        </IconButton>
+      </Stack>
+    ),
+  },
 ];

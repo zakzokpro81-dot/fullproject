@@ -1,5 +1,7 @@
 import supabase from "../../config/supabase";
 
+export const ORDER_QUERY_KEY = "orders";
+
 // 1. جلب كافة الطلبات مع تفاصيل العميل والحالة
 export const getOrders = async () => {
   const { data, error } = await supabase
@@ -61,8 +63,8 @@ export const createOrderAction = async (payload) => {
     .from("orders")
     .insert([{
   customer_id: payload.customer_id,
-  warehouse_id: payload.warehouse_id, // ✅ أضف هذا
-  status_id: payload.status_id || null, // اختياري
+  warehouse_id: payload.warehouse_id,
+  status_id: payload.status_id || 1, // Default to first status (e.g., "Pending")
   notes: payload.notes,
 }])
     .select()
@@ -70,10 +72,11 @@ export const createOrderAction = async (payload) => {
 
   if (orderError) throw orderError;
 
-  // 2. تجهيز العناصر لربطها بالطلب الجديد
+  // 2. Map form items to DB columns
+  // NOTE: order_items.product_variant_id FK references products.id despite the misleading name
   const itemsToInsert = payload.items.map((item) => ({
     order_id: orderData.id,
-    product_variant_id: item.product_id, // ربط الـ product_id من الفورم بـ product_variant_id في الجدول
+    product_variant_id: item.product_id,
     quantity: item.quantity,
     notes: item.notes,
   }));

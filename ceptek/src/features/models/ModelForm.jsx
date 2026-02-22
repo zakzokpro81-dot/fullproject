@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
     Dialog,
     DialogTitle,
@@ -8,20 +9,21 @@ import {
     MenuItem,
     FormControlLabel,
     Switch,
+    CircularProgress,
 } from "@mui/material";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { modelSchema } from "./model.schema";
-import { useQuery } from "@tanstack/react-query";
-import { getBrands } from "../brands/brand.api";
-import { getFamilies } from "../families/family.api";
-import { useEffect } from "react";
+import { modelSchema, modelDefaults } from "./model.schema";
 
 export default function ModelForm({
     open,
+    mode,
+    initialData,
     onClose,
     onSubmit,
-    defaultValues,
+    isPending = false,
+    brands = [],
+    families = [],
 }) {
     const {
         register,
@@ -32,20 +34,7 @@ export default function ModelForm({
         formState: { errors },
     } = useForm({
         resolver: zodResolver(modelSchema),
-        defaultValues,
-    });
-
-    // ======================
-    // Fetch brands & families
-    // ======================
-    const { data: brands = [] } = useQuery({
-        queryKey: ["brands"],
-        queryFn: getBrands,
-    });
-
-    const { data: families = [] } = useQuery({
-        queryKey: ["families"],
-        queryFn: getFamilies,
+        defaultValues: modelDefaults,
     });
 
     // ======================
@@ -76,18 +65,12 @@ export default function ModelForm({
     // Reset on open
     // ======================
     useEffect(() => {
-        if (defaultValues) {
-            reset(defaultValues);
+        if (mode === "edit" && initialData) {
+            reset(initialData);
         } else {
-            reset({
-                brand: "",
-                family: "",
-                name: "",
-                slug: "",
-                is_active: true,
-            });
+            reset(modelDefaults);
         }
-    }, [defaultValues, reset]);
+    }, [mode, initialData, reset]);
 
     const handleFormSubmit = (data) => {
         onSubmit(data);
@@ -97,7 +80,7 @@ export default function ModelForm({
     return (
         <Dialog open={open} onClose={onClose} fullWidth>
             <DialogTitle>
-                {defaultValues ? "Edit Model" : "Add Model"}
+                {mode === "edit" ? "Edit Model" : "Add Model"}
             </DialogTitle>
 
             <DialogContent>
@@ -171,9 +154,14 @@ export default function ModelForm({
             </DialogContent>
 
             <DialogActions>
-                <Button onClick={onClose}>Cancel</Button>
-                <Button variant="contained" onClick={handleSubmit(handleFormSubmit)}>
-                    Save
+                <Button onClick={onClose} disabled={isPending}>Cancel</Button>
+                <Button
+                    variant="contained"
+                    onClick={handleSubmit(handleFormSubmit)}
+                    disabled={isPending}
+                    startIcon={isPending ? <CircularProgress size={20} color="inherit" /> : null}
+                >
+                    {isPending ? "Saving..." : "Save"}
                 </Button>
             </DialogActions>
         </Dialog>

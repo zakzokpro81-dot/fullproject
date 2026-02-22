@@ -1,14 +1,29 @@
 import supabase from "../../config/supabase";
 
-// Get all attribute options with related attribute name
-export async function getAttributeOptions() {
-    const { data, error } = await supabase
-        .from("attribute_options")
-        .select("*, attributes(id, name, data_type, is_active)")
-        .order("id", { ascending: false });
+export const ATTRIBUTE_OPTION_QUERY_KEY = "attribute_options";
 
+// Get all attribute options with related attribute name, paginated and searchable
+export async function getAttributeOptions({ page = 0, pageSize = 10, searchText = "", attributeId = "" } = {}) {
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
+        .from("attribute_options")
+        .select("id, attribute_id, value, slug, attributes(id, name, data_type, is_active)", { count: "exact" })
+        .order("id", { ascending: false })
+        .range(from, to);
+
+    if (attributeId) {
+        query = query.eq("attribute_id", attributeId);
+    }
+
+    if (searchText) {
+        query = query.or(`value.ilike.%${searchText}%,slug.ilike.%${searchText}%`);
+    }
+
+    const { data, error, count } = await query;
     if (error) throw error;
-    return data;
+    return { data, count };
 }
 
 export async function createAttributeOption(payload) {
@@ -22,7 +37,7 @@ export async function createAttributeOption(payload) {
     return data;
 }
 
-export async function updateAttributeOption({ id, ...payload }) {
+export async function updateAttributeOption(id, payload) {
     const { data, error } = await supabase
         .from("attribute_options")
         .update(payload)
@@ -44,6 +59,15 @@ export async function deleteAttributeOption(id) {
     return true;
 }
 
+export async function deleteAttributeOptions(ids) {
+    const { error } = await supabase
+        .from("attribute_options")
+        .delete()
+        .in("id", ids);
+
+    if (error) throw error;
+    return true;
+}
 
 export async function getAttributes() {
     const { data, error } = await supabase

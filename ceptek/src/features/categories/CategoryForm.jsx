@@ -9,60 +9,47 @@ import {
   Stack,
   FormControlLabel,
   Switch,
+  CircularProgress,
 } from "@mui/material";
-import { useForm, Controller } from "react-hook-form"; // أضفنا Controller
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { categorySchema } from "./category.schema";
-
-const defaultFormValues = {
-  name: "",
-  slug: "",
-  show_all_models: false,
-  is_active: true,
-};
+import { categorySchema, categoryDefaults } from "./category.schema";
 
 export default function CategoryForm({
   open,
+  mode = "add",
+  initialData = null,
   onClose,
   onSubmit,
-  defaultValues = null,
-  isEditing = false,
+  isPending = false,
 }) {
   const {
     register,
     handleSubmit,
+    setValue,
     reset,
-    control, // استخراج control لاستخدامه مع الـ Controller
+    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(categorySchema),
-    defaultValues: defaultFormValues,
+    defaultValues: categoryDefaults,
   });
 
-  // تحديث القيم عند فتح المودال للتحرير
   useEffect(() => {
-    if (open) {
-      // تأكد من إعادة الضبط عند فتح المودال
-      if (defaultValues) {
-        reset({
-          ...defaultFormValues,
-          ...defaultValues,
-        });
-      } else {
-        reset(defaultFormValues);
-      }
+    if (mode === "edit" && initialData) {
+      reset({ ...categoryDefaults, ...initialData });
+    } else {
+      reset(categoryDefaults);
     }
-  }, [defaultValues, reset, open]);
-
-  const handleFormSubmit = (data) => {
-    onSubmit(data);
-  };
+  }, [mode, initialData, reset]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{isEditing ? "Edit Category" : "Add Category"}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: "bold" }}>
+        {mode === "edit" ? "Edit Category" : "Add Category"}
+      </DialogTitle>
 
-      <DialogContent>
+      <DialogContent dividers>
         <Stack spacing={2} mt={1}>
           <TextField
             label="Name"
@@ -70,7 +57,7 @@ export default function CategoryForm({
             error={!!errors.name}
             helperText={errors.name?.message}
             fullWidth
-            InputLabelProps={{ shrink: true }} // لضمان عدم تداخل النص عند التحرير
+            margin="normal"
           />
 
           <TextField
@@ -79,49 +66,44 @@ export default function CategoryForm({
             error={!!errors.slug}
             helperText={errors.slug?.message}
             fullWidth
-            InputLabelProps={{ shrink: true }}
+            margin="normal"
           />
 
-          {/* استخدام Controller للتحكم في Switch الحالة النشطة */}
-          <Controller
-            name="is_active"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={!!field.value} // ربط القيمة بـ checked
-                    onChange={(e) => field.onChange(e.target.checked)}
-                  />
-                }
-                label="Active"
+          <FormControlLabel
+            control={
+              <Switch
+                checked={!!watch("is_active")}
+                onChange={(e) => setValue("is_active", e.target.checked)}
               />
-            )}
+            }
+            label="Active"
           />
 
-          {/* استخدام Controller للتحكم في Switch إظهار الموديلات */}
-          <Controller
-            name="show_all_models"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={!!field.value}
-                    onChange={(e) => field.onChange(e.target.checked)}
-                  />
-                }
-                label="Show All Models"
+          <FormControlLabel
+            control={
+              <Switch
+                checked={!!watch("show_all_models")}
+                onChange={(e) => setValue("show_all_models", e.target.checked)}
               />
-            )}
+            }
+            label="Show All Models"
           />
         </Stack>
       </DialogContent>
 
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSubmit(handleFormSubmit)}>
-          {isEditing ? "Update" : "Save"}
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose} disabled={isPending}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit(onSubmit)}
+          disabled={isPending}
+          startIcon={
+            isPending ? <CircularProgress size={20} color="inherit" /> : null
+          }
+        >
+          {isPending ? "Saving..." : "Save"}
         </Button>
       </DialogActions>
     </Dialog>

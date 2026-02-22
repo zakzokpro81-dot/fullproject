@@ -1,5 +1,6 @@
 import supabase from "../../config/supabase";
 
+export const CUSTOMER_TYPE_QUERY_KEY = "customerTypes";
 
 export const getCustomerTypes = async ({ page, pageSize }) => {
   const from = page * pageSize;

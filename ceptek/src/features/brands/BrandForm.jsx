@@ -26,10 +26,11 @@ import {
   Button,
   Switch,
   FormControlLabel,
+  CircularProgress,
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { brandSchema } from "./brand.schema";
+import { brandSchema, brandDefaults } from "./brand.schema";
 
 function generateSlug(text) {
   return text
@@ -45,6 +46,7 @@ export default function BrandForm({
   initialData,
   onClose,
   onSubmit,
+  isPending = false,
 }) {
   const {
     register,
@@ -55,11 +57,7 @@ export default function BrandForm({
     formState: { errors },
   } = useForm({
     resolver: zodResolver(brandSchema),
-    defaultValues: {
-      name: "",
-      slug: "",
-      is_active: true,
-    },
+    defaultValues: brandDefaults,
   });
 
   const nameValue = watch("name");
@@ -68,11 +66,7 @@ export default function BrandForm({
     if (mode === "edit" && initialData) {
       reset(initialData);
     } else {
-      reset({
-        name: "",
-        slug: "",
-        is_active: true,
-      });
+      reset(brandDefaults);
     }
   }, [mode, initialData, reset]);
 
@@ -122,9 +116,18 @@ export default function BrandForm({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSubmit(submitHandler)}>
-          Save
+        <Button onClick={onClose} disabled={isPending}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit(submitHandler)}
+          disabled={isPending}
+          startIcon={
+            isPending ? <CircularProgress size={20} color="inherit" /> : null
+          }
+        >
+          {isPending ? "Saving..." : "Save"}
         </Button>
       </DialogActions>
     </Dialog>

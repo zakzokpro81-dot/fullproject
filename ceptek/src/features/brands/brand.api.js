@@ -18,20 +18,35 @@
 
 import supabase from "../../config/supabase";
 
+export const BRAND_QUERY_KEY = "brands";
+
 /**
- * Get all brands
+ * Get brands (paginated + server-side search)
  */
-export async function getBrands() {
-  const { data, error } = await supabase
+export async function getBrands({ page = 0, pageSize = 10, searchText = "" } = {}) {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
     .from("brands")
-    .select("id, name, slug, is_active")
+    .select("id, name, slug, is_active", { count: "exact" })
     .order("name", { ascending: true });
+
+  if (searchText) {
+    query = query.or(
+      `name.ilike.%${searchText}%,slug.ilike.%${searchText}%`
+    );
+  }
+
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
 
   if (error) {
     throw error;
   }
 
-  return data;
+  return { data, count };
 }
 
 /**
@@ -82,6 +97,19 @@ export async function deleteBrand(id) {
     throw error;
   }
 
+  return true;
+}
+
+/**
+ * Delete multiple brands by ID array (bulk delete)
+ */
+export async function deleteBrands(ids) {
+  const { error } = await supabase
+    .from("brands")
+    .delete()
+    .in("id", ids);
+
+  if (error) throw error;
   return true;
 }
 

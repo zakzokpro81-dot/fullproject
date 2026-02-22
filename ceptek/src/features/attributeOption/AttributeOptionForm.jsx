@@ -1,164 +1,112 @@
-import React, { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import {
-  Box,
-  Button,
-  Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   TextField,
+  Button,
+  CircularProgress,
   MenuItem,
-  Switch,
-  FormControlLabel,
 } from "@mui/material";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-
 import {
-  createAttributeOption,
-  updateAttributeOption,
-} from "./attributeOption.api";
-
-import { attributeOptionSchema } from "./attributeOption.schema";
+  attributeOptionSchema,
+  attributeOptionDefaults,
+} from "./attributeOption.schema";
 
 export default function AttributeOptionForm({
-  defaultValues,
-  attributes = [],
+  open,
+  mode = "add",
+  initialData = null,
   onClose,
+  onSubmit,
+  isPending = false,
+  attributes = [],
 }) {
-  const queryClient = useQueryClient();
-
-  const selectedAttribute = useMemo(() => {
-    return attributes.find(a => a.id === defaultValues?.attribute_id);
-  }, [attributes, defaultValues]);
-
   const {
-    control,
+    register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(attributeOptionSchema),
-    defaultValues: {
-      attribute_id: "",
-      value: "",
-      slug: "",
-    },
+    defaultValues: attributeOptionDefaults,
   });
-
-  const watchedAttributeId = watch("attribute_id");
-  const activeAttribute = attributes.find(a => a.id === watchedAttributeId);
 
   useEffect(() => {
-    if (defaultValues) {
-      reset(defaultValues);
-    } else {
+    if (mode === "edit" && initialData) {
       reset({
-        attribute_id: "",
-        value: "",
-        slug: "",
+        attribute_id: initialData.attribute_id,
+        value: initialData.value,
+        slug: initialData.slug,
       });
+    } else {
+      reset(attributeOptionDefaults);
     }
-  }, [defaultValues, reset]);
-
-  const createMutation = useMutation({
-    mutationFn: createAttributeOption,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["attribute-options"] });
-      onClose();
-    },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: updateAttributeOption,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["attribute-options"] });
-      onClose();
-    },
-  });
-
-  const onSubmit = (data) => {
-    defaultValues?.id
-      ? updateMutation.mutate({ id: defaultValues.id, ...data })
-      : createMutation.mutate(data);
-  };
+  }, [mode, initialData, reset]);
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-      <Stack spacing={2}>
-
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle sx={{ fontWeight: "bold" }}>
+        {mode === "add" ? "Add Attribute Option" : "Edit Attribute Option"}
+      </DialogTitle>
+      <DialogContent dividers>
         {/* Attribute */}
-        <Controller
-          name="attribute_id"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              select
-              label="Attribute"
-              {...field}
-              fullWidth
-              error={!!errors.attribute_id}
-              helperText={errors.attribute_id?.message}
-            >
-              {attributes.map(attr => (
-                <MenuItem key={attr.id} value={attr.id}>
-                  {attr.name}
-                </MenuItem>
-              ))}
-            </TextField>
-          )}
-        />
+        <TextField
+          select
+          label="Attribute"
+          {...register("attribute_id")}
+          fullWidth
+          slotProps={{ select: { displayEmpty: false } }}
+          margin="normal"
+          error={!!errors.attribute_id}
+          helperText={errors.attribute_id?.message}
+        >
+          {attributes.map((attr) => (
+            <MenuItem key={attr.id} value={attr.id}>
+              {attr.name} ({attr.data_type})
+            </MenuItem>
+          ))}
+        </TextField>
 
-        {/* Value – dynamic by data_type */}
-        {activeAttribute?.data_type === "boolean" ? (
-          <Controller
-            name="value"
-            control={control}
-            render={({ field }) => (
-              <FormControlLabel
-                control={<Switch {...field} checked={field.value === "true"} />}
-                label="Value"
-              />
-            )}
-          />
-        ) : (
-          <Controller
-            name="value"
-            control={control}
-            render={({ field }) => (
-              <TextField
-                label="Value"
-                type={activeAttribute?.data_type === "number" ? "number" : "text"}
-                {...field}
-                fullWidth
-                error={!!errors.value}
-                helperText={errors.value?.message}
-              />
-            )}
-          />
-        )}
+        {/* Value */}
+        <TextField
+          {...register("value")}
+          label="Value"
+          fullWidth
+          margin="normal"
+          error={!!errors.value}
+          helperText={errors.value?.message}
+        />
 
         {/* Slug */}
-        <Controller
-          name="slug"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              label="Slug"
-              {...field}
-              fullWidth
-              error={!!errors.slug}
-              helperText={errors.slug?.message}
-            />
-          )}
+        <TextField
+          {...register("slug")}
+          label="Slug"
+          fullWidth
+          margin="normal"
+          error={!!errors.slug}
+          helperText={errors.slug?.message}
+          placeholder="e.g., color-red"
         />
-
-        <Stack direction="row" justifyContent="flex-end" spacing={2}>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="contained">
-            {defaultValues ? "Update" : "Save"}
-          </Button>
-        </Stack>
-      </Stack>
-    </Box>
+      </DialogContent>
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose} disabled={isPending}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit(onSubmit)}
+          disabled={isPending}
+          startIcon={
+            isPending ? <CircularProgress size={20} color="inherit" /> : null
+          }
+        >
+          {isPending ? "Saving..." : "Save"}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

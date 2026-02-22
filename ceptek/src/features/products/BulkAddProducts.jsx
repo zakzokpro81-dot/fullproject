@@ -25,7 +25,9 @@ import FlashOnIcon from "@mui/icons-material/FlashOn";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import BulkProductTable from "./BulkProductTable";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import ProductActionDialogs from "../../componenets/ProductActionDialogs"; // تأكد من مسار الملف الصحيح
+import { Snackbar, Alert } from "@mui/material";
+import { useSnackbar } from "../../hooks/useSnackbar";
+import ProductActionDialogs from "../../components/ProductActionDialogs"; // تأكد من مسار الملف الصحيح
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
@@ -33,7 +35,6 @@ import { ModelAutocomplete } from "./ModelAutocomplete";
 import { Accordion, AccordionSummary, AccordionDetails } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
-import { useBulkProductLogic } from "./useBulkProductLogic";
 const SECTION_STYLE = {
   p: 3,
   borderRadius: 2,
@@ -61,7 +62,7 @@ const FIELD_PROPS = {
 };
 
 export function BulkAddProducts() {
-  const logic = useBulkProductLogic();
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   const { control, watch, setValue } = useForm({
     defaultValues: {
@@ -250,7 +251,10 @@ export function BulkAddProducts() {
     },
     onError: (error) => {
       console.error("Error details:", error);
-      alert(`فشل الحفظ: ${error.message || "تأكد من إدخال البيانات المطلوبة"}`);
+      showSnackbar(
+        `Save failed: ${error.message || "Please check the required fields"}`,
+        "error",
+      );
     },
   });
 
@@ -401,6 +405,7 @@ export function BulkAddProducts() {
         name: model.label || model.model_name,
         model_id: model.model_id || model.id,
         brand_id: model.brand_id,
+        family_id: model.family_id || null,
         part_name: watchedProductType?.name || "",
         category: watchedCategory,
         productType: watchedProductType,
@@ -474,6 +479,8 @@ export function BulkAddProducts() {
 
               brand_id: model.brand_id,
 
+              family_id: model.family_id || null,
+
               part_name: watchedProductType?.name || "",
 
               category: watchedCategory,
@@ -522,6 +529,8 @@ export function BulkAddProducts() {
             model_id: model.id,
 
             brand_id: model.brand_id,
+
+            family_id: model.family_id || null,
 
             part_name: watchedProductType?.name || "",
 
@@ -580,7 +589,7 @@ export function BulkAddProducts() {
 
   const handleRequestSave = () => {
     if (rows.length === 0) {
-      alert("لا توجد منتجات لحفظها");
+      showSnackbar("No products to save", "warning");
       return;
     }
     setOpenSaveConfirm(true); // نفتح الديالوغ بدل الحفظ المباشر
@@ -612,6 +621,7 @@ export function BulkAddProducts() {
       }
       return {
         name: row.name || "",
+        part_name: row.part_name || "",
         brand_id: row.brand_id || null,
         model_id: row.model_id || null,
         family_id: row.family_id || null,
@@ -1122,6 +1132,21 @@ export function BulkAddProducts() {
         openDeleteDialog={false}
         setOpenDeleteDialog={() => {}}
       />
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={closeSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={closeSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

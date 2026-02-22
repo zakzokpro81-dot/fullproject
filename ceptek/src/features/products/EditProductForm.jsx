@@ -15,6 +15,8 @@ import {
   Stack,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { editProductSchema } from "./product.schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getAttributes,
@@ -27,13 +29,20 @@ import {
 } from "./product.api";
 import { StockAdjustmentDialog } from "./StockAdjustmentDialog";
 
-const EditProductForm = ({ open, onClose, product }) => {
+const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
   const queryClient = useQueryClient();
   const [isReady, setIsReady] = useState(false);
   // تعريف حالة لفتح وإغلاق نافذة التسوية المخزنية
   const [openAdjustment, setOpenAdjustment] = React.useState(false);
   // تم إضافة watch هنا لحل الخطأ الذي ظهر لك
-  const { control, handleSubmit, setValue, watch } = useForm({
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(editProductSchema),
     defaultValues: {
       sellPrice: 0,
       costPrice: 0,
@@ -79,7 +88,7 @@ const EditProductForm = ({ open, onClose, product }) => {
     },
     onError: (err) => {
       console.error("Update Error:", err);
-      alert("فشل تحديث المنتج");
+      showSnackbar?.("Failed to update product", "error");
     },
   });
 
@@ -105,9 +114,7 @@ const EditProductForm = ({ open, onClose, product }) => {
       setValue("description", product.description || "");
       setValue("is_active", Boolean(product?.is_active));
 
-      // ملاحظة: تأكد من صحة هذا الحقل warehouses.warehouse_id، هل تقصد قيمة من مصفوفة؟
-      // غالباً هذا السطر زائد إذا كنت تعتمد على السيرفر في الأسفل
-      setValue("warehouses", warehouses.warehouse_id || "");
+      // Warehouse is set below via currentStockEntry or product.warehouse_id
 
       // 2. ربط الكاتاغوري بناءً على category_id
       if (product.category_id) {
@@ -182,7 +189,7 @@ const EditProductForm = ({ open, onClose, product }) => {
       category_id: data.category?.id || product.category_id,
       warehouse_id: data.warehouse?.id || product.warehouse_id,
       attributes: formattedAttributes,
-      is_active: data.is_active ? 1 : 0, // Maps the Switch boolean to the API format (1 or 0)
+      is_active: Boolean(data.is_active),
     };
 
     mutation.mutate({ id: product.id, payload });
@@ -330,10 +337,10 @@ const EditProductForm = ({ open, onClose, product }) => {
               open={openAdjustment}
               onClose={() => setOpenAdjustment(false)}
               product={product}
-              // نمرر الـ id مباشرة من المتغير الموجود في ملفك الأب
               warehouseId={
                 currentStockEntry?.warehouse?.id || product?.warehouse_id
               }
+              showSnackbar={showSnackbar}
             />
             <Controller
               name="description"
@@ -354,14 +361,9 @@ const EditProductForm = ({ open, onClose, product }) => {
               name="is_active"
               control={control}
               render={({ field }) => (
-                <Switch
-                  {...field}
-                  label="is_active"
-                  multiline
-                  rows={2}
-                  margin="normal"
-                  fullWidth
-                  checked={!!field.value}
+                <FormControlLabel
+                  control={<Switch {...field} checked={!!field.value} />}
+                  label="Active"
                 />
               )}
             />

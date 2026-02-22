@@ -27,3 +27,9 @@ export const brandSchema = z.object({
 
   is_active: z.boolean().default(true),
 });
+
+export const brandDefaults = {
+  name: "",
+  slug: "",
+  is_active: true,
+};

@@ -14,7 +14,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { getPayments, deletePayment, deletePayments } from "./payment.api";
 import { paymentColumns } from "./payment.columns";
 import PaymentForm from "./PaymentForm";
-import ProductActionDialogs from "../../componenets/ProductActionDialogs";
+import ProductActionDialogs from "../../components/ProductActionDialogs";
 
 export function PaymentList() {
   const queryClient = useQueryClient();

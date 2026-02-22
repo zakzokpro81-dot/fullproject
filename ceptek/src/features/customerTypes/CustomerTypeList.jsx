@@ -7,7 +7,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { getCustomerTypes, deleteCustomerType } from "./customerType.api";
 import { customerTypeColumns } from "./customerType.columns";
 import CustomerTypeForm from "./CustomerTypeForm"; // سننشئه في الخطوة التالية
-import ProductActionDialogs from "../../componenets/ProductActionDialogs"; // إعادة استخدام مكون الديالوغ الخاص بك
+import ProductActionDialogs from "../../components/ProductActionDialogs"; // إعادة استخدام مكون الديالوغ الخاص بك
 
 export function CustomerTypeList() {
   const queryClient = useQueryClient();

@@ -1,5 +1,7 @@
 import supabase from "../../config/supabase";
 
+export const PAYMENT_QUERY_KEY = "payments";
+
 export const getPayments = async ({ page, pageSize, searchText }) => {
   const from = page * pageSize;
   const to = from + pageSize - 1;

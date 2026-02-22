@@ -1,9 +1,19 @@
 import { z } from "zod";
 
-export const stockMovementSchema = z.object({
-  product_id: z.number().min(1, "Product is required"),
-  warehouse_id: z.number().min(1, "Warehouse is required"),
-  movement_type_id: z.number().min(1, "Movement type is required"),
-  quantity: z.number().min(1, "Quantity must be greater than 0"),
-  notes: z.string().optional(),
+export const warehouseStockSchema = z.object({
+  product_id: z.coerce.number().positive("Product is required"),
+  warehouse_id: z.coerce.number().positive("Warehouse is required"),
+  quantity: z.coerce.number().min(1, "Quantity must be at least 1"),
+  unit_cost: z.coerce.number().min(0, "Cost must be 0 or more").default(0),
 });
+
+/**
+ * Blank object with all schema defaults applied.
+ * Single source of truth — used by WarehouseStockForm.
+ */
+export const warehouseStockDefaults = {
+  product_id: 0,
+  warehouse_id: 0,
+  quantity: 1,
+  unit_cost: 0,
+};

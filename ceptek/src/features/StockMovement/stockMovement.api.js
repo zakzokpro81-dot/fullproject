@@ -1,5 +1,7 @@
 import supabase from "../../config/supabase";
 
+export const STOCK_MOVEMENT_QUERY_KEY = "stockMovements";
+
 export const getStockMovements = async ({ page, pageSize, searchText }) => {
   const from = page * pageSize;
   const to = from + pageSize - 1;
@@ -35,7 +37,6 @@ export const getStockMovements = async ({ page, pageSize, searchText }) => {
     console.error("Supabase Select Error:", error.message);
     throw error;
   }
-  console.log("Data Debug:", data[0]);
   return { data, count };
 };
 

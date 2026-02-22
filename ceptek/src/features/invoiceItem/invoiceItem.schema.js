@@ -7,3 +7,9 @@ export const invoiceItemSchema = z.object({
   unit_price: z.coerce.number().min(0, "Unit price cannot be negative"),
   total_price: z.coerce.number().min(0),
 });
+
+export const invoiceFormSchema = z.object({
+  customer_id: z.coerce.number().min(1, "Please select a customer"),
+  status_id: z.coerce.number().min(1, "Please select a status"),
+  invoice_date: z.string().min(1, "Date is required"),
+});

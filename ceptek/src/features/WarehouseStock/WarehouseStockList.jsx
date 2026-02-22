@@ -1,228 +1,229 @@
-import React, { useState, useMemo } from "react";
+import { useState } from "react";
+import { Box, Button, Typography, Alert, TextField, Paper } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+
 import {
-  Box,
-  Button,
-  Stack,
-  TextField,
-  Autocomplete,
-  Paper,
-  Typography,
-  Dialog ,
-  DialogTitle ,
-  DialogContent ,
-} from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {WarehouseStockForm}  from "./WarehouseStockForm"
-import { getWarehouseStock, getWarehouses, getBrands ,updateStockAction} from "./warehouseStock.api";
-import { stockColumns } from "./warehouseStock.columns";
-import ProductActionDialogs from "../../componenets/ProductActionDialogs";
-import ProductDetailsDrawer from "../orders/ProductDetailsDrawer";
+  useWarehouseStockQuery,
+  useWarehouseStockMutations,
+  useWarehouseStockFormOptions,
+} from "./warehouseStock.hooks";
+import { warehouseStockColumns } from "./warehouseStock.columns";
+import WarehouseStockForm from "./WarehouseStockForm";
+import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
+import MessageDialog from "../../components/MessageDialog";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function WarehouseStockList() {
-  const [searchText, setSearchText] = useState("");
-  const [selectedWarehouse, setSelectedWarehouse] = useState(null);
-  const [selectedBrand, setSelectedBrand] = useState(null);
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  // ── UI state ──────────────────────────────────────────────────────────────
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [openForm, setOpenForm] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [openDeleteSelected, setOpenDeleteSelected] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [mode, setMode] = useState("add"); // "add" | "edit"
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const queryClient = useQueryClient();
+  // ── Dialogs ───────────────────────────────────────────────────────────────
+  function handleCloseForm() {
+    setOpenForm(false);
+    setSelectedItem(null);
+  }
 
-     const [detailDrawerOpen, setDetailDrawerOpen] = React.useState(false);
-      const [selectedProductId, setSelectedProductId] = React.useState(null);
+  const { messageDialog, showMessageDialog, closeMessageDialog } = useMessageDialog();
 
-  const { data: stock = [], isLoading } = useQuery({
-    queryKey: ["warehouse_stock"],
-    queryFn: getWarehouseStock,
-  });
+  // ── Data hooks ────────────────────────────────────────────────────────────
+  const {
+    rows,
+    rowCount,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    paginationModel,
+    setPaginationModel,
+    searchText,
+    setSearchText,
+  } = useWarehouseStockQuery();
 
-  const { data: warehouses = [] } = useQuery({
-    queryKey: ["warehouses"],
-    queryFn: getWarehouses,
-  });
+  const { warehouses, products } = useWarehouseStockFormOptions();
 
-  const { data: brands = [] } = useQuery({
-    queryKey: ["brands"],
-    queryFn: getBrands,
-  });
+  const { createMutation, updateMutation, deleteMutation, deleteMultipleMutation } =
+    useWarehouseStockMutations({ onSuccess: handleCloseForm, showMessageDialog });
 
-  // داخل WarehouseStockList
+  // ── Handlers ─────────────────────────────────────────────────────────────
+  const handleOpenAdd = () => {
+    setMode("add");
+    setSelectedItem(null);
+    setOpenForm(true);
+  };
 
-const mutation = useMutation({
-    mutationFn: updateStockAction,
-    onSuccess: (data) => {
-        console.log("تم الحفظ بنجاح:", data);
-        queryClient.invalidateQueries(["warehouse_stock"]);
-        setIsFormOpen(false); // هذا السطر لن يعمل إلا إذا لم يحدث Error في الدالة أعلاه
-    },
-    onError: (err) => {
-        console.error("فشلت العملية:", err);
+  const handleOpenEdit = (row) => {
+    setMode("edit");
+    setSelectedItem(row);
+    setOpenForm(true);
+  };
+
+  const handleFormSubmit = (data) => {
+    if (mode === "add") {
+      createMutation.mutate(data);
+    } else {
+      updateMutation.mutate({ id: selectedItem.id, data });
     }
-});
+  };
 
+  const handleDeleteClick = (row) => {
+    setSelectedItem(row);
+    setOpenDelete(true);
+  };
 
-const handleSaveStock = async (data) => {
-    // استخدم mutateAsync بدلاً من mutate
-    return await mutation.mutateAsync(data);
-};
-
-
-  const filteredRows = useMemo(() => {
-    return stock.filter((row) => {
-      const matchesSearch =
-        row?.products?.name?.toLowerCase().includes(searchText.toLowerCase()) ||
-        row?.products?.sku?.toLowerCase().includes(searchText.toLowerCase());
-
-      const matchesWarehouse = selectedWarehouse
-        ? row?.warehouses?.id === selectedWarehouse.id
-        : true;
-
-      const matchesBrand = selectedBrand
-        ? row?.products?.brands?.id === selectedBrand.id
-        : true;
-
-      return matchesSearch && matchesWarehouse && matchesBrand;
+  const handleDeleteConfirm = () => {
+    if (!selectedItem) return;
+    deleteMutation.mutate(selectedItem.id, {
+      onSettled: () => {
+        setOpenDelete(false);
+        setSelectedItem(null);
+      },
     });
-  }, [stock, searchText, selectedWarehouse, selectedBrand]);
+  };
 
-  const toggleSelect = (id) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
+  const handlePaginationChange = (newModel) => {
+    setSelectedIds(new Set());
+    setPaginationModel(newModel);
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === filteredRows.length) {
-      setSelectedIds([]);
+    const allSelected = rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+    if (allSelected) {
+      setSelectedIds(new Set());
     } else {
-      setSelectedIds(filteredRows.map((r) => r.id));
+      setSelectedIds(new Set(rows.map((r) => r.id)));
     }
   };
 
-  const handleDelete = (row) => {
-    setDeleteTarget(row);
+  const toggleSelect = (id) => {
+    const newSet = new Set(selectedIds);
+    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+    setSelectedIds(newSet);
   };
 
-  const columns = stockColumns(
-    handleDelete,
-    selectedIds,
-    toggleSelect,
-    filteredRows,
-    toggleSelectAll
-  );
+  const handleDeleteSelectedConfirm = () => {
+    if (selectedIds.size === 0) return;
+    deleteMultipleMutation.mutate(Array.from(selectedIds), {
+      onSettled: () => {
+        setOpenDeleteSelected(false);
+        setSelectedIds(new Set());
+      },
+    });
+  };
 
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
-      <Typography variant="h5" mb={2}>
-        Stock Management
-      </Typography>
-      <Button variant="contained" onClick={() => setIsFormOpen(true)} >
-            Add Stock Movement
+    <Box>
+      {/* ── Header ── */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h5">Warehouse Stock</Typography>
+        <Box display="flex" gap={1}>
+          {selectedIds.size > 0 && (
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => setOpenDeleteSelected(true)}
+            >
+              Delete Selected ({selectedIds.size})
+            </Button>
+          )}
+          <Button variant="contained" onClick={handleOpenAdd}>
+            Add Stock Entry
           </Button>
-          </Stack>
-      {/* Filters */}
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Stack direction="row" spacing={2}>
-          <TextField
-            label="Search"
-            fullWidth
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-          />
+        </Box>
+      </Box>
 
-          <Autocomplete
-            options={warehouses}
-            getOptionLabel={(option) => option.name || ""}
-            value={selectedWarehouse}
-            onChange={(e, value) => setSelectedWarehouse(value)}
-            renderInput={(params) => (
-              <TextField {...params} label="Warehouse" />
-            )}
-            sx={{ minWidth: 200 }}
-          />
+      {/* ── Search ── */}
+      <Box mb={2}>
+        <TextField
+          label="Search"
+          variant="outlined"
+          size="small"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          fullWidth
+          sx={{ maxWidth: 400 }}
+        />
+      </Box>
 
-          <Autocomplete
-            options={brands}
-            getOptionLabel={(option) => option.name || ""}
-            value={selectedBrand}
-            onChange={(e, value) => setSelectedBrand(value)}
-            renderInput={(params) => <TextField {...params} label="Brand" />}
-            sx={{ minWidth: 200 }}
-          />
+      {/* ── Error banner ── */}
+      {isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Failed to load data: {error?.message || "Unknown error"}
+        </Alert>
+      )}
 
-          
-        </Stack>
+      {/* ── DataGrid (server-side pagination) ── */}
+      <Paper sx={{ height: 650, width: "100%" }}>
+        <DataGrid
+          rows={rows}
+          rowCount={rowCount}
+          columns={warehouseStockColumns(
+            handleOpenEdit,
+            handleDeleteClick,
+            selectedIds,
+            toggleSelect,
+            rows,
+            toggleSelectAll,
+          )}
+          loading={isLoading || isFetching}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationChange}
+          pageSizeOptions={[10, 25, 50]}
+          disableSelectionOnClick
+          sx={{ width: "100%" }}
+        />
       </Paper>
 
-      {/* DataGrid */}
-      <Paper sx={{ height: 600 }}>
-       <DataGrid
-  rows={filteredRows}
-  columns={columns}
-  loading={isLoading}
-  // التعديل هنا 👇
-  onRowClick={(params) => {
-    // params.row يحتوي على بيانات السطر بالكامل
-    // تأكد من مسار المعرف (id) بناءً على بنية البيانات لديك
-    const productId = params.row?.products?.id; 
-    
-    if (productId) {
-      setSelectedProductId(productId);
-      setDetailDrawerOpen(true);
-    }
-  }}
-  slots={{ toolbar: GridToolbar }}
-  slotProps={{
-    toolbar: { quickFilterAlwaysVisible: true },
-  }}
-  sx={{ 
-    width: "100%",
-    '& .MuiDataGrid-row:hover': { cursor: 'pointer' } // اختيارية: لتحويل الماوس لشكل يد عند التمرير
-  }}
-/>
-      </Paper>
-
-<Dialog 
-        open={isFormOpen} 
-        onClose={() => setIsFormOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle sx={{ fontWeight: 'bold' }}>Add / Update Stock</DialogTitle>
-        <DialogContent dividers>
-          <WarehouseStockForm 
-           onSave={(data) => mutation.mutateAsync(data)} 
-  defaultValues={{}}
-          />
-        </DialogContent>
-      </Dialog>
-
-
-      
-      {/* Delete Dialog */}
-      <ProductActionDialogs
-        open={Boolean(deleteTarget)}
-        onClose={() => setDeleteTarget(null)}
-        title="Delete Stock Item"
-        description={`Are you sure you want to delete stock for: ${
-          deleteTarget?.products?.name || ""
-        }`}
-        onConfirm={() => {
-          // لاحقاً نربطها بـ mutation
-          setDeleteTarget(null);
-        }}
+      {/* ── Form Dialog ── */}
+      <WarehouseStockForm
+        open={openForm}
+        mode={mode}
+        initialData={selectedItem}
+        onClose={handleCloseForm}
+        onSubmit={handleFormSubmit}
+        isPending={createMutation.isPending || updateMutation.isPending}
+        warehouses={warehouses}
+        products={products}
       />
 
+      {/* ── Delete Confirmation (single) ── */}
+      <ConfirmDeleteDialog
+        open={openDelete}
+        itemName={selectedItem?.products?.name || selectedItem?.id || ""}
+        onClose={() => {
+          setOpenDelete(false);
+          setSelectedItem(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        isPending={deleteMutation.isPending}
+      />
 
-      <ProductDetailsDrawer
-                      detailDrawerOpen={detailDrawerOpen}
-                      setDetailDrawerOpen={setDetailDrawerOpen}
-                      selectedProductId={selectedProductId}
-                  />
+      {/* ── Delete Confirmation (bulk) ── */}
+      <ConfirmDeleteDialog
+        open={openDeleteSelected}
+        itemName={`${selectedIds.size} selected items`}
+        onClose={() => setOpenDeleteSelected(false)}
+        onConfirm={handleDeleteSelectedConfirm}
+        isPending={deleteMultipleMutation.isPending}
+      />
 
+      {/* ── Message Dialog ── */}
+      <MessageDialog
+        open={messageDialog.open}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        severity={messageDialog.severity}
+        onClose={closeMessageDialog}
+      />
 
+      <ScrollToTopButton />
     </Box>
   );
 }

@@ -1,176 +1,249 @@
-//الصفحة الرئيسية للـ Families، تعرض DataGrid، Toolbar، وDialog حذف.
+// FamilyList.jsx
+// صفحة عرض Families — thin UI shell (named export)
 
 import { useState } from "react";
 import {
   Box,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogActions,
-  DialogContent,
   Typography,
+  Alert,
+  TextField,
+  Paper,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { GridToolbar } from "@mui/x-data-grid";
+
 import {
-  getFamilies,
-  createFamily,
-  updateFamily,
-  deleteFamily,
-} from "./family.api";
+  useFamilyQuery,
+  useFamilyMutations,
+  useFamilyFormOptions,
+} from "./family.hooks";
 import { familyColumns } from "./family.columns";
 import FamilyForm from "./FamilyForm";
-import ScrollToTopButton from "../../componenets/ScrollToTopButton";
-import ProductActionDialogs from "../../componenets/ProductActionDialogs"; // تأكد من مسار الملف الصحيح
+import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
+import MessageDialog from "../../components/MessageDialog";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function FamilyList() {
-  const queryClient = useQueryClient();
-
+  // ── UI state ──
+  const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
-  const [selectedFamily, setSelectedFamily] = useState(null);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [deleteId, setDeleteId] = useState(null);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [openDeleteSelected, setOpenDeleteSelected] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [mode, setMode] = useState("add"); // "add" | "edit"
 
-  // Fetch families
-  const { data: families = [], isLoading } = useQuery({
-    queryKey: ["families"],
-    queryFn: getFamilies,
-  });
+  // ── Close form helper (referenced by mutations hook) ──
+  function handleCloseForm() {
+    setOpenForm(false);
+    setSelectedItem(null);
+  }
 
-  // Create mutation
-  const createMutation = useMutation({
-    mutationFn: createFamily,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["families"]);
-      setOpenForm(false);
-    },
-  });
+  // ── Hooks ──
+  const { messageDialog, showMessageDialog, closeMessageDialog } =
+    useMessageDialog();
 
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: updateFamily,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["families"]);
-      setOpenForm(false);
-      setSelectedFamily(null);
-    },
-  });
+  const {
+    rows,
+    rowCount,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    paginationModel,
+    setPaginationModel,
+    searchText,
+    setSearchText,
+  } = useFamilyQuery();
 
-  // Delete mutation
-  const deleteMutation = useMutation({
-    mutationFn: deleteFamily,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["families"]);
-      setOpenDeleteDialog(false);
-      setDeleteId(null);
-    },
-  });
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    deleteMultipleMutation,
+  } = useFamilyMutations({ onSuccess: handleCloseForm, showMessageDialog });
 
-  const handleAdd = () => {
-    setSelectedFamily(null);
+  const { brands, productTypes } = useFamilyFormOptions();
+
+  // ── Handlers ──
+  const handleOpenAdd = () => {
+    setMode("add");
+    setSelectedItem(null);
     setOpenForm(true);
   };
 
-  const handleEdit = (family) => {
-    setSelectedFamily(family);
+  const handleOpenEdit = (row) => {
+    setMode("edit");
+    setSelectedItem(row);
     setOpenForm(true);
-  };
-
-  const handleDeleteClick = (id) => {
-    setDeleteId(id);
-    setOpenDeleteDialog(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    deleteMutation.mutate(deleteId);
   };
 
   const handleFormSubmit = (data) => {
-    if (selectedFamily) {
-            console.log("update",data)
-
-      updateMutation.mutate({ id: selectedFamily.id, ...data });
-    } else {
-      console.log("create",data)
+    if (mode === "add") {
       createMutation.mutate(data);
-      
+    } else {
+      updateMutation.mutate({ id: selectedItem.id, data });
     }
   };
 
+  const handleDeleteClick = (row) => {
+    setSelectedItem(row);
+    setOpenDelete(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!selectedItem) return;
+    deleteMutation.mutate(selectedItem.id, {
+      onSettled: () => {
+        setOpenDelete(false);
+        setSelectedItem(null);
+      },
+    });
+  };
+
+  const handlePaginationChange = (newModel) => {
+    setSelectedIds(new Set());
+    setPaginationModel(newModel);
+  };
+
+  const toggleSelectAll = () => {
+    const allSelected =
+      rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(rows.map((r) => r.id)));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    const newSet = new Set(selectedIds);
+    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+    setSelectedIds(newSet);
+  };
+
+  const handleDeleteSelectedConfirm = () => {
+    if (selectedIds.size === 0) return;
+    deleteMultipleMutation.mutate(Array.from(selectedIds), {
+      onSettled: () => {
+        setOpenDeleteSelected(false);
+        setSelectedIds(new Set());
+      },
+    });
+  };
+
   return (
-    <Box p={2}>
+    <Box>
+      {/* ── Header ── */}
       <Box
         display="flex"
         justifyContent="space-between"
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">Family</Typography>
-        <Button variant="contained" onClick={handleAdd} sx={{ mb: 2 }}>
-          Add Family
-        </Button>
+        <Typography variant="h5">Families</Typography>
+        <Box display="flex" gap={1}>
+          {selectedIds.size > 0 && (
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => setOpenDeleteSelected(true)}
+            >
+              Delete Selected ({selectedIds.size})
+            </Button>
+          )}
+          <Button variant="contained" onClick={handleOpenAdd}>
+            Add Family
+          </Button>
+        </Box>
       </Box>
 
-      <DataGrid
-        rows={families}
-        columns={familyColumns(handleEdit, handleDeleteClick)}
-        loading={isLoading}
-        autoHeight
-        pageSize={10}
-        rowsPerPageOptions={[10, 20, 50]}
-        sx={{
-          width: "100%",
+      {/* ── Search Field ── */}
+      <Box mb={2}>
+        <TextField
+          label="Search"
+          variant="outlined"
+          size="small"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          fullWidth
+          sx={{ maxWidth: 400 }}
+        />
+      </Box>
+
+      {/* ── Error Banner ── */}
+      {isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Failed to load data: {error?.message || "Unknown error"}
+        </Alert>
+      )}
+
+      {/* ── Data Grid (server-side pagination) ── */}
+      <Paper sx={{ height: 650, width: "100%" }}>
+        <DataGrid
+          rows={rows}
+          rowCount={rowCount}
+          columns={familyColumns(
+            handleOpenEdit,
+            handleDeleteClick,
+            selectedIds,
+            toggleSelect,
+            rows,
+            toggleSelectAll,
+          )}
+          loading={isLoading || isFetching}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationChange}
+          pageSizeOptions={[10, 25, 50]}
+          disableSelectionOnClick
+          sx={{ width: "100%" }}
+        />
+      </Paper>
+
+      {/* ── Form Dialog ── */}
+      <FamilyForm
+        open={openForm}
+        mode={mode}
+        initialData={selectedItem}
+        onClose={handleCloseForm}
+        onSubmit={handleFormSubmit}
+        isPending={createMutation.isPending || updateMutation.isPending}
+        brands={brands}
+        productTypes={productTypes}
+      />
+
+      {/* ── Delete Confirmation (single) ── */}
+      <ConfirmDeleteDialog
+        open={openDelete}
+        itemName={selectedItem?.name || ""}
+        onClose={() => {
+          setOpenDelete(false);
+          setSelectedItem(null);
         }}
-        showToolbar
-        slots={{
-          toolbar: GridToolbar,
-        }}
+        onConfirm={handleDeleteConfirm}
+        isPending={deleteMutation.isPending}
+      />
+
+      {/* ── Delete Confirmation (bulk) ── */}
+      <ConfirmDeleteDialog
+        open={openDeleteSelected}
+        itemName={`${selectedIds.size} selected items`}
+        onClose={() => setOpenDeleteSelected(false)}
+        onConfirm={handleDeleteSelectedConfirm}
+        isPending={deleteMultipleMutation.isPending}
+      />
+
+      {/* ── Message Dialog ── */}
+      <MessageDialog
+        open={messageDialog.open}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        severity={messageDialog.severity}
+        onClose={closeMessageDialog}
       />
 
       <ScrollToTopButton />
-      {/* Form Dialog */}
-      <FamilyForm
-        open={openForm}
-        onClose={() => setOpenForm(false)}
-        onSubmit={handleFormSubmit}
-        defaultValues={selectedFamily}
-        initialData={selectedFamily}
-      />
-
-      {/* Delete Confirmation Dialog */}
-
-      {/* <Dialog
-          open={openDeleteDialog}
-          onClose={() => setOpenDeleteDialog(false)}
-        >
-          <DialogTitle>Delete Confirm</DialogTitle>
-
-          <DialogContent>
-            Are you sure you want to delete this family?{" "}
-            <strong>{selectedFamily?.name}</strong>
-            <br />
-            no back
-          </DialogContent>
-
-          <DialogActions>
-            <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
-            <Button variant="contained" onClick={handleDeleteConfirm}>
-              Delete
-            </Button>
-          </DialogActions>
-        </Dialog> */}
-
-      <ProductActionDialogs
-        //openDeleteSelectedDialog={openDeleteDialog}
-        //setOpenDeleteSelectedDialog={setOpenDelete}
-        //selectedIds={selectedFamily?.id}
-        handleDeleteSelected={handleDeleteClick}
-        openDeleteDialog={openDeleteDialog}
-        setOpenDeleteDialog={setOpenDeleteDialog}
-        selectedProduct={selectedFamily}
-        handleDeleteConfirm={handleDeleteConfirm}
-      />
     </Box>
   );
 }

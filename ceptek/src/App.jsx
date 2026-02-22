@@ -5,8 +5,8 @@ import { useState } from "react";
 import CssBaseline from "@mui/material/CssBaseline";
 import Typography from "@mui/material/Typography";
 import { createTheme, styled, ThemeProvider } from "@mui/material/styles";
-import { TopBar } from "./componenets/TopBar";
-import { SideBar } from "./componenets/SideBar";
+import { TopBar } from "./components/TopBar";
+import { SideBar } from "./components/SideBar";
 import { getDesignTokens } from "./theme";
 import { Outlet } from "react-router-dom";
 

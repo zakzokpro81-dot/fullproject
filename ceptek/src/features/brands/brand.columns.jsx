@@ -12,11 +12,37 @@
 
 // الهدف:
 // نفس الجدول ممكن نستخدمه لاحقاً مع DataGrid أو Table ثانية بدون تعديل المنطق
-import { Box, IconButton } from "@mui/material";
-import EditNoteIcon from '@mui/icons-material/EditNote';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Box, Checkbox, IconButton, Tooltip } from "@mui/material";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-export const brandColumns = (onEdit, onDelete) => [
+export const brandColumns = ({ onEdit, onDelete, selectedIds, toggleSelect, rows, toggleSelectAll }) => [
+  {
+    field: "select",
+    headerName: "",
+    width: 60,
+    sortable: false,
+    disableColumnMenu: true,
+    renderHeader: () => {
+      const allSelected =
+        rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+      return (
+        <Checkbox
+          checked={allSelected}
+          indeterminate={selectedIds.size > 0 && !allSelected}
+          onClick={(e) => e.stopPropagation()}
+          onChange={toggleSelectAll}
+        />
+      );
+    },
+    renderCell: (params) => (
+      <Checkbox
+        checked={selectedIds.has(params.row.id)}
+        onClick={(e) => e.stopPropagation()}
+        onChange={() => toggleSelect(params.row.id)}
+      />
+    ),
+  },
   {
     field: "name",
     headerName: "Brand Name",
@@ -31,32 +57,34 @@ export const brandColumns = (onEdit, onDelete) => [
     field: "is_active",
     headerName: "Status",
     width: 120,
-    renderCell: (params) =>
-      params.value ? "Active" : "Inactive",
+    renderCell: (params) => (params.value ? "Active" : "Inactive"),
   },
   {
     field: "actions",
     headerName: "Actions",
-    width: 160,
+    width: 140,
     sortable: false,
     filterable: false,
+    disableExport: true,
     renderCell: (params) => {
       const row = params.row;
-
       return (
-        <>
-          <Box >
-            <IconButton onClick={() => onEdit(row)}>
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          <Tooltip title="Edit">
+            <IconButton aria-label="edit brand" onClick={() => onEdit(row)}>
               <EditNoteIcon />
             </IconButton>
-            <IconButton onClick={() => onDelete(row )}>
-
+          </Tooltip>
+          <Tooltip title="Delete">
+            <IconButton
+              aria-label="delete brand"
+              color="error"
+              onClick={() => onDelete(row)}
+            >
               <DeleteIcon />
-
             </IconButton>
-          </Box>
-
-        </>
+          </Tooltip>
+        </Box>
       );
     },
   },

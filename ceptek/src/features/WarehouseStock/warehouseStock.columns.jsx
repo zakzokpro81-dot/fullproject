@@ -1,21 +1,37 @@
 import { IconButton, Checkbox, Stack } from "@mui/material";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-export const stockColumns = (onDelete, selectedIds, toggleSelect, rows = [], toggleSelectAll) => [
+export const warehouseStockColumns = (
+  onEdit,
+  onDelete,
+  selectedIds,
+  toggleSelect,
+  rows = [],
+  toggleSelectAll,
+) => [
   {
     field: "select",
     headerName: "",
     width: 60,
-    renderHeader: () => (
-      <Checkbox
-        checked={rows.length > 0 && selectedIds.length === rows.length}
-        indeterminate={selectedIds.length > 0 && selectedIds.length < rows.length}
-        onChange={toggleSelectAll}
-      />
-    ),
+    sortable: false,
+    disableColumnMenu: true,
+    renderHeader: () => {
+      const allSelected =
+        rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+      return (
+        <Checkbox
+          checked={allSelected}
+          indeterminate={selectedIds.size > 0 && !allSelected}
+          onClick={(e) => e.stopPropagation()}
+          onChange={toggleSelectAll}
+        />
+      );
+    },
     renderCell: (params) => (
       <Checkbox
-        checked={selectedIds.includes(params.row.id)}
+        checked={selectedIds.has(params.row.id)}
+        onClick={(e) => e.stopPropagation()}
         onChange={() => toggleSelect(params.row.id)}
       />
     ),
@@ -25,6 +41,12 @@ export const stockColumns = (onDelete, selectedIds, toggleSelect, rows = [], tog
     headerName: "Product",
     flex: 1,
     valueGetter: (value, row) => row?.products?.name || "",
+  },
+  {
+    field: "sku",
+    headerName: "SKU",
+    flex: 1,
+    valueGetter: (value, row) => row?.products?.sku || "",
   },
   {
     field: "brand",
@@ -46,10 +68,28 @@ export const stockColumns = (onDelete, selectedIds, toggleSelect, rows = [], tog
   {
     field: "actions",
     headerName: "Actions",
-    width: 100,
+    width: 160,
+    sortable: false,
+    filterable: false,
+    disableExport: true,
     renderCell: (params) => (
       <Stack direction="row" spacing={1}>
-        <IconButton color="error" onClick={() => onDelete(params.row)}>
+        <IconButton
+          color="error"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(params.row);
+          }}
+        >
+          <EditNoteIcon />
+        </IconButton>
+        <IconButton
+          color="primary"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(params.row);
+          }}
+        >
           <DeleteIcon />
         </IconButton>
       </Stack>

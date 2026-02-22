@@ -1,34 +1,89 @@
-import { GridActionsCellItem } from '@mui/x-data-grid';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { IconButton, Stack, Checkbox } from "@mui/material";
+import EditNoteIcon from "@mui/icons-material/EditNote";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-export const warehouseColumns = (onEdit, onDelete) => [
-    { field: 'name', headerName: 'Name', flex: 1 },
-    { field: 'location', headerName: 'Location', flex: 1 },
-    {
-        field: 'is_active',
-        headerName: 'Active',
-        width: 100,
-        type: 'boolean',
+export const warehouseColumns = (
+  onEdit,
+  onDelete,
+  selectedIds,
+  toggleSelect,
+  rows = [],
+  toggleSelectAll,
+) => [
+  {
+    field: "select",
+    headerName: "",
+    width: 60,
+    sortable: false,
+    disableColumnMenu: true,
+
+    renderHeader: () => {
+      const allSelected =
+        rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+
+      return (
+        <Checkbox
+          checked={allSelected}
+          indeterminate={selectedIds.size > 0 && !allSelected}
+          onClick={(e) => e.stopPropagation()}
+          onChange={toggleSelectAll}
+        />
+      );
     },
-    {
-        field: 'actions',
-        type: 'actions',
-        headerName: 'Actions',
-        width: 120,
-        getActions: (params) => [
-            <GridActionsCellItem
-                key="edit"
-                icon={<EditIcon />}
-                label="Edit"
-                onClick={() => onEdit(params.row)}
-            />,
-            <GridActionsCellItem
-                key="delete"
-                icon={<DeleteIcon />}
-                label="Delete"
-                onClick={() => onDelete(params.row)}
-            />,
-        ],
-    },
+
+    renderCell: (params) => (
+      <Checkbox
+        checked={selectedIds.has(params.row.id)}
+        onClick={(e) => e.stopPropagation()}
+        onChange={() => toggleSelect(params.row.id)}
+      />
+    ),
+  },
+  {
+    field: "name",
+    headerName: "Name",
+    flex: 1,
+  },
+  {
+    field: "location",
+    headerName: "Location",
+    flex: 1,
+  },
+  {
+    field: "is_active",
+    headerName: "Active",
+    width: 120,
+    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+  },
+  {
+    field: "actions",
+    headerName: "Actions",
+    width: 160,
+    sortable: false,
+    filterable: false,
+    disableExport: true,
+    renderCell: (params) => (
+      <Stack direction="row" spacing={1}>
+        <IconButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(params.row);
+          }}
+          color="error"
+        >
+          <EditNoteIcon />
+        </IconButton>
+
+        <IconButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(params.row);
+          }}
+          color="primary"
+        >
+          <DeleteIcon />
+        </IconButton>
+      </Stack>
+    ),
+  },
 ];

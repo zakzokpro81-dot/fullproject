@@ -8,36 +8,31 @@ import {
   Route,
   RouterProvider,
 } from "react-router-dom";
-import { Router } from "@mui/icons-material";
 import App from "./App";
 import { Team } from "./pages/team/Team";
 import { Input } from "./pages/input/Input";
-import { Provider } from "react-redux";
-import { store } from "./redux/store";
-import { BrandList } from "../src/features/brands/BrandList";
+import { BrandList } from "./features/brands/BrandList";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { FamilyList } from "../src/features/families/FamilyList";
-import { ModelsList } from "../src/features/models/ModelsList";
-import { ProductsList } from "../src/features/products/ProductList";
-import { WarehousesList } from "../src/features/warehouses/WarehousesList";
-import { WarehouseStockList } from "../src/features/WarehouseStock/WarehouseStockList";
-import { BulkProductCreate } from "../src/features/products/BulkProductCreate";
-import { BulkAddProducts } from "../src/features/products/BulkAddProducts";
-import { CategoryList } from "../src/features/categories/CategoryList";
-import { ProductTypeList } from "../src/features/Product Types/ProductTypeList";
-import { ProductTypeAttributesList } from "../src/features/product type attributes/ProductTypeAttributesList";
+import { FamilyList } from "./features/families/FamilyList";
+import { ModelsList } from "./features/models/ModelsList";
+import { ProductsList } from "./features/products/ProductList";
+import { WarehouseList } from "./features/warehouses/WarehousesList";
+import { WarehouseStockList } from "./features/WarehouseStock/WarehouseStockList";
+import { BulkAddProducts } from "./features/products/BulkAddProducts";
+import { CategoryList } from "./features/categories/CategoryList";
+import { ProductTypeList } from "./features/Product Types/ProductTypeList";
+import { ProductTypeAttributesList } from "./features/product type attributes/ProductTypeAttributesList";
 import { AttributeOptionList } from "./features/attributeOption/AttributeOptionList";
-import { AttributeList } from "../src/features/attributes/AttributeList";
-import { CustomerList } from "../src/features/Customers/CustomerList";
-import { CustomerTypeList } from "../src/features/customerTypes/CustomerTypeList";
-import { PaymentList } from "../src/features/customerPayments/PaymentList";
-import { InvoicesList } from "./features/invoices/InvoicesList";
-import { InvoiceItemsList } from "../src/features/invoiceItem/InvoiceItemsList";
+import { AttributeList } from "./features/attributes/AttributeList";
+import { CustomerList } from "./features/Customers/CustomerList";
+import { CustomerTypeList } from "./features/customerTypes/CustomerTypeList";
+import { PaymentList } from "./features/customerPayments/PaymentList";
+import { InvoiceItemsList } from "./features/invoiceItem/InvoiceItemsList";
 import { StockMovementList } from "./features/StockMovement/StockMovementList";
 import { AccountList } from "./features/accounts/AccountList";
 import { InvoiceList } from "./features/invoice/InvoiceList";
 import { OrderList } from "./features/orders/OrderList";
-import { ProductsPage } from "./features/newProducts/ProductsPage";
+
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter(
@@ -46,31 +41,29 @@ const router = createBrowserRouter(
       <Route index element={<Dashboard />} />
       <Route path="/team" element={<Team />} />
       <Route path="/input" element={<Input />} />
-      <Route path="/BrandList" element={<BrandList />} />
-      <Route path="/FamilyList" element={<FamilyList />} />
-      <Route path="/ModelsList" element={<ModelsList />} />
-      <Route path="/ProductsList" element={<ProductsList />} />
-      <Route path="/WarehousesList" element={<WarehousesList />} />
-      <Route path="/WarehouseStockList" element={<WarehouseStockList />} />
-      <Route path="/BulkAddProducts" element={<BulkAddProducts />} />
-      <Route path="/CategoryList" element={<CategoryList />} />
-      <Route path="/ProductTypeList" element={<ProductTypeList />} />
+      <Route path="/brands" element={<BrandList />} />
+      <Route path="/families" element={<FamilyList />} />
+      <Route path="/models" element={<ModelsList />} />
+      <Route path="/products" element={<ProductsList />} />
+      <Route path="/warehouses" element={<WarehouseList />} />
+      <Route path="/warehouse-stock" element={<WarehouseStockList />} />
+      <Route path="/products/bulk-add" element={<BulkAddProducts />} />
+      <Route path="/categories" element={<CategoryList />} />
+      <Route path="/product-types" element={<ProductTypeList />} />
       <Route
-        path="/ProductTypeAttributesList"
+        path="/product-type-attributes"
         element={<ProductTypeAttributesList />}
       />
-      <Route path="/AttributeOptionList" element={<AttributeOptionList />} />
-      <Route path="/AttributeList" element={<AttributeList />} />
-      <Route path="/CustomerList" element={<CustomerList />} />
-      <Route path="/CustomerTypeList" element={<CustomerTypeList />} />
-      <Route path="/PaymentList" element={<PaymentList />} />
-      <Route path="/InvoiceItemsList" element={<InvoiceItemsList />} />
-      <Route path="/StockMovementList" element={<StockMovementList />} />
-      <Route path="/AccountList" element={<AccountList />} />
-      <Route path="/InvoiceList" element={<InvoiceList />} />
-      <Route path="/InvoicesList" element={<InvoicesList />} />
-      <Route path="/OrderList" element={<OrderList />} />
-      <Route path="/ProductsPage" element={<ProductsPage />} />
+      <Route path="/attribute-options" element={<AttributeOptionList />} />
+      <Route path="/attributes" element={<AttributeList />} />
+      <Route path="/customers" element={<CustomerList />} />
+      <Route path="/customer-types" element={<CustomerTypeList />} />
+      <Route path="/payments" element={<PaymentList />} />
+      <Route path="/invoice-items" element={<InvoiceItemsList />} />
+      <Route path="/stock-movements" element={<StockMovementList />} />
+      <Route path="/accounts" element={<AccountList />} />
+      <Route path="/invoices" element={<InvoiceList />} />
+      <Route path="/orders" element={<OrderList />} />
     </Route>,
   ),
 );
@@ -78,9 +71,7 @@ const router = createBrowserRouter(
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <Provider store={store}>
-        <RouterProvider router={router} />
-      </Provider>
+      <RouterProvider router={router} />
     </QueryClientProvider>
   </StrictMode>,
 );

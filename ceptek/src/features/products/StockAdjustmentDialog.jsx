@@ -15,7 +15,13 @@ import { adjustProductStock } from "./product.api";
 
 // ... الاستيرادات كما هي
 
-export function StockAdjustmentDialog({ open, onClose, product, warehouseId }) {
+export function StockAdjustmentDialog({
+  open,
+  onClose,
+  product,
+  warehouseId,
+  showSnackbar,
+}) {
   const queryClient = useQueryClient();
   const [newQuantity, setNewQuantity] = useState(0);
   const [reason, setReason] = useState("");
@@ -32,7 +38,7 @@ export function StockAdjustmentDialog({ open, onClose, product, warehouseId }) {
     onSuccess: () => {
       queryClient.invalidateQueries(["products"]);
       onClose();
-      alert("Stock Updated Successfully");
+      showSnackbar?.("Stock Updated Successfully", "success");
     },
     onError: (error) => {
       console.error("Critical Mutation Error:", error);
@@ -44,7 +50,10 @@ export function StockAdjustmentDialog({ open, onClose, product, warehouseId }) {
     const finalWarehouseId = warehouseId || product?.warehouse_id;
 
     if (!finalWarehouseId) {
-      alert("تنبيه: لا يوجد مستودع مرتبط بهذا المنتج.");
+      showSnackbar?.(
+        "Warning: No warehouse is associated with this product.",
+        "warning",
+      );
       return;
     }
 

@@ -77,7 +77,6 @@ export function ModelAutocomplete({
       loading={isLoading}
       renderInput={(params) => (
         <TextField
-          sx={{ color: "#d21994", backgroundColor: "#e2e8ee" }}
           {...params}
           label={label}
           margin="normal"

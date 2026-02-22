@@ -1,29 +1,62 @@
-import  supabase  from "../../config/supabase";
+import supabase from "../../config/supabase";
 
-// جلب كل المخازن
-export const getWarehouses = async () => {
-  const { data, error } = await supabase.from('warehouses').select('*').order('name', { ascending: true });
-  if (error) throw new Error(error.message);
-  return data;
-};
+export const WAREHOUSE_QUERY_KEY = "warehouses";
+
+// جلب المخازن مع pagination و search
+export async function getWarehouses({ page = 0, pageSize = 10, searchText = "" } = {}) {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+
+  let query = supabase
+    .from("warehouses")
+    .select("id, name, location, is_active", { count: "exact" })
+    .order("name", { ascending: true })
+    .range(from, to);
+
+  if (searchText) {
+    query = query.or(`name.ilike.%${searchText}%,location.ilike.%${searchText}%`);
+  }
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { data, count };
+}
 
 // إنشاء مخزن جديد
-export const createWarehouse = async (warehouse) => {
-  const { data, error } = await supabase.from('warehouses').insert([warehouse]).select().single();
-  if (error) throw new Error(error.message);
+export async function createWarehouse(payload) {
+  const { data, error } = await supabase
+    .from("warehouses")
+    .insert(payload)
+    .select()
+    .single();
+
+  if (error) throw error;
   return data;
-};
+}
 
 // تعديل مخزن
-export const updateWarehouse = async (id, warehouse) => {
-  const { data, error } = await supabase.from('warehouses').update(warehouse).eq('id', id).select().single();
-  if (error) throw new Error(error.message);
-  return data;
-};
+export async function updateWarehouse(id, payload) {
+  const { data, error } = await supabase
+    .from("warehouses")
+    .update(payload)
+    .eq("id", id)
+    .select()
+    .single();
 
-// حذف مخزن
-export const deleteWarehouse = async (id) => {
-  const { error } = await supabase.from('warehouses').delete().eq('id', id);
-  if (error) throw new Error(error.message);
+  if (error) throw error;
+  return data;
+}
+
+// حذف مخزن واحد
+export async function deleteWarehouse(id) {
+  const { error } = await supabase.from("warehouses").delete().eq("id", id);
+  if (error) throw error;
   return true;
-};
+}
+
+// حذف مخازن متعددة
+export async function deleteWarehouses(ids) {
+  const { error } = await supabase.from("warehouses").delete().in("id", ids);
+  if (error) throw error;
+  return true;
+}

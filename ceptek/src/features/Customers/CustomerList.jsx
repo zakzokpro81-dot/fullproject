@@ -19,7 +19,7 @@ import { getCustomers, deleteCustomer, deleteCustomers } from "./customer.api"; 
 import { getCustomerTypes } from "../customerTypes/customerType.api";
 import { customerColumns } from "./customer.columns";
 import CustomerForm from "./CustomerForm";
-import ProductActionDialogs from "../../componenets/ProductActionDialogs";
+import ProductActionDialogs from "../../components/ProductActionDialogs";
 
 export function CustomerList() {
   const queryClient = useQueryClient();

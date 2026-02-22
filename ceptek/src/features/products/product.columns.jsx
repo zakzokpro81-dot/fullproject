@@ -53,18 +53,18 @@ export const productColumns = (
   },
   {
     field: "product_type",
-    headerName: "Spear Part",
+    headerName: "Product Type",
     width: 120,
     valueGetter: (value, row) => row?.product_type?.name || "N/A",
   },
   {
     field: "sell_price",
-    headerName: "sell price",
+    headerName: "Sell Price",
     width: 80,
   },
   {
     field: "cost_price",
-    headerName: "cost price",
+    headerName: "Cost Price",
     width: 80,
   },
   {
@@ -74,7 +74,7 @@ export const productColumns = (
   },
   {
     field: "description",
-    headerName: "description",
+    headerName: "Description",
     width: 100,
   },
   {
@@ -88,7 +88,7 @@ export const productColumns = (
             e.stopPropagation();
             onEdit(params.row);
           }}
-          color="error"
+          color="primary"
         >
           <EditNoteIcon />
         </IconButton>
@@ -98,7 +98,7 @@ export const productColumns = (
             e.stopPropagation();
             onDelete(params.row);
           }}
-          color="primary"
+          color="error"
         >
           <DeleteIcon />
         </IconButton>

@@ -2,175 +2,232 @@ import { useState } from "react";
 import {
   Box,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Typography,
+  Alert,
+  TextField,
+  Paper,
 } from "@mui/material";
-import { DataGrid, GridToolbar } from "@mui/x-data-grid";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import ScrollToTopButton from "../../componenets/ScrollToTopButton";
+import { DataGrid } from "@mui/x-data-grid";
 
-import { getModels, createModel, updateModel, deleteModel } from "./model.api";
+import { useModelQuery, useModelMutations } from "./model.hooks";
 import { modelColumns } from "./model.columns";
 import ModelForm from "./ModelForm";
-import ProductActionDialogs from "../../componenets/ProductActionDialogs"; // تأكد من مسار الملف الصحيح
+import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
+import MessageDialog from "../../components/MessageDialog";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function ModelsList() {
-  const queryClient = useQueryClient();
+  // ── UI state only ──
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [openForm, setOpenForm] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [openDeleteSelected, setOpenDeleteSelected] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [mode, setMode] = useState("add");
 
-  const [openFormDialog, setOpenFormDialog] = useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(null);
+  // ── Define closeForm before wiring hooks ──
+  function handleCloseForm() {
+    setOpenForm(false);
+    setSelectedItem(null);
+  }
 
-  // =====================
-  // Fetch models
-  // =====================
-  const { data: models = [], isLoading } = useQuery({
-    queryKey: ["models"],
-    queryFn: getModels,
-  });
+  // ── Hooks ──
+  const { messageDialog, showMessageDialog, closeMessageDialog } =
+    useMessageDialog();
 
-  // =====================
-  // Create mutation
-  // =====================
-  const createMutation = useMutation({
-    mutationFn: createModel,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["models"]);
-      setOpenFormDialog(false);
-    },
-  });
+  const {
+    rows,
+    rowCount,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    paginationModel,
+    setPaginationModel,
+    searchText,
+    setSearchText,
+    brands,
+    families,
+  } = useModelQuery();
 
-  // =====================
-  // Update mutation
-  // =====================
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => updateModel(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["models"]);
-      setOpenFormDialog(false);
-      setSelectedModel(null);
-    },
-  });
+  const { createMutation, updateMutation, deleteMutation, deleteMultipleMutation } =
+    useModelMutations({ onSuccess: handleCloseForm, showMessageDialog });
 
-  // =====================
-  // Delete mutation
-  // =====================
-  const deleteMutation = useMutation({
-    mutationFn: deleteModel,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["models"]);
-      setOpenDeleteDialog(false);
-      setSelectedModel(null);
-    },
-  });
-
-  // =====================
-  // Handlers
-  // =====================
-  const handleAddClick = () => {
-    setSelectedModel(null);
-    setOpenFormDialog(true);
+  // ── Handlers ──
+  const handleOpenAdd = () => {
+    setMode("add");
+    setSelectedItem(null);
+    setOpenForm(true);
   };
 
-  const handleEditClick = (model) => {
-    setSelectedModel(model);
-    setOpenFormDialog(true);
-  };
-
-  const handleDeleteClick = (model) => {
-    setSelectedModel(model);
-    setOpenDeleteDialog(true);
-  };
-
-  const handleDeleteConfirm = () => {
-    deleteMutation.mutate(selectedModel.id);
+  const handleOpenEdit = (row) => {
+    setMode("edit");
+    setSelectedItem(row);
+    setOpenForm(true);
   };
 
   const handleFormSubmit = (data) => {
-    const payload = {
-      ...data,
-      slug: data.slug || data.name.toLowerCase().replace(/\s+/g, "-"),
-    };
-
-    if (selectedModel) {
-      updateMutation.mutate({ id: selectedModel.id, data: payload });
+    if (mode === "add") {
+      createMutation.mutate(data);
     } else {
-      createMutation.mutate(payload);
+      updateMutation.mutate({ id: selectedItem.id, data });
     }
+  };
+
+  const handleDeleteClick = (row) => {
+    setSelectedItem(row);
+    setOpenDelete(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!selectedItem) return;
+    deleteMutation.mutate(selectedItem.id, {
+      onSettled: () => {
+        setOpenDelete(false);
+        setSelectedItem(null);
+      },
+    });
+  };
+
+  const handlePaginationChange = (newModel) => {
+    setSelectedIds(new Set());
+    setPaginationModel(newModel);
+  };
+
+  const toggleSelectAll = () => {
+    const allSelected =
+      rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(rows.map((r) => r.id)));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    const newSet = new Set(selectedIds);
+    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+    setSelectedIds(newSet);
+  };
+
+  const handleDeleteSelectedConfirm = () => {
+    if (selectedIds.size === 0) return;
+    deleteMultipleMutation.mutate(Array.from(selectedIds), {
+      onSettled: () => {
+        setOpenDeleteSelected(false);
+        setSelectedIds(new Set());
+      },
+    });
   };
 
   return (
     <Box>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        mb={2}
-      >
-        <Typography variant="h5">Model</Typography>
-        <Button variant="contained" onClick={handleAddClick} sx={{ mb: 2 }}>
-          Add Model
-        </Button>
+      {/* ── Header ── */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h5">Models</Typography>
+        <Box display="flex" gap={1}>
+          {selectedIds.size > 0 && (
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => setOpenDeleteSelected(true)}
+            >
+              Delete Selected ({selectedIds.size})
+            </Button>
+          )}
+          <Button variant="contained" onClick={handleOpenAdd}>
+            Add Model
+          </Button>
+        </Box>
       </Box>
 
-      <DataGrid
-        rows={models}
-        columns={modelColumns(handleEditClick, handleDeleteClick)}
-        loading={isLoading}
-        autoHeight
-        pageSize={10}
-        sx={{
-          width: "100%",
-        }}
-        showToolbar
-        slots={{
-          toolbar: GridToolbar,
-        }}
-      />
-      <ScrollToTopButton />
-      {/* Add / Edit Dialog */}
+      {/* ── Search Field ── */}
+      <Box mb={2}>
+        <TextField
+          label="Search"
+          variant="outlined"
+          size="small"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          fullWidth
+          sx={{ maxWidth: 400 }}
+        />
+      </Box>
+
+      {/* ── Error Banner ── */}
+      {isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Failed to load data: {error?.message || "Unknown error"}
+        </Alert>
+      )}
+
+      {/* ── Data Grid (server-side pagination) ── */}
+      <Paper sx={{ height: 650, width: "100%" }}>
+        <DataGrid
+          rows={rows}
+          rowCount={rowCount}
+          columns={modelColumns(
+            handleOpenEdit,
+            handleDeleteClick,
+            selectedIds,
+            toggleSelect,
+            rows,
+            toggleSelectAll,
+          )}
+          loading={isLoading || isFetching}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationChange}
+          pageSizeOptions={[10, 25, 50]}
+          disableSelectionOnClick
+          sx={{ width: "100%" }}
+        />
+      </Paper>
+
+      {/* ── Form Dialog ── */}
       <ModelForm
-        open={openFormDialog}
-        onClose={() => setOpenFormDialog(false)}
+        open={openForm}
+        mode={mode}
+        initialData={selectedItem}
+        onClose={handleCloseForm}
         onSubmit={handleFormSubmit}
-        defaultValues={selectedModel}
+        isPending={createMutation.isPending || updateMutation.isPending}
+        brands={brands}
+        families={families}
       />
 
-      {/* Delete Dialog */}
-      {/* <Dialog
-        open={openDeleteDialog}
-        onClose={() => setOpenDeleteDialog(false)}
-      >
-        <DialogTitle>Delete Confirm</DialogTitle>
-
-        <DialogContent>
-          Are you sure you want to delete this model?{" "}
-          <strong>{selectedModel?.name}</strong>
-          <br />
-          no back
-        </DialogContent>
-
-        <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Cancel</Button>
-          <Button variant="contained" onClick={handleDeleteConfirm}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog> */}
-
-      <ProductActionDialogs
-        //openDeleteSelectedDialog={openDeleteDialog}
-        // setOpenDeleteSelectedDialog={setOpenDeleteDialog}
-        selectedIds={selectedModel?.id}
-        handleDeleteSelected={handleDeleteClick}
-        openDeleteDialog={openDeleteDialog}
-        setOpenDeleteDialog={setOpenDeleteDialog}
-        selectedProduct={selectedModel}
-        handleDeleteConfirm={handleDeleteConfirm}
+      {/* ── Delete Confirmation (single) ── */}
+      <ConfirmDeleteDialog
+        open={openDelete}
+        itemName={selectedItem?.name || ""}
+        onClose={() => {
+          setOpenDelete(false);
+          setSelectedItem(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        isPending={deleteMutation.isPending}
       />
+
+      {/* ── Delete Confirmation (bulk) ── */}
+      <ConfirmDeleteDialog
+        open={openDeleteSelected}
+        itemName={`${selectedIds.size} selected items`}
+        onClose={() => setOpenDeleteSelected(false)}
+        onConfirm={handleDeleteSelectedConfirm}
+        isPending={deleteMultipleMutation.isPending}
+      />
+
+      {/* ── Message Dialog ── */}
+      <MessageDialog
+        open={messageDialog.open}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        severity={messageDialog.severity}
+        onClose={closeMessageDialog}
+      />
+
+      <ScrollToTopButton />
     </Box>
   );
 }

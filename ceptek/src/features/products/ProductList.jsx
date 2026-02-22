@@ -41,7 +41,9 @@ import { productColumns } from "./product.columns";
 import AddProductForm from "./AddProductForm";
 import EditProductForm from "./EditProductForm";
 import { ProductsHeader } from "./ProductsHeader";
-import ProductActionDialogs from "../../componenets/ProductActionDialogs";
+import ProductActionDialogs from "../../components/ProductActionDialogs";
+import { Snackbar, Alert } from "@mui/material";
+import { useSnackbar } from "../../hooks/useSnackbar";
 function normalizeTurkish(str = "") {
   return str
     .replace(/İ/g, "I")
@@ -62,6 +64,7 @@ function normalizeTurkish(str = "") {
 
 export function ProductsList() {
   const queryClient = useQueryClient();
+  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
 
   const [openAddDialog, setOpenAddDialog] = React.useState(false);
   const [openEditDialog, setOpenEditDialog] = React.useState(false);
@@ -268,6 +271,7 @@ export function ProductsList() {
         <AddProductForm
           open={openAddDialog}
           onClose={() => setOpenAddDialog(false)}
+          showSnackbar={showSnackbar}
         />
       )}
       {openEditDialog && selectedProduct && (
@@ -278,8 +282,24 @@ export function ProductsList() {
             setSelectedProduct(null);
           }}
           product={selectedProduct}
+          showSnackbar={showSnackbar}
         />
       )}
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={closeSnackbar}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={closeSnackbar}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

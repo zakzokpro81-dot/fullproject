@@ -1,0 +1,102 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  getAttributes,
+  createAttribute,
+  updateAttribute,
+  deleteAttribute,
+  deleteAttributes,
+  ATTRIBUTE_QUERY_KEY,
+} from "./attributes.api";
+
+export function useAttributeQuery() {
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [searchText, setSearchText] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filters, setFilters] = useState({
+    data_type: "",
+    has_options: "",
+    is_active: "",
+  });
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setPaginationModel((prev) => ({ ...prev, page: 0 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText, filters]);
+
+  const { data, isLoading, isFetching, isError, error } = useQuery({
+    queryKey: [ATTRIBUTE_QUERY_KEY, paginationModel, debouncedSearch, filters],
+    queryFn: () =>
+      getAttributes({
+        page: paginationModel.page,
+        pageSize: paginationModel.pageSize,
+        searchText: debouncedSearch,
+        filters,
+      }),
+    staleTime: 1000 * 60 * 5,
+    placeholderData: (prev) => prev,
+  });
+
+  return {
+    rows: data?.data || [],
+    rowCount: data?.count || 0,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    paginationModel,
+    setPaginationModel,
+    searchText,
+    setSearchText,
+    filters,
+    setFilters,
+  };
+}
+
+export function useAttributeMutations({ onSuccess, showMessageDialog }) {
+  const queryClient = useQueryClient();
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: [ATTRIBUTE_QUERY_KEY] });
+
+  const createMutation = useMutation({
+    mutationFn: createAttribute,
+    onSuccess: () => {
+      invalidate();
+      onSuccess?.();
+      showMessageDialog?.("Created successfully", "success");
+    },
+    onError: (err) => showMessageDialog?.(err.message || "Failed to create", "error"),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => updateAttribute(id, data),
+    onSuccess: () => {
+      invalidate();
+      onSuccess?.();
+      showMessageDialog?.("Updated successfully", "success");
+    },
+    onError: (err) => showMessageDialog?.(err.message || "Failed to update", "error"),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteAttribute,
+    onSuccess: () => {
+      invalidate();
+      showMessageDialog?.("Deleted successfully", "success");
+    },
+    onError: (err) => showMessageDialog?.(err.message || "Failed to delete", "error"),
+  });
+
+  const deleteMultipleMutation = useMutation({
+    mutationFn: deleteAttributes,
+    onSuccess: () => {
+      invalidate();
+      showMessageDialog?.("Deleted successfully", "success");
+    },
+    onError: (err) => showMessageDialog?.(err.message || "Failed to delete", "error"),
+  });
+
+  return { createMutation, updateMutation, deleteMutation, deleteMultipleMutation };
+}

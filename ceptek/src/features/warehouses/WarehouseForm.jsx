@@ -1,80 +1,98 @@
-import React from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { warehouseSchema } from './warehouse.schema';
-import { TextField, Checkbox, FormControlLabel, Button, Stack } from '@mui/material';
+import { useEffect } from "react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Button,
+  Switch,
+  FormControlLabel,
+  CircularProgress,
+} from "@mui/material";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { warehouseSchema, warehouseDefaults } from "./warehouse.schema";
 
-export function WarehouseForm({ defaultValues = {}, onSubmit, onCancel }) {
-    // تعيين قيم افتراضية كاملة لتجنب التحذيرات
-    const initialValues = {
-        name: defaultValues.name ?? '',
-        location: defaultValues.location ?? '',
-        is_active: defaultValues.is_active ?? true,
-    };
+export default function WarehouseForm({
+  open,
+  mode,
+  initialData,
+  onClose,
+  onSubmit,
+  isPending,
+}) {
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(warehouseSchema),
+    defaultValues: warehouseDefaults,
+  });
 
-    const { handleSubmit, control } = useForm({
-        defaultValues: initialValues,
-        resolver: zodResolver(warehouseSchema),
-    });
+  useEffect(() => {
+    if (mode === "edit" && initialData) {
+      reset(initialData);
+    } else {
+      reset(warehouseDefaults);
+    }
+  }, [mode, initialData, reset]);
 
-    return (
-        <form onSubmit={handleSubmit(onSubmit)}>
-            <Stack spacing={2}>
-                {/* اسم المخزن */}
-                <Controller
-                    name="name"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            label="Name"
-                            fullWidth
-                            value={field.value ?? ''}
-                        />
-                    )}
-                />
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>
+        {mode === "edit" ? "Edit Warehouse" : "Add Warehouse"}
+      </DialogTitle>
 
-                {/* موقع المخزن */}
-                <Controller
-                    name="location"
-                    control={control}
-                    render={({ field }) => (
-                        <TextField
-                            {...field}
-                            label="Location"
-                            fullWidth
-                            value={field.value ?? ''}
-                        />
-                    )}
-                />
+      <DialogContent dividers>
+        <TextField
+          {...register("name")}
+          label="Name"
+          fullWidth
+          margin="normal"
+          error={!!errors.name}
+          helperText={errors.name?.message}
+        />
 
-                {/* حالة التفعيل */}
-                <Controller
-                    name="is_active"
-                    control={control}
-                    render={({ field }) => (
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    {...field}
-                                    checked={field.value ?? true} // fallback لقيمة افتراضية
-                                />
-                            }
-                            label="Active"
-                        />
-                    )}
-                />
+        <TextField
+          {...register("location")}
+          label="Location"
+          fullWidth
+          margin="normal"
+          error={!!errors.location}
+          helperText={errors.location?.message}
+        />
 
-                {/* الأزرار المعتادة */}
-                <Stack direction="row" spacing={1}>
-                    <Button type="submit" variant="contained">
-                        Save
-                    </Button>
-                    <Button type="button" variant="outlined" onClick={onCancel}>
-                        Cancel
-                    </Button>
-                </Stack>
-            </Stack>
-        </form>
-    );
+        <FormControlLabel
+          control={
+            <Switch
+              checked={!!watch("is_active")}
+              onChange={(e) => setValue("is_active", e.target.checked)}
+            />
+          }
+          label="Active"
+        />
+      </DialogContent>
+
+      <DialogActions>
+        <Button onClick={onClose} disabled={isPending}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit(onSubmit)}
+          disabled={isPending}
+          startIcon={
+            isPending ? <CircularProgress size={20} color="inherit" /> : null
+          }
+        >
+          {isPending ? "Saving..." : "Save"}
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
 }

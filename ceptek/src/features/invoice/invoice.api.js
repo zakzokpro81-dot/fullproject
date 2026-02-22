@@ -1,5 +1,7 @@
 import supabase from "../../config/supabase";
 
+export const INVOICE_QUERY_KEY = "invoices";
+
 // جلب قائمة الفواتير لعرضها في ملف الـ List
 // export const getInvoices = async () => {
 //   const { data, error } = await supabase

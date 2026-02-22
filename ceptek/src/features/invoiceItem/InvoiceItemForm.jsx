@@ -16,37 +16,47 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import supabase from "../../config/supabase";
 import {
   saveCompleteInvoice,
   getInvoiceStatuses,
-  getCustomersForSelect, // تم التغيير هنا
+  getCustomersForSelect,
 } from "./invoiceItem.api";
+import { invoiceFormSchema } from "./invoiceItem.schema";
 
 export default function InvoiceForm({ open, onClose }) {
   const queryClient = useQueryClient();
 
-  // State للفاتورة
-  const [customerId, setCustomerId] = React.useState("");
-  const [statusId, setStatusId] = React.useState("");
-  const [invoiceDate, setInvoiceDate] = React.useState(
-    new Date().toISOString().split("T")[0],
-  );
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(invoiceFormSchema),
+    defaultValues: {
+      customer_id: "",
+      status_id: "",
+      invoice_date: new Date().toISOString().split("T")[0],
+    },
+  });
 
-  // State للأصناف (Items)
+  // State for items (dynamic list, not part of the Zod schema)
   const [items, setItems] = React.useState([]);
 
-  // State لإضافة صنف جديد
+  // State for temp item being added
   const [tempProduct, setTempProduct] = React.useState({
     variant_id: "",
     qty: 1,
     price: 0,
   });
 
-  // جلب البيانات المساعدة (العملاء، الحالات، المنتجات)
+  // Fetch reference data
   const { data: customers } = useQuery({
     queryKey: ["customers"],
-    queryFn: () => getCustomers({ page: 0, pageSize: 1000 }),
+    queryFn: getCustomersForSelect,
   });
   const { data: statuses } = useQuery({
     queryKey: ["statuses"],
@@ -62,11 +72,13 @@ export default function InvoiceForm({ open, onClose }) {
     },
   });
 
-  // عملية الحفظ
+  // Save mutation
   const mutation = useMutation({
     mutationFn: (data) => saveCompleteInvoice(data.invoice, data.items),
     onSuccess: () => {
       queryClient.invalidateQueries(["invoices"]);
+      reset();
+      setItems([]);
       onClose();
     },
   });
@@ -88,12 +100,13 @@ export default function InvoiceForm({ open, onClose }) {
 
   const removeItem = (id) => setItems(items.filter((i) => i.id !== id));
 
-  const handleSave = () => {
+  const onSubmit = (formData) => {
+    if (items.length === 0) return;
     const total = items.reduce((sum, i) => sum + i.total_price, 0);
     const invoiceData = {
-      customer_id: customerId,
-      status_id: statusId,
-      invoice_date: invoiceDate,
+      customer_id: Number(formData.customer_id),
+      status_id: Number(formData.status_id),
+      invoice_date: formData.invoice_date,
       total_amount: total,
       paid_amount: 0,
     };
@@ -105,16 +118,17 @@ export default function InvoiceForm({ open, onClose }) {
       <DialogTitle>Create New Invoice</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={3}>
-          {/* بيانات الفاتورة الأساسية */}
+          {/* Invoice header fields */}
           <Stack direction="row" spacing={2}>
             <TextField
               select
               label="Customer"
               fullWidth
-              value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
+              {...register("customer_id")}
+              error={!!errors.customer_id}
+              helperText={errors.customer_id?.message}
             >
-              {customers?.data?.map((c) => (
+              {customers?.map((c) => (
                 <MenuItem key={c.id} value={c.id}>
                   {c.name}
                 </MenuItem>
@@ -124,8 +138,9 @@ export default function InvoiceForm({ open, onClose }) {
               select
               label="Status"
               fullWidth
-              value={statusId}
-              onChange={(e) => setStatusId(e.target.value)}
+              {...register("status_id")}
+              error={!!errors.status_id}
+              helperText={errors.status_id?.message}
             >
               {statuses?.map((s) => (
                 <MenuItem key={s.id} value={s.id}>
@@ -137,8 +152,9 @@ export default function InvoiceForm({ open, onClose }) {
               type="date"
               label="Date"
               fullWidth
-              value={invoiceDate}
-              onChange={(e) => setInvoiceDate(e.target.value)}
+              {...register("invoice_date")}
+              error={!!errors.invoice_date}
+              helperText={errors.invoice_date?.message}
               InputLabelProps={{ shrink: true }}
             />
           </Stack>
@@ -226,8 +242,8 @@ export default function InvoiceForm({ open, onClose }) {
         <Button onClick={onClose}>Cancel</Button>
         <Button
           variant="contained"
-          onClick={handleSave}
-          disabled={items.length === 0 || !customerId || mutation.isPending}
+          onClick={handleSubmit(onSubmit)}
+          disabled={items.length === 0 || mutation.isPending}
         >
           {mutation.isPending ? "Saving..." : "Save Invoice"}
         </Button>

@@ -1,99 +1,119 @@
-// هذا الملف مسؤول عن التعامل مع Supabase لجدول models
-// يحتوي على دوال:
-// - جلب الموديلات
-// - إضافة موديل
-// - حذف موديل
-// - تعديل موديل
-// لا يحتوي على أي UI
-
+// model.api.js
+// دوال CRUD للتعامل مع Supabase لجدول models
+// ❌ لا React — هذا ملف بيانات بحت
 
 import supabase from "../../config/supabase";
 
-// ===============================
-// Get all models with relations
-// ===============================
-export const getModels = async () => {
-    const { data, error } = await supabase
-        .from("models")
-        .select(`
-      id,
-      name,
-      slug,
-      is_active,
-      family,
-      families (
-        id,
-        name,
-        brands (
-          id,
-          name
-        )
-      )
-    `)
-        .order("id", { ascending: true });
+// Single source of truth for the React Query cache key
+export const MODEL_QUERY_KEY = "models";
 
-    if (error) {
-        console.error("Error fetching models:", error);
-        throw error;
-    }
+// ===============================
+// Get all models (paginated + search)
+// ===============================
+export async function getModels({ page = 0, pageSize = 10, searchText = "" } = {}) {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
 
-    return data;
-};
+  let query = supabase
+    .from("models")
+    .select(
+      `id, name, slug, is_active, family,
+       families (
+         id,
+         name,
+         brands ( id, name )
+       )`,
+      { count: "exact" }
+    )
+    .order("id", { ascending: true })
+    .range(from, to);
+
+  if (searchText) {
+    query = query.or(`name.ilike.%${searchText}%,slug.ilike.%${searchText}%`);
+  }
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { data, count };
+}
+
+// ===============================
+// Fetch all brands for dropdown
+// ===============================
+export async function getAllBrands() {
+  const { data, error } = await supabase
+    .from("brands")
+    .select("id, name")
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
+
+// ===============================
+// Fetch all families for dropdown
+// ===============================
+export async function getAllFamilies() {
+  const { data, error } = await supabase
+    .from("families")
+    .select("id, name, brand")
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return data;
+}
 
 // ===============================
 // Create model
 // ===============================
-export const createModel = async (model) => {
-    const { data, error } = await supabase.from("models").insert([model]);
+export async function createModel(payload) {
+  const { data, error } = await supabase
+    .from("models")
+    .insert(payload)
+    .select()
+    .single();
 
-    if (error) {
-        console.error("Error creating model:", error);
-        throw error;
-    }
-
-    return data;
-};
+  if (error) throw error;
+  return data;
+}
 
 // ===============================
 // Update model
 // ===============================
-export const updateModel = async (id, model) => {
-    const { data, error } = await supabase
-        .from("models")
-        .update(model)
-        .eq("id", id);
+export async function updateModel(id, payload) {
+  const { data, error } = await supabase
+    .from("models")
+    .update(payload)
+    .eq("id", id)
+    .select()
+    .single();
 
-    if (error) {
-        console.error("Error updating model:", error);
-        throw error;
-    }
-
-    return data;
-};
+  if (error) throw error;
+  return data;
+}
 
 // ===============================
-// Delete model
+// Delete single model
 // ===============================
-export const deleteModel = async (id) => {
-    const { data, error } = await supabase.from("models").delete().eq("id", id);
+export async function deleteModel(id) {
+  const { error } = await supabase
+    .from("models")
+    .delete()
+    .eq("id", id);
 
-    if (error) {
-        console.error("Error deleting model:", error);
-        throw error;
-    }
+  if (error) throw error;
+  return true;
+}
 
-    return data;
-};
+// ===============================
+// Delete multiple models (bulk)
+// ===============================
+export async function deleteModels(ids) {
+  const { error } = await supabase
+    .from("models")
+    .delete()
+    .in("id", ids);
 
-
-export async function getAttributesByPart(product_type, part_type_id) {
-    const { data, error } = await supabase
-        .from("attributes")
-        .select("*")
-        .eq("product_type", product_type)
-        .eq("part_type_id", part_type_id)
-        .order("id", { ascending: true });
-
-    if (error) throw error;
-    return data;
+  if (error) throw error;
+  return true;
 }

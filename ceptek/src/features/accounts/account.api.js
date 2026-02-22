@@ -1,5 +1,7 @@
 import supabase from "../../config/supabase";
 
+export const ACCOUNT_QUERY_KEY = "accounts";
+
 export const getAccounts = async () => {
   const { data, error } = await supabase
     .from("accounts")

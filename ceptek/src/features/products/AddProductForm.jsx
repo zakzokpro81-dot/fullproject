@@ -10,6 +10,8 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { addProductSchema } from "./product.schema";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCategories,
@@ -22,9 +24,17 @@ import {
 } from "./product.api";
 import { ModelAutocomplete } from "./ModelAutocomplete";
 
-const AddProductForm = ({ open, onClose }) => {
+const AddProductForm = ({ open, onClose, showSnackbar }) => {
   const queryClient = useQueryClient();
-  const { control, handleSubmit, watch, reset, setValue } = useForm({
+  const {
+    control,
+    handleSubmit,
+    watch,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(addProductSchema),
     defaultValues: {},
   });
   const [formReady, setFormReady] = useState(false);
@@ -65,7 +75,7 @@ const AddProductForm = ({ open, onClose }) => {
       onClose();
       reset();
     },
-    onError: () => alert("Failed to save product"),
+    onError: () => showSnackbar?.("Failed to save product", "error"),
   });
 
   useEffect(() => {
@@ -112,10 +122,13 @@ const AddProductForm = ({ open, onClose }) => {
 
   if (!formReady)
     return (
-      <CircularProgress
-        size={40}
-        style={{ margin: "40px auto", display: "block" }}
-      />
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+        <DialogContent
+          sx={{ display: "flex", justifyContent: "center", py: 6 }}
+        >
+          <CircularProgress size={40} />
+        </DialogContent>
+      </Dialog>
     );
 
   return (

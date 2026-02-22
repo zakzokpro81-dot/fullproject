@@ -1,5 +1,7 @@
 import supabase from "../../config/supabase";
 
+export const CUSTOMER_QUERY_KEY = "customers";
+
 // جلب الزبائن مع دعم الصفحات والبحث والفلترة
 export const getCustomers = async ({ page, pageSize, searchText, customerTypeId }) => {
   const from = page * pageSize;

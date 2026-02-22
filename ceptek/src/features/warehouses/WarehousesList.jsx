@@ -1,112 +1,229 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getWarehouses, createWarehouse, updateWarehouse, deleteWarehouse } from './warehouse.api';
-import { warehouseColumns } from './warehouse.columns';
-import { WarehouseForm } from './WarehouseForm';
-import { DataGrid, GridToolbar } from '@mui/x-data-grid';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Box } from '@mui/material';
+import { useState } from "react";
+import {
+  Box,
+  Button,
+  Typography,
+  Alert,
+  TextField,
+  Paper,
+} from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
 
-export function WarehousesList() {
-    const queryClient = useQueryClient();
+import { useWarehouseQuery, useWarehouseMutations } from "./warehouse.hooks";
+import { warehouseColumns } from "./warehouse.columns";
+import WarehouseForm from "./WarehouseForm";
+import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
+import MessageDialog from "../../components/MessageDialog";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
 
-    // ✅ useQuery بالشكل الصحيح v5
-    const { data: warehouses = [], isLoading } = useQuery({
-        queryKey: ['warehouses'],
-        queryFn: getWarehouses,
-        
-    });
+export function WarehouseList() {
+  // ── UI state ──
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [openForm, setOpenForm] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [openDeleteSelected, setOpenDeleteSelected] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [mode, setMode] = useState("add");
 
+  // ── handleCloseForm defined before hooks ──
+  function handleCloseForm() {
+    setOpenForm(false);
+    setSelectedItem(null);
+  }
 
-    // ✅ useMutation بالشكل الصحيح v5
-    const createMutation = useMutation({
-        mutationFn: createWarehouse,
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['warehouses'] }),
-    });
+  // ── Hooks ──
+  const { messageDialog, showMessageDialog, closeMessageDialog } =
+    useMessageDialog();
 
-    const updateMutation = useMutation({
-        mutationFn: ({ id, data }) => updateWarehouse(id, data),
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['warehouses'] }),
-    });
+  const {
+    rows,
+    rowCount,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    paginationModel,
+    setPaginationModel,
+    searchText,
+    setSearchText,
+  } = useWarehouseQuery();
 
-    const deleteMutation = useMutation({
-        mutationFn: deleteWarehouse,
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ['warehouses'] }),
-    });
+  const { createMutation, updateMutation, deleteMutation, deleteMultipleMutation } =
+    useWarehouseMutations({ onSuccess: handleCloseForm, showMessageDialog });
 
-    const [openForm, setOpenForm] = useState(false);
-    const [selectedWarehouse, setSelectedWarehouse] = useState(null);
-    const [openDelete, setOpenDelete] = useState(false);
+  // ── Handlers ──
+  const handleOpenAdd = () => {
+    setMode("add");
+    setSelectedItem(null);
+    setOpenForm(true);
+  };
 
-    const handleEdit = (warehouse) => {
-        setSelectedWarehouse(warehouse);
-        setOpenForm(true);
-    };
+  const handleOpenEdit = (row) => {
+    setMode("edit");
+    setSelectedItem(row);
+    setOpenForm(true);
+  };
 
-    const handleDelete = (warehouse) => {
-        setSelectedWarehouse(warehouse);
-        setOpenDelete(true);
-    };
+  const handleFormSubmit = (data) => {
+    if (mode === "add") {
+      createMutation.mutate(data);
+    } else {
+      updateMutation.mutate({ id: selectedItem.id, data });
+    }
+  };
 
-    const handleFormSubmit = (data) => {
-        if (selectedWarehouse) {
-            updateMutation.mutate({ id: selectedWarehouse.id, data });
-        } else {
-            console.log('Data to create warehouse:', data);
+  const handleDeleteClick = (row) => {
+    setSelectedItem(row);
+    setOpenDelete(true);
+  };
 
-            createMutation.mutate(data);
-
-        }
-        setOpenForm(false);
-        setSelectedWarehouse(null);
-    };
-
-    const confirmDelete = () => {
-        deleteMutation.mutate(selectedWarehouse.id);
+  const handleDeleteConfirm = () => {
+    if (!selectedItem) return;
+    deleteMutation.mutate(selectedItem.id, {
+      onSettled: () => {
         setOpenDelete(false);
-        setSelectedWarehouse(null);
-    };
+        setSelectedItem(null);
+      },
+    });
+  };
 
-    return (
-        <Box sx={{ width: '100%' }}>
-            <Button variant="contained" sx={{ mb: 2 }} onClick={() => setOpenForm(true)}>
-                Add Warehouse
+  const handlePaginationChange = (newModel) => {
+    setSelectedIds(new Set());
+    setPaginationModel(newModel);
+  };
+
+  const toggleSelectAll = () => {
+    const allSelected =
+      rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(rows.map((r) => r.id)));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    const newSet = new Set(selectedIds);
+    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+    setSelectedIds(newSet);
+  };
+
+  const handleDeleteSelectedConfirm = () => {
+    if (selectedIds.size === 0) return;
+    deleteMultipleMutation.mutate(Array.from(selectedIds), {
+      onSettled: () => {
+        setOpenDeleteSelected(false);
+        setSelectedIds(new Set());
+      },
+    });
+  };
+
+  return (
+    <Box>
+      {/* ── Header ── */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Typography variant="h5">Warehouses</Typography>
+        <Box display="flex" gap={1}>
+          {selectedIds.size > 0 && (
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => setOpenDeleteSelected(true)}
+            >
+              Delete Selected ({selectedIds.size})
             </Button>
-
-            <DataGrid
-                rows={warehouses}
-                columns={warehouseColumns(handleEdit, handleDelete)}
-                loading={isLoading}
-                autoHeight
-                pageSize={10}
-                rowsPerPageOptions={[10, 25, 50]}
-                components={{ Toolbar: GridToolbar }}
-            />
-
-            {/* Dialog Add/Edit */}
-            <Dialog open={openForm} onClose={() => setOpenForm(false)} fullWidth maxWidth="sm">
-                <DialogTitle>{selectedWarehouse ? 'Edit Warehouse' : 'Add Warehouse'}</DialogTitle>
-                <DialogContent>
-                    <WarehouseForm
-                        defaultValues={selectedWarehouse || {}}
-                        onSubmit={handleFormSubmit}
-                        onCancel={() => setOpenForm(false)}
-                    />
-                </DialogContent>
-            </Dialog>
-
-            {/* Dialog Delete */}
-            <Dialog open={openDelete} onClose={() => setOpenDelete(false)}>
-                <DialogTitle>Delete Warehouse</DialogTitle>
-                <DialogContent>
-                    Are you sure you want to delete <b>{selectedWarehouse?.name}</b>?
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setOpenDelete(false)}>Cancel</Button>
-                    <Button color="error" onClick={confirmDelete}>
-                        Delete
-                    </Button>
-                </DialogActions>
-            </Dialog>
+          )}
+          <Button variant="contained" onClick={handleOpenAdd}>
+            Add Warehouse
+          </Button>
         </Box>
-    );
+      </Box>
+
+      {/* ── Search Field ── */}
+      <Box mb={2}>
+        <TextField
+          label="Search"
+          variant="outlined"
+          size="small"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          fullWidth
+          sx={{ maxWidth: 400 }}
+        />
+      </Box>
+
+      {/* ── Error Banner ── */}
+      {isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Failed to load data: {error?.message || "Unknown error"}
+        </Alert>
+      )}
+
+      {/* ── Data Grid (server-side pagination) ── */}
+      <Paper sx={{ height: 650, width: "100%" }}>
+        <DataGrid
+          rows={rows}
+          rowCount={rowCount}
+          columns={warehouseColumns(
+            handleOpenEdit,
+            handleDeleteClick,
+            selectedIds,
+            toggleSelect,
+            rows,
+            toggleSelectAll,
+          )}
+          loading={isLoading || isFetching}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationChange}
+          pageSizeOptions={[10, 25, 50]}
+          disableSelectionOnClick
+          sx={{ width: "100%" }}
+        />
+      </Paper>
+
+      {/* ── Form Dialog ── */}
+      <WarehouseForm
+        open={openForm}
+        mode={mode}
+        initialData={selectedItem}
+        onClose={handleCloseForm}
+        onSubmit={handleFormSubmit}
+        isPending={createMutation.isPending || updateMutation.isPending}
+      />
+
+      {/* ── Delete Confirmation (single) ── */}
+      <ConfirmDeleteDialog
+        open={openDelete}
+        itemName={selectedItem?.name || ""}
+        onClose={() => {
+          setOpenDelete(false);
+          setSelectedItem(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        isPending={deleteMutation.isPending}
+      />
+
+      {/* ── Delete Confirmation (bulk) ── */}
+      <ConfirmDeleteDialog
+        open={openDeleteSelected}
+        itemName={`${selectedIds.size} selected items`}
+        onClose={() => setOpenDeleteSelected(false)}
+        onConfirm={handleDeleteSelectedConfirm}
+        isPending={deleteMultipleMutation.isPending}
+      />
+
+      {/* ── Message Dialog ── */}
+      <MessageDialog
+        open={messageDialog.open}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        severity={messageDialog.severity}
+        onClose={closeMessageDialog}
+      />
+
+      <ScrollToTopButton />
+    </Box>
+  );
 }

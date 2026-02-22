@@ -1,63 +1,63 @@
 import supabase from "../../config/supabase";
 
-// اسم الجدول في قاعدة البيانات
+// Table name
 const TABLE_NAME = "product_categories";
 
-// جلب جميع التصنيفات
-export const getCategories = async () => {
-    const { data, error } = await supabase
-        .from(TABLE_NAME)
-        .select("*")
-        .order("id", { ascending: false });
+// Query key constant for react-query
+export const CATEGORY_QUERY_KEY = "categories";
 
-    if (error) {
-        throw new Error(error.message);
+// Get paginated categories with optional search
+export async function getCategories({ page = 0, pageSize = 10, searchText = "" } = {}) {
+    const from = page * pageSize;
+    const to = from + pageSize - 1;
+
+    let query = supabase
+        .from(TABLE_NAME)
+        .select("id,name,slug,is_active,show_all_models", { count: "exact" })
+        .order("id", { ascending: false })
+        .range(from, to);
+
+    if (searchText) {
+        const like = `%${searchText}%`;
+        query = query.or(`name.ilike.${like},slug.ilike.${like}`);
     }
 
-    return data;
-};
+    const { data, error, count } = await query;
+    if (error) throw error;
+    return { data, count };
+}
 
-// إضافة تصنيف جديد
-export const createCategory = async (product_categories) => {
+export async function createCategory(payload) {
     const { data, error } = await supabase
         .from(TABLE_NAME)
-        .insert([product_categories])
+        .insert(payload)
         .select()
         .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
+    if (error) throw error;
     return data;
-};
+}
 
-// تعديل تصنيف
-export const updateCategory = async ({ id, ...product_categories }) => {
+export async function updateCategory(id, payload) {
     const { data, error } = await supabase
         .from(TABLE_NAME)
-        .update(product_categories)
+        .update(payload)
         .eq("id", id)
         .select()
         .single();
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
+    if (error) throw error;
     return data;
-};
+}
 
-// حذف تصنيف
-export const deleteCategory = async (id) => {
-    const { error } = await supabase
-        .from(TABLE_NAME)
-        .delete()
-        .eq("id", id);
+export async function deleteCategory(id) {
+    const { error } = await supabase.from(TABLE_NAME).delete().eq("id", id);
+    if (error) throw error;
+    return true;
+}
 
-    if (error) {
-        throw new Error(error.message);
-    }
-
-    return id;
-};
+export async function deleteCategories(ids = []) {
+    const { error } = await supabase.from(TABLE_NAME).delete().in("id", ids);
+    if (error) throw error;
+    return true;
+}
