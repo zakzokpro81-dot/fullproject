@@ -18,8 +18,7 @@ export const stockMovementColumns = [
     headerName: "Qty",
     width: 100,
     renderCell: (params) => {
-      // 1. تحديد أنواع الحركات التي تعتبر "خرج" (أحمر) بناءً على الـ IDs الخاصة بك
-      // 2: out, 7: Sales, 9: Purchase Return, 12: Damaged
+      // Outgoing movement types (red): 2=out, 7=Sales, 9=Purchase Return, 12=Damaged
       const outgoingIds = [2, 7, 9, 12];
       const isOutgoing = outgoingIds.includes(params.row.movement_type_id);
       const value = params.value || 0;
@@ -38,12 +37,13 @@ export const stockMovementColumns = [
   },
   {
     field: "unit_cost",
-    headerName: "Unit Cost", // تم تعديل المسمى ليصبح أوضح
+    headerName: "Unit Cost",
     width: 120,
-    // إصلاح جلب السعر: التأكد من أنه يقرأ مباشرة من الصف
     renderCell: (params) => (
       <Typography>
-        {params.row.unit_cost ? `${params.row.unit_cost.toLocaleString()} $` : "0.00 $"}
+        {params.row.unit_cost
+          ? `${params.row.unit_cost.toLocaleString()} $`
+          : "0.00 $"}
       </Typography>
     ),
   },
@@ -57,17 +57,18 @@ export const stockMovementColumns = [
     field: "movement_type",
     headerName: "Type",
     width: 150,
-    valueGetter: (value, row) => row?.stock_movement_types?.movement_name || "N/A",
+    valueGetter: (value, row) =>
+      row?.stock_movement_types?.movement_name || "N/A",
     renderCell: (params) => {
       const outgoingIds = [2, 7, 9, 12];
       const isOutgoing = outgoingIds.includes(params.row.movement_type_id);
       return (
-        <Chip 
-          label={params.value} 
-          size="small" 
-          variant="filled" 
-          color={isOutgoing ? "error" : "success"} // تلوين الـ Chip أيضاً
-          sx={{ fontWeight: 'bold', textTransform: 'capitalize' }}
+        <Chip
+          label={params.value}
+          size="small"
+          variant="filled"
+          color={isOutgoing ? "error" : "success"}
+          sx={{ fontWeight: "bold", textTransform: "capitalize" }}
         />
       );
     },
@@ -79,12 +80,12 @@ export const stockMovementColumns = [
     valueGetter: (value, row) => {
       if (!row.created_at) return "N/A";
       const date = new Date(row.created_at);
-      return isNaN(date.getTime()) ? "N/A" : date.toLocaleString('en-GB');
+      return isNaN(date.getTime()) ? "N/A" : date.toLocaleString("en-GB");
     },
   },
   {
     field: "description",
     headerName: "Description",
     width: 180,
-  }
+  },
 ];

@@ -64,6 +64,7 @@ export default function AttributeOptionForm({
           error={!!errors.attribute_id}
           helperText={errors.attribute_id?.message}
         >
+          <MenuItem value="">Select Attribute...</MenuItem>
           {attributes.map((attr) => (
             <MenuItem key={attr.id} value={attr.id}>
               {attr.name} ({attr.data_type})

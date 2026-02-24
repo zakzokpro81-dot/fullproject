@@ -197,7 +197,7 @@ export function WarehouseStockList() {
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationChange}
           pageSizeOptions={[10, 25, 50]}
-          disableSelectionOnClick
+          disableRowSelectionOnClick
           sx={{ width: "100%" }}
         />
       </Paper>

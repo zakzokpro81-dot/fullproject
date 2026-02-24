@@ -225,7 +225,7 @@ export function AttributeOptionList() {
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationChange}
-          disableSelectionOnClick
+          disableRowSelectionOnClick
           pageSizeOptions={[10, 25, 50]}
           sx={{ width: "100%" }}
         />

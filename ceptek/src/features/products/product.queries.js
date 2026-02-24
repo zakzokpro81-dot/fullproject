@@ -45,7 +45,7 @@ export const getProducts = async ({
       .eq("warehouse_id", cleanId);
 
     if (stockError) {
-      console.error("Stock API Error:", stockError.message);
+      throw new Error(stockError.message);
     }
 
     if (stockData && stockData.length > 0) {
@@ -161,7 +161,6 @@ export const getProductStockLocation = async (productId) => {
     .maybeSingle();
 
   if (error) {
-    console.error("Error fetching stock location:", error);
     throw error;
   }
   return data;
@@ -177,7 +176,6 @@ export async function getWarehouses() {
     .order("id", { ascending: true });
 
   if (error) {
-    console.error("Failed to fetch warehouses:", error);
     return [];
   }
   return data;

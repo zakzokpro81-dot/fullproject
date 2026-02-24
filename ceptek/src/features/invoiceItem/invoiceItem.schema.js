@@ -13,3 +13,9 @@ export const invoiceFormSchema = z.object({
   status_id: z.coerce.number().min(1, "Please select a status"),
   invoice_date: z.string().min(1, "Date is required"),
 });
+
+export const invoiceFormDefaults = {
+  customer_id: "",
+  status_id: "",
+  invoice_date: new Date().toISOString().split("T")[0],
+};

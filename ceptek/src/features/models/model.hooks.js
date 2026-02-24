@@ -1,6 +1,5 @@
 // model.hooks.js
-// Custom hooks: useModelQuery + useModelMutations
-// ❌ لا MUI — منطق فقط
+// Custom hooks: useModelQuery + useModelMutations (logic only, no MUI)
 
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";

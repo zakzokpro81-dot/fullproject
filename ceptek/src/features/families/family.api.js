@@ -1,5 +1,5 @@
 // family.api.js
-// دوال CRUD للتعامل مع Supabase لميزة Families
+// CRUD operations for Families table
 
 import supabase from "../../config/supabase";
 

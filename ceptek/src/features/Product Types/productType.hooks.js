@@ -6,8 +6,11 @@ import {
   updateProductType,
   deleteProductType,
   deleteProductTypes,
+  getTrackingTypes,
+  getVariantStrategiesFromDB,
   PRODUCTTYPE_QUERY_KEY,
 } from "./productType.api";
+import { getCategories } from "../categories/category.api";
 
 /**
  * Fetches the entity list with server-side pagination and debounced search.
@@ -132,4 +135,30 @@ export function useProductTypeMutations({ onSuccess, showMessageDialog }) {
   });
 
   return { createMutation, updateMutation, deleteMutation, deleteMultipleMutation };
+}
+
+/**
+ * Fetches reference data for ProductType form dropdowns.
+ */
+export function useProductTypeFormOptions() {
+  const { data: categoriesResult } = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+    staleTime: 1000 * 60 * 10,
+  });
+  const categories = categoriesResult?.data ?? [];
+
+  const { data: trackingTypes = [] } = useQuery({
+    queryKey: ["trackingTypes"],
+    queryFn: getTrackingTypes,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  const { data: variantStrategies = [] } = useQuery({
+    queryKey: ["variantStrategies"],
+    queryFn: getVariantStrategiesFromDB,
+    staleTime: 1000 * 60 * 10,
+  });
+
+  return { categories, trackingTypes, variantStrategies };
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getBrands,
@@ -29,8 +29,6 @@ export function useBrandQuery() {
     return () => clearTimeout(timer);
   }, [searchText]);
 
-  const rowCountRef = useRef(0);
-
   const { data, isLoading, isFetching, isError, error } = useQuery({
     queryKey: [BRAND_QUERY_KEY, paginationModel, debouncedSearch],
     queryFn: () =>
@@ -39,19 +37,13 @@ export function useBrandQuery() {
         pageSize: paginationModel.pageSize,
         searchText: debouncedSearch,
       }),
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
     placeholderData: (prev) => prev,
   });
 
-  // Keep the last known rowCount so the DataGrid never resets to 0
-  // mid-flight (which causes MUI to override paginationModel.pageSize).
-  if (data?.count !== undefined) {
-    rowCountRef.current = data.count;
-  }
-
   return {
     rows: data?.data || [],
-    rowCount: rowCountRef.current,
+    rowCount: data?.count || 0,
     isLoading,
     isFetching,
     isError,
@@ -66,12 +58,8 @@ export function useBrandQuery() {
 /**
  * Returns create / update / delete mutations with cache invalidation
  * and notification callbacks.
- *
- * @param {object} options
- * @param {function} options.onSuccess   - called after any successful mutation (e.g., close dialog)
- * @param {function} options.showSnackbar - (message, severity) => void
  */
-export function useBrandMutations({ onSuccess, showSnackbar }) {
+export function useBrandMutations({ onSuccess, showMessageDialog }) {
   const queryClient = useQueryClient();
 
   const invalidate = () =>
@@ -81,11 +69,11 @@ export function useBrandMutations({ onSuccess, showSnackbar }) {
     mutationFn: createBrand,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Brand created successfully", "success");
-      onSuccess();
+      onSuccess?.();
+      showMessageDialog?.("Brand created successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to create brand", "error");
+    onError: (err) => {
+      showMessageDialog?.(err.message || "Failed to create brand", "error");
     },
   });
 
@@ -93,11 +81,11 @@ export function useBrandMutations({ onSuccess, showSnackbar }) {
     mutationFn: ({ id, data }) => updateBrand(id, data),
     onSuccess: () => {
       invalidate();
-      showSnackbar("Brand updated successfully", "success");
-      onSuccess();
+      onSuccess?.();
+      showMessageDialog?.("Brand updated successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to update brand", "error");
+    onError: (err) => {
+      showMessageDialog?.(err.message || "Failed to update brand", "error");
     },
   });
 
@@ -105,10 +93,10 @@ export function useBrandMutations({ onSuccess, showSnackbar }) {
     mutationFn: deleteBrand,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Brand deleted successfully", "success");
+      showMessageDialog?.("Brand deleted successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to delete brand", "error");
+    onError: (err) => {
+      showMessageDialog?.(err.message || "Failed to delete brand", "error");
     },
   });
 
@@ -116,10 +104,10 @@ export function useBrandMutations({ onSuccess, showSnackbar }) {
     mutationFn: deleteBrands,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Brands deleted successfully", "success");
+      showMessageDialog?.("Brands deleted successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to delete brands", "error");
+    onError: (err) => {
+      showMessageDialog?.(err.message || "Failed to delete brands", "error");
     },
   });
 

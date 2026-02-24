@@ -1,50 +1,111 @@
-import * as React from "react";
-import { Box, Paper, Typography, Button, Stack, TextField } from "@mui/material";
+import { useState } from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  Stack,
+  TextField,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { useQuery } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
-import { getStockMovements } from "./stockMovement.api";
+
 import { stockMovementColumns } from "./stockMovement.columns";
 import StockMovementForm from "./StockMovementForm";
+import {
+  useStockMovementQuery,
+  useStockMovementMutations,
+  useStockMovementFormOptions,
+} from "./stockMovement.hooks";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
+import MessageDialog from "../../components/MessageDialog";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
 
 export function StockMovementList() {
-  const [openForm, setOpenForm] = React.useState(false);
-  const [searchText, setSearchText] = React.useState("");
-  const [paginationModel, setPaginationModel] = React.useState({ page: 0, pageSize: 10 });
+  const {
+    rows,
+    rowCount,
+    isLoading,
+    isFetching,
+    paginationModel,
+    setPaginationModel,
+    searchText,
+    setSearchText,
+  } = useStockMovementQuery();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["stockMovements", paginationModel, searchText],
-    queryFn: () => getStockMovements({ page: paginationModel.page, pageSize: paginationModel.pageSize, searchText }),
+  const { movementTypes, warehouses, products } = useStockMovementFormOptions();
+  const [openForm, setOpenForm] = useState(false);
+  const { messageDialog, showMessageDialog } = useMessageDialog();
+
+  const { createMutation } = useStockMovementMutations({
+    onSuccess: () => setOpenForm(false),
+    showMessageDialog,
   });
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Stack direction="row" justifyContent="space-between" sx={{ mb: 3 }}>
-        <Typography variant="h5" fontWeight="bold">Stock Movements</Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setOpenForm(true)}>
-          New Movement
-        </Button>
-      </Stack>
+    <Box sx={{ width: "100%", p: 3 }}>
+      <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          sx={{ mb: 3 }}
+        >
+          <Typography variant="h5" fontWeight="bold">
+            Stock Movements
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setOpenForm(true)}
+          >
+            New Movement
+          </Button>
+        </Stack>
 
-      <TextField 
-        fullWidth label="Search by Product Name" 
-        sx={{ mb: 2 }} 
-        onChange={(e) => setSearchText(e.target.value)} 
-      />
-
-      <Paper sx={{ height: 500 }}>
-        <DataGrid
-          rows={data?.data || []}
-          rowCount={data?.count || 0}
-          columns={stockMovementColumns}
-          loading={isLoading}
-          paginationMode="server"
-          paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
+        <TextField
+          fullWidth
+          label="Search by product name"
+          size="small"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
         />
       </Paper>
 
-      {openForm && <StockMovementForm open={openForm} onClose={() => setOpenForm(false)} />}
+      <Paper sx={{ height: 600, width: "100%" }}>
+        <DataGrid
+          rows={rows}
+          rowCount={rowCount}
+          columns={stockMovementColumns}
+          loading={isLoading || isFetching}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={setPaginationModel}
+          disableRowSelectionOnClick
+        />
+      </Paper>
+
+      <MessageDialog
+        open={messageDialog.open}
+        onClose={messageDialog.onClose}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        type={messageDialog.type}
+      />
+
+      {openForm && (
+        <StockMovementForm
+          open={openForm}
+          onClose={() => setOpenForm(false)}
+          onSubmit={(data) => createMutation.mutate(data)}
+          isPending={createMutation.isPending}
+          products={products}
+          warehouses={warehouses}
+          movementTypes={movementTypes}
+        />
+      )}
+
+      <ScrollToTopButton />
     </Box>
   );
 }

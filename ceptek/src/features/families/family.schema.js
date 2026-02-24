@@ -1,5 +1,5 @@
 // family.schema.js
-// Zod schema للفورم الخاص بـ Families
+// Zod validation schema for Families
 
 import { z } from "zod";
 

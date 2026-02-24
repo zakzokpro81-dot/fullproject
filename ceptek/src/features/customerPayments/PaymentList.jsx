@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState } from "react";
 import {
   Box,
   Paper,
@@ -8,55 +8,91 @@ import {
   TextField,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AddIcon from "@mui/icons-material/Add";
 
-import { getPayments, deletePayment, deletePayments } from "./payment.api";
 import { paymentColumns } from "./payment.columns";
 import PaymentForm from "./PaymentForm";
-import ProductActionDialogs from "../../components/ProductActionDialogs";
+import {
+  usePaymentQuery,
+  usePaymentMutations,
+  usePaymentFormOptions,
+} from "./payment.hooks";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
+import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
+import MessageDialog from "../../components/MessageDialog";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
 
 export function PaymentList() {
-  const queryClient = useQueryClient();
+  const {
+    rows,
+    rowCount,
+    isLoading,
+    isFetching,
+    paginationModel,
+    setPaginationModel,
+    searchText,
+    setSearchText,
+  } = usePaymentQuery();
 
-  // States
-  const [openForm, setOpenForm] = React.useState(false);
-  const [selectedPayment, setSelectedPayment] = React.useState(null);
-  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
+  const { invoices } = usePaymentFormOptions();
+
+  const [openForm, setOpenForm] = useState(false);
+  const [formMode, setFormMode] = useState("add");
+  const [selectedPayment, setSelectedPayment] = useState(null);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openDeleteSelectedDialog, setOpenDeleteSelectedDialog] =
-    React.useState(false);
-  const [selectedIds, setSelectedIds] = React.useState(new Set());
-  const [searchText, setSearchText] = React.useState("");
-  const [paginationModel, setPaginationModel] = React.useState({
-    page: 0,
-    pageSize: 10,
+    useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+
+  const { messageDialog, showMessageDialog } = useMessageDialog();
+
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    deleteMultipleMutation,
+  } = usePaymentMutations({
+    onSuccess: () => setOpenForm(false),
+    showMessageDialog,
   });
 
-  // Query
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["payments", paginationModel, searchText],
-    queryFn: () =>
-      getPayments({
-        page: paginationModel.page,
-        pageSize: paginationModel.pageSize,
-        searchText,
-      }),
-    keepPreviousData: true,
-  });
+  const handleOpenAdd = () => {
+    setSelectedPayment(null);
+    setFormMode("add");
+    setOpenForm(true);
+  };
 
-  // Mutations
-  const deleteMutation = useMutation({
-    mutationFn: deletePayment,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["payments"]);
-      setOpenDeleteDialog(false);
-      setSelectedPayment(null);
-    },
-  });
+  const handleOpenEdit = (row) => {
+    setSelectedPayment(row);
+    setFormMode("edit");
+    setOpenForm(true);
+  };
 
-  const rows = data?.data || [];
+  const handleOpenDelete = (row) => {
+    setSelectedPayment(row);
+    setOpenDeleteDialog(true);
+  };
 
-  // Handlers
+  const handleDeleteConfirm = () => {
+    deleteMutation.mutate(selectedPayment.id);
+    setOpenDeleteDialog(false);
+    setSelectedPayment(null);
+  };
+
+  const handleDeleteSelected = () => {
+    deleteMultipleMutation.mutate(Array.from(selectedIds));
+    setSelectedIds(new Set());
+    setOpenDeleteSelectedDialog(false);
+  };
+
+  const handleFormSubmit = (data) => {
+    if (formMode === "edit") {
+      updateMutation.mutate({ id: selectedPayment.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
   const toggleSelectAll = () => {
     if (rows.length > 0 && selectedIds.size === rows.length) {
       setSelectedIds(new Set());
@@ -66,27 +102,19 @@ export function PaymentList() {
   };
 
   const toggleSelect = (id) => {
-    const newSet = new Set(selectedIds);
-    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
-    setSelectedIds(newSet);
+    const next = new Set(selectedIds);
+    next.has(id) ? next.delete(id) : next.add(id);
+    setSelectedIds(next);
   };
 
-  const handleDeleteSelected = async () => {
-    await deletePayments(Array.from(selectedIds));
-    queryClient.invalidateQueries(["payments"]);
+  const handlePaginationChange = (model) => {
+    setPaginationModel(model);
     setSelectedIds(new Set());
-    setOpenDeleteSelectedDialog(false);
   };
 
   const columns = paymentColumns(
-    (p) => {
-      setSelectedPayment(p);
-      setOpenForm(true);
-    },
-    (p) => {
-      setSelectedPayment(p);
-      setOpenDeleteDialog(true);
-    },
+    handleOpenEdit,
+    handleOpenDelete,
     selectedIds,
     toggleSelect,
     rows,
@@ -103,7 +131,7 @@ export function PaymentList() {
           justifyContent="space-between"
           sx={{ mb: 3 }}
         >
-          <Typography variant="h5" sx={{ fontWeight: "bold" }}>
+          <Typography variant="h5" fontWeight="bold">
             Customer Payments
           </Typography>
           <Stack direction="row" spacing={1}>
@@ -118,10 +146,7 @@ export function PaymentList() {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={() => {
-                setSelectedPayment(null);
-                setOpenForm(true);
-              }}
+              onClick={handleOpenAdd}
             >
               Add Payment
             </Button>
@@ -129,7 +154,7 @@ export function PaymentList() {
         </Stack>
 
         <TextField
-          label="Search by Note or Customer Name"
+          label="Search by note or customer name"
           size="small"
           fullWidth
           value={searchText}
@@ -140,34 +165,53 @@ export function PaymentList() {
       <Paper sx={{ height: 600, width: "100%" }}>
         <DataGrid
           rows={rows}
-          rowCount={data?.count || 0}
+          rowCount={rowCount}
           loading={isLoading || isFetching}
           columns={columns}
           paginationMode="server"
           paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          disableSelectionOnClick
+          onPaginationModelChange={handlePaginationChange}
+          disableRowSelectionOnClick
         />
       </Paper>
 
-      <ProductActionDialogs
-        openDeleteDialog={openDeleteDialog}
-        setOpenDeleteDialog={setOpenDeleteDialog}
-        selectedProduct={selectedPayment}
-        handleDeleteConfirm={() => deleteMutation.mutate(selectedPayment.id)}
-        openDeleteSelectedDialog={openDeleteSelectedDialog}
-        setOpenDeleteSelectedDialog={setOpenDeleteSelectedDialog}
-        selectedIds={selectedIds}
-        handleDeleteSelected={handleDeleteSelected}
+      <ConfirmDeleteDialog
+        open={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Payment"
+        message={`Are you sure you want to delete this payment?`}
+      />
+
+      <ConfirmDeleteDialog
+        open={openDeleteSelectedDialog}
+        onClose={() => setOpenDeleteSelectedDialog(false)}
+        onConfirm={handleDeleteSelected}
+        title="Delete Selected"
+        message={`Are you sure you want to delete ${selectedIds.size} payment(s)?`}
+      />
+
+      <MessageDialog
+        open={messageDialog.open}
+        onClose={messageDialog.onClose}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        type={messageDialog.type}
       />
 
       {openForm && (
         <PaymentForm
           open={openForm}
-          onClose={() => setOpenForm(false)}
+          mode={formMode}
           initialData={selectedPayment}
+          onClose={() => setOpenForm(false)}
+          onSubmit={handleFormSubmit}
+          isPending={createMutation.isPending || updateMutation.isPending}
+          invoices={invoices}
         />
       )}
+
+      <ScrollToTopButton />
     </Box>
   );
 }

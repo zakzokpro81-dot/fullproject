@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCustomers,
@@ -9,15 +9,8 @@ import {
   CUSTOMER_QUERY_KEY,
 } from "./customer.api";
 
-/**
- * Fetches the customer list with server-side pagination and debounced search.
- */
 export function useCustomerQuery({ customerTypeId } = {}) {
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 10,
-  });
-
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchText, setSearchText] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -28,8 +21,6 @@ export function useCustomerQuery({ customerTypeId } = {}) {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchText]);
-
-  const rowCountRef = useRef(0);
 
   const { data, isLoading, isFetching, isError, error } = useQuery({
     queryKey: [CUSTOMER_QUERY_KEY, paginationModel, debouncedSearch, customerTypeId],
@@ -44,13 +35,9 @@ export function useCustomerQuery({ customerTypeId } = {}) {
     placeholderData: (prev) => prev,
   });
 
-  if (data?.count !== undefined) {
-    rowCountRef.current = data.count;
-  }
-
   return {
     rows: data?.data || [],
-    rowCount: rowCountRef.current,
+    rowCount: data?.count || 0,
     isLoading,
     isFetching,
     isError,
@@ -62,10 +49,7 @@ export function useCustomerQuery({ customerTypeId } = {}) {
   };
 }
 
-/**
- * Returns create / update / delete mutations with cache invalidation.
- */
-export function useCustomerMutations({ onSuccess, showSnackbar }) {
+export function useCustomerMutations({ onSuccess, showMessageDialog }) {
   const queryClient = useQueryClient();
 
   const invalidate = () =>
@@ -75,11 +59,11 @@ export function useCustomerMutations({ onSuccess, showSnackbar }) {
     mutationFn: createCustomer,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Customer created successfully", "success");
-      onSuccess();
+      onSuccess?.();
+      showMessageDialog?.("Created successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to create customer", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to create", "error");
     },
   });
 
@@ -87,11 +71,11 @@ export function useCustomerMutations({ onSuccess, showSnackbar }) {
     mutationFn: ({ id, data }) => updateCustomer(id, data),
     onSuccess: () => {
       invalidate();
-      showSnackbar("Customer updated successfully", "success");
-      onSuccess();
+      onSuccess?.();
+      showMessageDialog?.("Updated successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to update customer", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to update", "error");
     },
   });
 
@@ -99,10 +83,10 @@ export function useCustomerMutations({ onSuccess, showSnackbar }) {
     mutationFn: deleteCustomer,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Customer deleted successfully", "success");
+      showMessageDialog?.("Deleted successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to delete customer", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to delete", "error");
     },
   });
 
@@ -110,10 +94,10 @@ export function useCustomerMutations({ onSuccess, showSnackbar }) {
     mutationFn: deleteCustomers,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Customers deleted successfully", "success");
+      showMessageDialog?.("Deleted successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to delete customers", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to delete", "error");
     },
   });
 

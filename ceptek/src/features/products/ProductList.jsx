@@ -1,168 +1,63 @@
-import * as React from "react";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography,
-  Paper,
-  Drawer,
-  Divider,
-  Stack,
-  TextField,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormControlLabel,
-  Switch,
-} from "@mui/material";
+import { useState } from "react";
+import { Box, Paper } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import CloseIcon from "@mui/icons-material/Close";
+
 import { ProductDetailsDrawer } from "./ProductDetailsDrawer";
-import {
-  getProducts,
-  deleteProduct,
-  getWarehouses,
-  getProductTypes,
-  deleteProducts,
-  softDeleteProduct,
-  deactivateProduct,
-  deactivateMultipleProducts,
-} from "./product.api";
 import { productColumns } from "./product.columns";
 import AddProductForm from "./AddProductForm";
 import EditProductForm from "./EditProductForm";
 import { ProductsHeader } from "./ProductsHeader";
-import ProductActionDialogs from "../../components/ProductActionDialogs";
-import { Snackbar, Alert } from "@mui/material";
-import { useSnackbar } from "../../hooks/useSnackbar";
-function normalizeTurkish(str = "") {
-  return str
-    .replace(/İ/g, "I")
-    .replace(/I/g, "I")
-    .replace(/ı/g, "i")
-    .replace(/Ş/g, "S")
-    .replace(/ş/g, "s")
-    .replace(/Ğ/g, "G")
-    .replace(/ğ/g, "g")
-    .replace(/Ü/g, "U")
-    .replace(/ü/g, "u")
-    .replace(/Ö/g, "O")
-    .replace(/ö/g, "o")
-    .replace(/Ç/g, "C")
-    .replace(/ç/g, "c")
-    .toLowerCase();
-}
+import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
+import MessageDialog from "../../components/MessageDialog";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
+import {
+  useProductQuery,
+  useProductReferenceData,
+  useProductMutations,
+} from "./product.hooks";
 
 export function ProductsList() {
-  const queryClient = useQueryClient();
-  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
-
-  const [openAddDialog, setOpenAddDialog] = React.useState(false);
-  const [openEditDialog, setOpenEditDialog] = React.useState(false);
-  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
-  const [detailDrawerOpen, setDetailDrawerOpen] = React.useState(false);
+  const [openAddDialog, setOpenAddDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [openDeleteSelectedDialog, setOpenDeleteSelectedDialog] =
-    React.useState(false);
+    useState(false);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [warehouseId, setWarehouseId] = useState("");
+  const [typeId, setTypeId] = useState("");
 
-  const [selectedIds, setSelectedIds] = React.useState(new Set());
+  const { messageDialog, showMessageDialog, closeMessageDialog } =
+    useMessageDialog();
 
-  const [selectedProduct, setSelectedProduct] = React.useState(null);
-  const [searchText, setSearchText] = React.useState("");
-  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const {
+    rows,
+    rowCount,
+    isLoading,
+    isFetching,
+    paginationModel,
+    setPaginationModel,
+    searchText,
+    setSearchText,
+  } = useProductQuery({ warehouseId, typeId });
 
-  const { data: warehouses = [] } = useQuery({
-    queryKey: ["warehouses"],
-    queryFn: getWarehouses,
-  });
-  const { data: productTypes = [] } = useQuery({
-    queryKey: ["productTypes"],
-    queryFn: getProductTypes,
-  });
+  const { warehouses, productTypes } = useProductReferenceData();
 
-  const [warehouseId, setWarehouseId] = React.useState("");
-  const [typeId, setTypeId] = React.useState("");
-
-  const [paginationModel, setPaginationModel] = React.useState({
-    page: 0,
-    pageSize: 10,
-  });
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchText), 500);
-    return () => clearTimeout(timer);
-  }, [searchText]);
-
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: [
-      "products",
-      paginationModel,
-      debouncedSearch,
-      warehouseId,
-      typeId,
-    ],
-    queryFn: () =>
-      getProducts({
-        page: paginationModel.page,
-        pageSize: paginationModel.pageSize,
-        searchText: normalizeTurkish(debouncedSearch),
-        warehouseId,
-        typeId,
-      }),
-    staleTime: 1000 * 60 * 5,
-    cacheTime: 1000 * 60 * 30,
-    keepPreviousData: true,
-  });
-
-  // 1️⃣ موتيشن جديد لإيقاف تفعيل منتج واحد
-  const deactivateSingleMutation = useMutation({
-    mutationFn: deactivateProduct, // الدالة التي سنضيفها في الـ API
+  const {
+    deactivateSingleMutation,
+    deactivateBulkMutation,
+    deleteMutation,
+    softDeleteMutation,
+  } = useProductMutations({
     onSuccess: () => {
-      queryClient.invalidateQueries(["products"]);
       setOpenDeleteDialog(false);
-      setSelectedProduct(null);
-    },
-  });
-
-  // 2️⃣ موتيشن جديد لإيقاف تفعيل مجموعة منتجات
-  const deactivateBulkMutation = useMutation({
-    mutationFn: deactivateMultipleProducts, // الدالة التي سنضيفها في الـ API
-    onSuccess: () => {
-      queryClient.invalidateQueries(["products"]);
       setOpenDeleteSelectedDialog(false);
+      setSelectedProduct(null);
       setSelectedIds(new Set());
     },
-  });
-
-  // 3️⃣ دالة جديدة كلياً لمعالجة تأكيد إيقاف التفعيل الفردي
-  const handleDeactivateConfirm = () => {
-    if (selectedProduct) {
-      deactivateSingleMutation.mutate(selectedProduct.id);
-    }
-  };
-
-  // 4️⃣ دالة جديدة كلياً لمعالجة تأكيد إيقاف التفعيل الجماعي
-  const handleDeactivateSelectedConfirm = () => {
-    if (selectedIds.size > 0) {
-      deactivateBulkMutation.mutate(Array.from(selectedIds));
-    }
-  };
-
-  const deleteMutation = useMutation({
-    mutationFn: deleteProduct,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["products"]);
-      setOpenDeleteDialog(false);
-      setSelectedProduct(null);
-    },
+    showMessageDialog,
   });
 
   const handleEditAction = (product) => {
@@ -175,39 +70,34 @@ export function ProductsList() {
     setOpenDeleteDialog(true);
   };
 
-  const handleDeleteConfirm = () => {
-    if (selectedProduct) deleteMutation.mutate(selectedProduct.id);
+  const handleDeactivateConfirm = () => {
+    if (selectedProduct) {
+      deactivateSingleMutation.mutate(selectedProduct.id);
+    }
+  };
+
+  const handleDeactivateSelectedConfirm = () => {
+    if (selectedIds.size > 0) {
+      deactivateBulkMutation.mutate(Array.from(selectedIds));
+    }
   };
 
   const handleRowClick = (params) => {
-    const fullProductData = data?.data?.find((p) => p.id === params.row.id);
+    const fullProductData = rows.find((p) => p.id === params.row.id);
     setSelectedProduct(fullProductData || params.row);
     setDetailDrawerOpen(true);
   };
 
-  const rows = data?.data || [];
-
   const toggleSelectAll = () => {
     const allSelected =
       rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
-
-    if (allSelected) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(rows.map((r) => r.id)));
-    }
+    setSelectedIds(allSelected ? new Set() : new Set(rows.map((r) => r.id)));
   };
 
   const toggleSelect = (id) => {
     const newSet = new Set(selectedIds);
     newSet.has(id) ? newSet.delete(id) : newSet.add(id);
     setSelectedIds(newSet);
-  };
-
-  const handleDeleteSelected = async () => {
-    await softDeleteProduct(Array.from(selectedIds));
-    queryClient.invalidateQueries(["products"]);
-    setSelectedIds(new Set());
   };
 
   const columns = productColumns(
@@ -218,7 +108,12 @@ export function ProductsList() {
     rows,
     toggleSelectAll,
   );
-  const handleAddClick = () => setOpenAddDialog(true);
+
+  const handlePaginationChange = (model) => {
+    setPaginationModel(model);
+    setSelectedIds(new Set());
+  };
+
   return (
     <Box sx={{ width: "100%", p: 3 }}>
       <ProductsHeader
@@ -233,19 +128,19 @@ export function ProductsList() {
         setTypeId={setTypeId}
         warehouses={warehouses}
         productTypes={productTypes}
-        handleAddClick={handleAddClick}
+        handleAddClick={() => setOpenAddDialog(true)}
       />
 
       <Paper sx={{ height: 650, width: "100%" }}>
         <DataGrid
-          rows={data?.data || []}
-          rowCount={data?.count || 0}
+          rows={rows}
+          rowCount={rowCount}
           loading={isLoading || isFetching}
           columns={columns}
           paginationMode="server"
           paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          disableSelectionOnClick
+          onPaginationModelChange={handlePaginationChange}
+          disableRowSelectionOnClick
           onRowClick={handleRowClick}
         />
       </Paper>
@@ -256,24 +151,32 @@ export function ProductsList() {
         selectedProduct={selectedProduct}
       />
 
-      <ProductActionDialogs
-        openDeleteSelectedDialog={openDeleteSelectedDialog}
-        setOpenDeleteSelectedDialog={setOpenDeleteSelectedDialog}
-        selectedIds={selectedIds}
-        handleDeleteSelected={handleDeactivateSelectedConfirm}
-        openDeleteDialog={openDeleteDialog}
-        setOpenDeleteDialog={setOpenDeleteDialog}
-        selectedProduct={selectedProduct}
-        handleDeleteConfirm={handleDeactivateConfirm}
+      {/* Single delete confirmation */}
+      <ConfirmDeleteDialog
+        open={openDeleteDialog}
+        onClose={() => setOpenDeleteDialog(false)}
+        onConfirm={handleDeactivateConfirm}
+        title="Deactivate Product"
+        message={`Are you sure you want to deactivate "${selectedProduct?.name}"?`}
+      />
+
+      {/* Bulk delete confirmation */}
+      <ConfirmDeleteDialog
+        open={openDeleteSelectedDialog}
+        onClose={() => setOpenDeleteSelectedDialog(false)}
+        onConfirm={handleDeactivateSelectedConfirm}
+        title="Deactivate Selected Products"
+        message={`Are you sure you want to deactivate ${selectedIds.size} selected product(s)?`}
       />
 
       {openAddDialog && (
         <AddProductForm
           open={openAddDialog}
           onClose={() => setOpenAddDialog(false)}
-          showSnackbar={showSnackbar}
+          showSnackbar={showMessageDialog}
         />
       )}
+
       {openEditDialog && selectedProduct && (
         <EditProductForm
           open={openEditDialog}
@@ -282,24 +185,12 @@ export function ProductsList() {
             setSelectedProduct(null);
           }}
           product={selectedProduct}
-          showSnackbar={showSnackbar}
+          showSnackbar={showMessageDialog}
         />
       )}
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={closeSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={closeSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      <MessageDialog {...messageDialog} onClose={closeMessageDialog} />
+      <ScrollToTopButton />
     </Box>
   );
 }

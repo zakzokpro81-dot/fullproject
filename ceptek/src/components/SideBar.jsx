@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import { styled, useTheme } from "@mui/material/styles";
@@ -20,11 +20,27 @@ import {
   ReceiptOutlined,
   ExpandLess,
   ExpandMore,
+  Inventory2Outlined,
+  AddBoxOutlined,
+  WarehouseOutlined,
+  HistoryOutlined,
+  AccountBalanceOutlined,
+  GroupOutlined,
+  CategoryOutlined,
+  ShoppingCartOutlined,
+  LabelOutlined,
+  TuneOutlined,
+  ListAltOutlined,
+  ViewListOutlined,
+  ClassOutlined,
+  PaymentOutlined,
+  DescriptionOutlined,
+  ReceiptLongOutlined,
+  LocalShippingOutlined,
 } from "@mui/icons-material";
 
 import { Avatar, Tooltip, Typography } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
-import { grey } from "@mui/material/colors";
 
 const drawerWidth = 240;
 
@@ -77,29 +93,27 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 // ================= MENU STRUCTURE =================
 
 const menuGroups = [
-  // {
-  //   id: "model",
   {
     id: "products",
     title: "Products & Stock",
     color: "#ed6c02",
-    icon: <ContactsOutlined />,
+    icon: <Inventory2Outlined />,
     children: [
-      { text: "Products", path: "/products", icon: <HomeOutlined /> },
+      { text: "Products", path: "/products", icon: <Inventory2Outlined /> },
       {
         text: "Bulk Import",
         path: "/products/bulk-add",
-        icon: <HomeOutlined />,
+        icon: <AddBoxOutlined />,
       },
       {
         text: "Stock Levels",
         path: "/warehouse-stock",
-        icon: <HomeOutlined />,
+        icon: <WarehouseOutlined />,
       },
       {
         text: "Stock History",
         path: "/stock-movements",
-        icon: <HomeOutlined />,
+        icon: <HistoryOutlined />,
       },
     ],
   },
@@ -107,72 +121,71 @@ const menuGroups = [
     id: "accounts",
     title: "Accounts & Customers",
     color: "#1976d2",
-    icon: <HomeOutlined />,
+    icon: <AccountBalanceOutlined />,
     children: [
-      { text: "Accounts", path: "/accounts", icon: <PeopleOutline /> },
-      { text: "Customers", path: "/customers", icon: <ContactsOutlined /> },
+      { text: "Accounts", path: "/accounts", icon: <AccountBalanceOutlined /> },
+      { text: "Customers", path: "/customers", icon: <PeopleOutline /> },
       {
         text: "Customer Types",
         path: "/customer-types",
-        icon: <ReceiptOutlined />,
+        icon: <GroupOutlined />,
       },
-      { text: "Invoices", path: "/invoices", icon: <ReceiptOutlined /> },
+      { text: "Invoices", path: "/invoices", icon: <DescriptionOutlined /> },
       {
         text: "Invoice Items",
         path: "/invoice-items",
-        icon: <ReceiptOutlined />,
+        icon: <ReceiptLongOutlined />,
       },
-      { text: "Payments", path: "/payments", icon: <ReceiptOutlined /> },
+      { text: "Payments", path: "/payments", icon: <PaymentOutlined /> },
     ],
   },
   {
     id: "orders",
     title: "Orders",
     color: "#2e7d32",
-    icon: <PeopleOutline />,
+    icon: <ShoppingCartOutlined />,
     children: [
-      { text: "Order List", path: "/orders", icon: <ReceiptOutlined /> },
+      { text: "Order List", path: "/orders", icon: <LocalShippingOutlined /> },
     ],
   },
   {
     id: "catalog",
     title: "Catalog & Settings",
     color: "#9c27b0",
-    icon: <ReceiptOutlined />,
+    icon: <CategoryOutlined />,
     children: [
-      { text: "Brands", path: "/brands", icon: <PeopleOutline /> },
-      { text: "Families", path: "/families", icon: <ContactsOutlined /> },
-      { text: "Models", path: "/models", icon: <ReceiptOutlined /> },
-      { text: "Warehouses", path: "/warehouses", icon: <HomeOutlined /> },
-      { text: "Attributes", path: "/attributes", icon: <ReceiptOutlined /> },
+      { text: "Brands", path: "/brands", icon: <LabelOutlined /> },
+      { text: "Families", path: "/families", icon: <ClassOutlined /> },
+      { text: "Models", path: "/models", icon: <ViewListOutlined /> },
+      { text: "Warehouses", path: "/warehouses", icon: <WarehouseOutlined /> },
+      { text: "Attributes", path: "/attributes", icon: <TuneOutlined /> },
       {
         text: "Attribute Options",
         path: "/attribute-options",
-        icon: <ReceiptOutlined />,
+        icon: <ListAltOutlined />,
       },
       {
         text: "Product Types",
         path: "/product-types",
-        icon: <ReceiptOutlined />,
+        icon: <CategoryOutlined />,
       },
-      { text: "Categories", path: "/categories", icon: <ReceiptOutlined /> },
+      { text: "Categories", path: "/categories", icon: <ClassOutlined /> },
     ],
   },
 ];
 
 // ================= COMPONENT =================
 
-export function SideBar({ open, handleDrawerClose, setOpen }) {
+export function SideBar({ open, handleDrawerClose }) {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const [openGroup, setOpenGroup] = React.useState(null);
   const [openGroups, setOpenGroups] = useState({});
   const [hoverOpen, setHoverOpen] = useState(false);
 
   const isDrawerOpen = open || hoverOpen;
 
-  // فتح القسم تلقائياً حسب route الحالي
+  // Auto-expand group matching current route
   useEffect(() => {
     const newOpenGroups = {};
 
@@ -193,10 +206,6 @@ export function SideBar({ open, handleDrawerClose, setOpen }) {
       ...prev,
       [id]: !prev[id],
     }));
-  };
-
-  const handleGroupHover = (groupId) => {
-    setOpenGroup(groupId);
   };
 
   return (
@@ -225,7 +234,7 @@ export function SideBar({ open, handleDrawerClose, setOpen }) {
           border: "2px solid #1976d2",
           my: 1,
         }}
-        src="../src/images/zek.jpeg"
+        src="/images/zek.jpeg"
       />
 
       <Typography align="center" sx={{ fontSize: isDrawerOpen ? "17px" : 0 }}>
@@ -244,17 +253,17 @@ export function SideBar({ open, handleDrawerClose, setOpen }) {
       <Divider sx={{ my: 1 }} />
       <List>
         {menuGroups.map((group) => {
-          const isOpen = openGroup === group.id;
+          const isOpen = !!openGroups[group.id];
 
           return (
-            <React.Fragment key={group.id}>
+            <Fragment key={group.id}>
               <Tooltip
                 title={isDrawerOpen ? "" : group.title}
                 placement="right"
               >
                 <ListItem disablePadding sx={{ display: "block" }}>
                   <ListItemButton
-                    onMouseEnter={() => handleGroupHover(group.id)}
+                    onClick={() => toggleGroup(group.id)}
                     sx={{
                       minHeight: 52,
                       mx: 1,
@@ -262,7 +271,6 @@ export function SideBar({ open, handleDrawerClose, setOpen }) {
                       borderRadius: 2,
                       justifyContent: isDrawerOpen ? "initial" : "center",
 
-                      // اللون الأساسي الخاص بكل مجموعة
                       bgcolor: isOpen ? group.color : `${group.color}22`,
                       color: isOpen ? "#fff" : group.color,
 
@@ -360,7 +368,7 @@ export function SideBar({ open, handleDrawerClose, setOpen }) {
               </Collapse>
 
               <Divider sx={{ my: 1, opacity: 0.3 }} />
-            </React.Fragment>
+            </Fragment>
           );
         })}
       </List>

@@ -1,123 +1,232 @@
-import * as React from "react";
-import { Box, Paper, Typography, Button, Stack } from "@mui/material";
+import { useState } from "react";
+import {
+  Box,
+  Button,
+  Typography,
+  Alert,
+  TextField,
+  Paper,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import AddIcon from "@mui/icons-material/Add";
 
-import { getCustomerTypes, deleteCustomerType } from "./customerType.api";
+import {
+  useCustomerTypeQuery,
+  useCustomerTypeMutations,
+} from "./customerType.hooks";
 import { customerTypeColumns } from "./customerType.columns";
-import CustomerTypeForm from "./CustomerTypeForm"; // سننشئه في الخطوة التالية
-import ProductActionDialogs from "../../components/ProductActionDialogs"; // إعادة استخدام مكون الديالوغ الخاص بك
+import CustomerTypeForm from "./CustomerTypeForm";
+import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
+import MessageDialog from "../../components/MessageDialog";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function CustomerTypeList() {
-  const queryClient = useQueryClient();
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [openForm, setOpenForm] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [openDeleteSelected, setOpenDeleteSelected] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [mode, setMode] = useState("add");
 
-  // States
-  const [openForm, setOpenForm] = React.useState(false);
-  const [selectedType, setSelectedType] = React.useState(null);
-  const [openDeleteDialog, setOpenDeleteDialog] = React.useState(false);
-  const [paginationModel, setPaginationModel] = React.useState({
-    page: 0,
-    pageSize: 10,
+  function handleCloseForm() {
+    setOpenForm(false);
+    setSelectedItem(null);
+  }
+
+  const { messageDialog, showMessageDialog, closeMessageDialog } =
+    useMessageDialog();
+
+  const {
+    rows,
+    rowCount,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    paginationModel,
+    setPaginationModel,
+    searchText,
+    setSearchText,
+  } = useCustomerTypeQuery();
+
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    deleteMultipleMutation,
+  } = useCustomerTypeMutations({
+    onSuccess: handleCloseForm,
+    showMessageDialog,
   });
 
-  // Query: جلب البيانات من السيرفر
-  const { data, isLoading, isFetching } = useQuery({
-    queryKey: ["customerTypes", paginationModel],
-    queryFn: () =>
-      getCustomerTypes({
-        page: paginationModel.page,
-        pageSize: paginationModel.pageSize,
-      }),
-    keepPreviousData: true,
-  });
-
-  // Mutation: حذف النوع
-  const deleteMutation = useMutation({
-    mutationFn: deleteCustomerType,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["customerTypes"]);
-      setOpenDeleteDialog(false);
-      setSelectedType(null);
-    },
-  });
-
-  // Handlers
-  const handleAddClick = () => {
-    setSelectedType(null);
+  const handleOpenAdd = () => {
+    setMode("add");
+    setSelectedItem(null);
     setOpenForm(true);
   };
 
-  const handleEditAction = (type) => {
-    setSelectedType(type);
+  const handleOpenEdit = (row) => {
+    setMode("edit");
+    setSelectedItem(row);
     setOpenForm(true);
   };
 
-  const handleDeleteAction = (type) => {
-    setSelectedType(type);
-    setOpenDeleteDialog(true);
+  const handleFormSubmit = (data) => {
+    if (mode === "add") {
+      createMutation.mutate(data);
+    } else {
+      updateMutation.mutate({ id: selectedItem.id, data });
+    }
+  };
+
+  const handleDeleteClick = (row) => {
+    setSelectedItem(row);
+    setOpenDelete(true);
   };
 
   const handleDeleteConfirm = () => {
-    if (selectedType) deleteMutation.mutate(selectedType.id);
+    if (!selectedItem) return;
+    deleteMutation.mutate(selectedItem.id, {
+      onSettled: () => {
+        setOpenDelete(false);
+        setSelectedItem(null);
+      },
+    });
   };
 
-  const columns = customerTypeColumns(handleEditAction, handleDeleteAction);
+  const handlePaginationChange = (newModel) => {
+    setSelectedIds(new Set());
+    setPaginationModel(newModel);
+  };
+
+  const toggleSelectAll = () => {
+    const allSelected =
+      rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(rows.map((r) => r.id)));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    const newSet = new Set(selectedIds);
+    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+    setSelectedIds(newSet);
+  };
+
+  const handleDeleteSelectedConfirm = () => {
+    if (selectedIds.size === 0) return;
+    deleteMultipleMutation.mutate(Array.from(selectedIds), {
+      onSettled: () => {
+        setOpenDeleteSelected(false);
+        setSelectedIds(new Set());
+      },
+    });
+  };
 
   return (
-    <Box sx={{ width: "100%", p: 3 }}>
-      {/* Header بسيط متوافق مع تصميمك */}
-      <Paper sx={{ p: 2, mb: 3, borderRadius: 2 }}>
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Typography variant="h5" sx={{ fontWeight: "bold" }}>
-            إدارة أنواع الزبائن
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={handleAddClick}
-          >
-            إضافة نوع جديد
+    <Box>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
+        <Typography variant="h5">Customer Types</Typography>
+        <Box display="flex" gap={1}>
+          {selectedIds.size > 0 && (
+            <Button
+              variant="contained"
+              color="error"
+              onClick={() => setOpenDeleteSelected(true)}
+            >
+              Delete Selected ({selectedIds.size})
+            </Button>
+          )}
+          <Button variant="contained" onClick={handleOpenAdd}>
+            Add Customer Type
           </Button>
-        </Stack>
-      </Paper>
+        </Box>
+      </Box>
 
-      {/* الجدول */}
-      <Paper sx={{ height: 500, width: "100%" }}>
+      <Box mb={2}>
+        <TextField
+          label="Search"
+          variant="outlined"
+          size="small"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          fullWidth
+          sx={{ maxWidth: 400 }}
+        />
+      </Box>
+
+      {isError && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Failed to load data: {error?.message || "Unknown error"}
+        </Alert>
+      )}
+
+      <Paper sx={{ height: 650, width: "100%" }}>
         <DataGrid
-          rows={data?.data || []}
-          rowCount={data?.count || 0}
+          rows={rows}
+          rowCount={rowCount}
+          columns={customerTypeColumns(
+            handleOpenEdit,
+            handleDeleteClick,
+            selectedIds,
+            toggleSelect,
+            rows,
+            toggleSelectAll,
+          )}
           loading={isLoading || isFetching}
-          columns={columns}
           paginationMode="server"
           paginationModel={paginationModel}
-          onPaginationModelChange={setPaginationModel}
-          disableSelectionOnClick
+          onPaginationModelChange={handlePaginationChange}
+          pageSizeOptions={[10, 25, 50]}
+          disableRowSelectionOnClick
+          sx={{ width: "100%" }}
         />
       </Paper>
 
-      {/* ديالوغ الحذف - إعادة استخدام المكون الخاص بك */}
-      <ProductActionDialogs
-        openDeleteDialog={openDeleteDialog}
-        setOpenDeleteDialog={setOpenDeleteDialog}
-        selectedProduct={selectedType} // المكون يتوقع selectedProduct سنمرر له النوع
-        handleDeleteConfirm={handleDeleteConfirm}
-        // بما أننا لا نحتاج الحذف الجماعي هنا حالياً سأمرر قيم فارغة
-        openDeleteSelectedDialog={false}
+      <CustomerTypeForm
+        open={openForm}
+        mode={mode}
+        initialData={selectedItem}
+        onClose={handleCloseForm}
+        onSubmit={handleFormSubmit}
+        isPending={createMutation.isPending || updateMutation.isPending}
       />
 
-      {/* فورم الإضافة والتعديل */}
-      {openForm && (
-        <CustomerTypeForm
-          open={openForm}
-          onClose={() => setOpenForm(false)}
-          initialData={selectedType}
-        />
-      )}
+      <ConfirmDeleteDialog
+        open={openDelete}
+        itemName={selectedItem?.type_name || ""}
+        onClose={() => {
+          setOpenDelete(false);
+          setSelectedItem(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        isPending={deleteMutation.isPending}
+      />
+
+      <ConfirmDeleteDialog
+        open={openDeleteSelected}
+        itemName={`${selectedIds.size} selected items`}
+        onClose={() => setOpenDeleteSelected(false)}
+        onConfirm={handleDeleteSelectedConfirm}
+        isPending={deleteMultipleMutation.isPending}
+      />
+
+      <MessageDialog
+        open={messageDialog.open}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        severity={messageDialog.severity}
+        onClose={closeMessageDialog}
+      />
+
+      <ScrollToTopButton />
     </Box>
   );
 }

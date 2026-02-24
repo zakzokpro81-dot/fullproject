@@ -1,75 +1,56 @@
 import supabase from "../../config/supabase";
 
-// جلب الفواتير
+export const INVOICE_ITEM_QUERY_KEY = "invoiceItems";
 
-// جلب الفواتير (كما هي)
-export const getInvoices = async ({ page, pageSize, searchText }) => {
-  const from = page * pageSize;
-  const to = from + pageSize - 1;
-
-  let query = supabase
-    .from("invoices")
-    .select(`
-      *,
-      customers (name),
-      invoice_statuses (status_name)
-    `, { count: "exact" })
-    .order("id", { ascending: false })
-    .range(from, to);
-
-  if (searchText) {
-    query = query.ilike("customers.name", `%${searchText}%`);
-  }
-
-  const { data, count, error } = await query;
-  if (error) throw error;
-  return { data, count };
-};
-
-// --- الدوال المضافة لخدمة الفاتورة من نفس الملف ---
-
-export const getCustomersForSelect = async () => {
+export async function getCustomersForSelect() {
   const { data, error } = await supabase
     .from("customers")
     .select("id, name")
     .order("name");
-  if (error) throw error;
+  if (error) throw new Error(error.message);
   return data;
-};
+}
 
-export const getInvoiceStatuses = async () => {
-  const { data, error } = await supabase.from("invoice_statuses").select("*");
-  if (error) throw error;
+export async function getInvoiceStatuses() {
+  const { data, error } = await supabase
+    .from("invoice_statuses")
+    .select("id, status_name");
+  if (error) throw new Error(error.message);
   return data;
-};
+}
 
-export const saveCompleteInvoice = async (invoiceData, items) => {
+export async function getProductVariants() {
+  const { data, error } = await supabase
+    .from("product_variants")
+    .select("id, sku, products(name)");
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function saveCompleteInvoice(invoiceData, items) {
   const { data: invoice, error: invError } = await supabase
     .from("invoices")
-    .insert([invoiceData])
+    .insert(invoiceData)
     .select()
     .single();
 
-  if (invError) throw invError;
+  if (invError) throw new Error(invError.message);
 
   if (items.length > 0) {
-    const preparedItems = items.map(item => ({
+    const preparedItems = items.map((item) => ({
       invoice_id: invoice.id,
       product_variant_id: item.product_variant_id,
       quantity: item.quantity,
       unit_price: item.unit_price,
-      total_price: item.total_price
+      total_price: item.total_price,
     }));
 
     const { error: itemsError } = await supabase
       .from("invoice_items")
       .insert(preparedItems);
 
-    if (itemsError) throw itemsError;
+    if (itemsError) throw new Error(itemsError.message);
   }
+
   return invoice;
-};
-
-// حفظ الفاتورة مع أصنافها (Master-Detail Save)
-
-
+}

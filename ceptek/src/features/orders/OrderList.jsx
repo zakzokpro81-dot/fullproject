@@ -1,32 +1,46 @@
-import * as React from "react";
+import { useState } from "react";
 import { Box, Button, Typography, Paper } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
-import { useQuery } from "@tanstack/react-query";
-import { getOrders } from "./order.api";
+
 import { orderColumns } from "./order.columns";
 import OrderForm from "./OrderForm";
-import OrderDetailsDrawer from "./OrderDetailsDrawer"; // Import the separate drawer file
+import OrderDetailsDrawer from "./OrderDetailsDrawer";
+import {
+  useOrderQuery,
+  useOrderFormOptions,
+  useOrderMutations,
+} from "./order.hooks";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
+import MessageDialog from "../../components/MessageDialog";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
 
 export function OrderList() {
-  const [openForm, setOpenForm] = React.useState(false);
-  const [selectedOrder, setSelectedOrder] = React.useState(null);
+  const [openForm, setOpenForm] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [warehouseId, setWarehouseId] = useState(null);
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["orders"],
-    queryFn: getOrders,
+  const { messageDialog, showMessageDialog, closeMessageDialog } =
+    useMessageDialog();
+
+  const { rows, isLoading } = useOrderQuery();
+  const { customers, warehouses, products, loadingProducts } =
+    useOrderFormOptions(warehouseId);
+
+  const { createMutation, confirmMutation } = useOrderMutations({
+    onSuccess: () => setOpenForm(false),
+    showMessageDialog,
   });
 
   return (
     <Box sx={{ p: 3 }}>
-      {/* Header Section */}
+      {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#2c3e50" }}>
+        <Typography variant="h5" fontWeight="bold">
           Sales Orders Management
         </Typography>
         <Button
           variant="contained"
-          color="primary"
           startIcon={<AddIcon />}
           onClick={() => setOpenForm(true)}
         >
@@ -34,35 +48,40 @@ export function OrderList() {
         </Button>
       </Box>
 
-      {/* Main Grid Section */}
-      <Paper sx={{ height: 600, width: "100%", boxShadow: 3 }}>
+      {/* Grid */}
+      <Paper sx={{ height: 600, width: "100%" }}>
         <DataGrid
-          rows={data || []}
+          rows={rows}
           columns={orderColumns}
           loading={isLoading}
           pageSizeOptions={[10, 20]}
           initialState={{
             pagination: { paginationModel: { pageSize: 10 } },
           }}
-          // Logic to open Drawer when clicking anywhere on the row
           onRowClick={(params) => setSelectedOrder(params.row)}
-          sx={{
-            cursor: "pointer",
-            "& .MuiDataGrid-row:hover": {
-              backgroundColor: "#f5f5f5",
-            },
-          }}
+          disableRowSelectionOnClick
         />
       </Paper>
 
-      {/* Form Dialog for Creating New Orders */}
-      <OrderForm open={openForm} onClose={() => setOpenForm(false)} />
+      <OrderForm
+        open={openForm}
+        onClose={() => setOpenForm(false)}
+        onSubmit={(data) => createMutation.mutate(data)}
+        isPending={createMutation.isPending}
+        customers={customers}
+        warehouses={warehouses}
+        products={products}
+        loadingProducts={loadingProducts}
+      />
 
-      {/* Separate Drawer for Viewing Order Details */}
       <OrderDetailsDrawer
         order={selectedOrder}
         onClose={() => setSelectedOrder(null)}
+        confirmMutation={confirmMutation}
       />
+
+      <MessageDialog {...messageDialog} onClose={closeMessageDialog} />
+      <ScrollToTopButton />
     </Box>
   );
 }

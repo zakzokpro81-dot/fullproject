@@ -1,72 +1,62 @@
 import supabase from "../../config/supabase";
 
+const TABLE_NAME = "customers";
+
 export const CUSTOMER_QUERY_KEY = "customers";
 
-// جلب الزبائن مع دعم الصفحات والبحث والفلترة
-export const getCustomers = async ({ page, pageSize, searchText, customerTypeId }) => {
+export async function getCustomers({ page = 0, pageSize = 10, searchText = "", customerTypeId } = {}) {
   const from = page * pageSize;
   const to = from + pageSize - 1;
 
   let query = supabase
-    .from("customers")
-    // طلب جلب بيانات الجدول المرتبط type_name من جدول customer_types
-    .select("*, customer_types(type_name)", { count: "exact" })
+    .from(TABLE_NAME)
+    .select("id, name, store_name, email, phone, address, customer_type_id, is_active, customer_types(type_name)", { count: "exact" })
     .order("id", { ascending: false })
     .range(from, to);
 
   if (searchText) {
-    query = query.or(`name.ilike.%${searchText}%,store_name.ilike.%${searchText}%`);
+    const like = `%${searchText}%`;
+    query = query.or(`name.ilike.${like},store_name.ilike.${like}`);
   }
 
   if (customerTypeId) {
     query = query.eq("customer_type_id", customerTypeId);
   }
 
-  const { data, count, error } = await query;
+  const { data, error, count } = await query;
   if (error) throw error;
-  
-  // سطر للفحص البرمجي (اختياري)
-  console.log("Full Row Sample:", data?.[0]); 
-  
   return { data, count };
-};
-// إضافة زبون جديد
-export const createCustomer = async (newCustomer) => {
-  const { data, error } = await supabase
-    .from("customers")
-    .insert([newCustomer])
-    .select();
-  if (error) throw error;
-  return data[0];
-};
+}
 
-// تعديل بيانات زبون
-export const updateCustomer = async ({ id, ...updates }) => {
+export async function createCustomer(payload) {
   const { data, error } = await supabase
-    .from("customers")
-    .update(updates)
+    .from(TABLE_NAME)
+    .insert(payload)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateCustomer(id, payload) {
+  const { data, error } = await supabase
+    .from(TABLE_NAME)
+    .update(payload)
     .eq("id", id)
-    .select();
+    .select()
+    .single();
   if (error) throw error;
-  return data[0];
-};
+  return data;
+}
 
-// حذف زبون واحد
-export const deleteCustomer = async (id) => {
-  const { error } = await supabase
-    .from("customers")
-    .delete()
-    .eq("id", id);
+export async function deleteCustomer(id) {
+  const { error } = await supabase.from(TABLE_NAME).delete().eq("id", id);
   if (error) throw error;
-  return id;
-};
+  return true;
+}
 
-// --- الدالة المفقودة: الحذف الجماعي ---
-export const deleteCustomers = async (ids) => {
-  const { error } = await supabase
-    .from("customers")
-    .delete()
-    .in("id", ids); // استخدام عامل التصفية 'in' لحذف مجموعة معرفات
+export async function deleteCustomers(ids = []) {
+  const { error } = await supabase.from(TABLE_NAME).delete().in("id", ids);
   if (error) throw error;
-  return ids;
-};
+  return true;
+}

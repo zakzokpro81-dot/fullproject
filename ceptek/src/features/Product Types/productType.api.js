@@ -16,7 +16,7 @@ export async function getProductTypes({
   let query = supabase
     .from(TABLE_NAME)
     .select(`
-      *,
+      id, name, slug, is_active, category_id, variant_strategy_id, tracking_type_id,
       product_categories (id, name),
       variant_strategies (id, name),
       tracking_types (id, name)

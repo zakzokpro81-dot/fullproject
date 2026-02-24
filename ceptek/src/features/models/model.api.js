@@ -1,6 +1,5 @@
 // model.api.js
-// دوال CRUD للتعامل مع Supabase لجدول models
-// ❌ لا React — هذا ملف بيانات بحت
+// CRUD operations for models table (pure data layer, no React)
 
 import supabase from "../../config/supabase";
 

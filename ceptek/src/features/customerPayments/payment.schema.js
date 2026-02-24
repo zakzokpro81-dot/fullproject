@@ -6,3 +6,10 @@ export const paymentSchema = z.object({
   date: z.string().min(1, "Date is required"),
   notes: z.string().optional().nullable(),
 });
+
+export const paymentDefaults = {
+  invoice_id: "",
+  amount: "",
+  date: new Date().toISOString().split("T")[0],
+  notes: "",
+};

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Box,
   Paper,
@@ -27,7 +27,7 @@ import BulkProductTable from "./BulkProductTable";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Snackbar, Alert } from "@mui/material";
 import { useSnackbar } from "../../hooks/useSnackbar";
-import ProductActionDialogs from "../../components/ProductActionDialogs"; // تأكد من مسار الملف الصحيح
+import ProductActionDialogs from "../../components/ProductActionDialogs";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
@@ -74,17 +74,17 @@ export function BulkAddProducts() {
       warehouse: null,
     },
   });
-  const [trackingData, setTrackingData] = useState(""); // لتخزين الـ IMEIs كبيانات نصية مؤقتة
+  const [trackingData, setTrackingData] = useState(""); // Temp IMEI text storage
   const TRACKING_TYPES = {
-    SERIAL: 1, // الرقم التسلسلي / IMEI
-    QUANTITY: 2, // الكمية العادية
+    SERIAL: 1, // Serial / IMEI
+    QUANTITY: 2, // Quantity mode
   };
   const [unitsList, setUnitsList] = useState([{ imei: "", serial_number: "" }]);
 
   const [rows, setRows] = useState([]);
   const [openSaveConfirm, setOpenSaveConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  // مراقبة القيم العلوية
+  // Watch top-level values
   const allValues = watch();
   const watchedAttributes = watch("attributes");
   const watchedCategory = watch("category");
@@ -108,22 +108,22 @@ export function BulkAddProducts() {
     queryFn: () => getAttributes(watchedProductType?.id),
     enabled: !!watchedProductType,
   });
-  // تحديث الصفوف في الجدول تلقائياً عند تغيير قائمة الـ IMEI/Serial في الحقول العلوية
+  // Auto-sync table rows when IMEI/Serial fields change
   useEffect(() => {
     if (watchedProductType?.tracking_type_id === 3 && rows.length > 0) {
       setRows((prevRows) => {
         return prevRows.map((row, index) => {
-          // إذا كان هناك بيانات مقابلة لهذا الصف في قائمة الوحدات العلوية
+          // If matching unit data exists for this row index
           if (unitsList[index]) {
             const updatedRow = { ...row };
             const manuallyEdited = row.manuallyEditedFields || [];
 
-            // لا تحدث الـ IMEI إذا كان المستخدم قد عدله يدوياً في الجدول (محمي)
+            // Skip IMEI if manually edited in table (protected)
             if (!manuallyEdited.includes("imei")) {
               updatedRow.imei = unitsList[index].imei;
             }
 
-            // لا تحدث الـ Serial إذا كان محمي يدوياً
+            // Skip Serial if manually edited (protected)
             if (!manuallyEdited.includes("serial_number")) {
               updatedRow.serial_number = unitsList[index].serial_number;
             }
@@ -142,12 +142,12 @@ export function BulkAddProducts() {
 
   useEffect(() => {
     if (warehouses && warehouses.length > 0) {
-      // تعيين أول مستودع في "الحقول العلوية" تلقائياً
+      // Auto-assign first warehouse
       setValue("warehouse", warehouses[0]);
     }
   }, [warehouses, setValue]);
 
-  // --- المزامنة التلقائية (المنطق المحمي) ---
+  // --- Auto-sync (protected field logic) ---
   useEffect(() => {
     if (rows.length === 0) return;
 
@@ -207,7 +207,7 @@ export function BulkAddProducts() {
     JSON.stringify(watchedAttributes),
   ]);
 
-  // --- منطق الحماية المستخلص من المثال ---
+  // --- Field protection logic ---
   const getUpdatedProtectionList = (oldRow, newRow) => {
     const edited = [...(oldRow.manuallyEditedFields || [])];
     const fields = [
@@ -243,14 +243,11 @@ export function BulkAddProducts() {
   const mutation = useMutation({
     mutationFn: saveBulkProducts,
     onSuccess: () => {
-      // نفس الأسطر في ملفك الفردي
       queryClient.invalidateQueries(["products"]);
-      setRows([]); // مسح الجدول الجماعي
-      setOpenSaveConfirm(false); // إغلاق الديالوغ
-      // يمكنك إضافة alert هنا إذا أردت كما في ملفك
+      setRows([]);
+      setOpenSaveConfirm(false);
     },
     onError: (error) => {
-      console.error("Error details:", error);
       showSnackbar(
         `Save failed: ${error.message || "Please check the required fields"}`,
         "error",
@@ -258,16 +255,16 @@ export function BulkAddProducts() {
     },
   });
 
-  // دالة لإضافة سطر جديد
+  // Add a new unit row
   const addUnitField = () => {
-    // 1. إضافة حقل فارغ في القائمة العلوية
+    // 1. Add empty field to top-level list
     setUnitsList((prev) => [...prev, { imei: "", serial_number: "" }]);
-    // 2. إذا كان هناك أصلاً منتجات في الجدول، نأخذ أول سطر كـ "نموذج" ونضيف سطر جديد مثله
+    // 2. If rows already exist, clone first row as template
     if (rows.length > 0) {
-      const templateRow = rows[0]; // نأخذ معلومات الموديل والسعر والبراند من أول سطر
+      const templateRow = rows[0];
       const newBlankRow = {
         ...templateRow,
-        id: Math.random().toString(36).substr(2, 9), // آيدي جديد فريد
+        id: Math.random().toString(36).substr(2, 9),
         imei: "",
         serial_number: "",
         manuallyEditedFields: [],
@@ -276,20 +273,20 @@ export function BulkAddProducts() {
     }
   };
 
-  // دالة لتحديث قيمة حقل معين
+  // Update a specific unit field
   const updateUnitField = (index, field, value) => {
     const newUnits = [...unitsList];
     newUnits[index][field] = value;
     setUnitsList(newUnits);
   };
 
-  // دالة لحذف سطر
+  // Remove a unit row
   const removeUnitField = (index) => {
-    // حذف من القائمة العلوية
+    // Remove from top-level list
     const updatedUnits = unitsList.filter((_, i) => i !== index);
     setUnitsList(updatedUnits);
 
-    // حذف السطر المقابل له من الجدول
+    // Remove corresponding table row
     setRows((prevRows) => prevRows.filter((_, i) => i !== index));
   };
 
@@ -298,7 +295,7 @@ export function BulkAddProducts() {
     border: "1px solid",
     borderColor: "divider",
     boxShadow: "0px 2px 4px rgba(0,0,0,0.05)",
-    "&:before": { display: "none" }, // لإخفاء الخط الافتراضي بين الأكورديونات
+    "&:before": { display: "none" },
   };
 
   const applySpecificFieldToRow = (index, fieldName) => {
@@ -310,7 +307,7 @@ export function BulkAddProducts() {
         newRows[index] = {
           ...newRows[index],
           [fieldName]: valueFromTop,
-          // حذف الحماية عن هذا الحقل في هذا الصف تحديداً
+          // Remove field protection for this specific row
           manuallyEditedFields: (
             newRows[index].manuallyEditedFields || []
           ).filter((f) => f !== fieldName),
@@ -320,7 +317,7 @@ export function BulkAddProducts() {
     });
   };
 
-  // --- وظائف الصاعقة كسر الحماية ---
+  // --- Force-apply (break protection) helpers ---
   const applyFieldToAll = (fieldName) => {
     setRows((prev) =>
       prev.map((row) => {
@@ -393,7 +390,7 @@ export function BulkAddProducts() {
         });
       }
 
-      // فلترة السيريالات التي تحتوي على نص
+      // Filter units that have content
       const validUnits = unitsList.filter(
         (u) => u.imei.trim() || u.serial_number.trim(),
       );
@@ -411,7 +408,7 @@ export function BulkAddProducts() {
         productType: watchedProductType,
         imei: unit.imei.trim(),
         serial_number: unit.serial_number.trim(),
-        stock: 1, // إجباري 1 في نظام السيريال
+        stock: 1, // Fixed at 1 for serial tracking mode
         warehouse_name:
           allValues.warehouse?.name || currentWarehouse?.name || "",
         warehouse_id: allValues.warehouse?.id || currentWarehouse?.id || null,
@@ -439,7 +436,7 @@ export function BulkAddProducts() {
     (selectedModels) => {
       const currentWarehouse = watch("warehouse");
 
-      // 1. تحضير السمات (Attributes) العلوية
+      // 1. Prepare top-level attributes
 
       const topAttrs = {};
 
@@ -456,13 +453,13 @@ export function BulkAddProducts() {
 
       selectedModels.forEach((model) => {
         if (isSerialMode) {
-          // نأخذ الوحدات التي تم ملؤها فقط
+          // Only take filled units
 
           const validUnits = unitsList.filter(
             (u) => u.imei.trim() !== "" || u.serial_number.trim() !== "",
           );
 
-          // إذا كانت القائمة فارغة، نضيف سطراً فارغاً واحداً للموديل (للمرونة)
+          // If empty, add one blank row for flexibility
 
           const unitsToProcess =
             validUnits.length > 0
@@ -487,7 +484,7 @@ export function BulkAddProducts() {
 
               productType: watchedProductType,
 
-              // البيانات المستمدة من قائمة الوحدات العلوية
+              // Data derived from the top-level unit list
 
               imei: unit.imei.trim(),
 
@@ -509,17 +506,14 @@ export function BulkAddProducts() {
 
               attributes: { ...topAttrs },
 
-              // --- الجزء الهام للمزامنة ---
-
-              // نترك هذه المصفوفة فارغة عند الإضافة لكي تعتبر الحقول "تابعة" للأب
-
-              // وتتأثر بأي تغيير علوي تلقائياً حتى يقوم المستخدم بتعديل الخلية بنفسه
+              // --- Sync: leave empty so fields inherit from parent ---
+              // Fields stay synced until user manually edits in table
 
               manuallyEditedFields: [],
             });
           });
         } else {
-          // الوضع العادي (كميات)
+          // Standard quantity mode
 
           newEntries.push({
             id: Math.random().toString(36).substr(2, 9),
@@ -575,7 +569,7 @@ export function BulkAddProducts() {
 
       watchedAttributes,
 
-      unitsList, // ضروري جداً لكي تشعر الدالة بتغيرات الـ IMEI العلوية
+      unitsList, // Required for IMEI changes awareness
 
       watch,
     ],
@@ -592,24 +586,24 @@ export function BulkAddProducts() {
       showSnackbar("No products to save", "warning");
       return;
     }
-    setOpenSaveConfirm(true); // نفتح الديالوغ بدل الحفظ المباشر
+    setOpenSaveConfirm(true);
   };
 
   const handleConfirmSave = () => {
     const productsData = rows.map((row) => {
-      // تقليد منطق الـ API الفردي في استخراج الـ attributes
+      // Extract and clean attributes for API submission
       const cleanedAttributes = {};
 
       if (row.attributes) {
         Object.entries(row.attributes).forEach(([slug, val]) => {
           let finalValue = val;
 
-          // --- هذا هو السطر الجوهري الذي يقلد كود الـ API الفردي لديك ---
+          // Unwrap object values to plain values
           if (typeof val === "object" && val !== null && "value" in val) {
             finalValue = val.value;
           }
 
-          // إرسال الحقل فقط إذا كان له قيمة (تجنب الـ null value error)
+          // Only send fields with actual values (avoid null value error)
           if (
             finalValue !== null &&
             finalValue !== undefined &&
@@ -632,15 +626,14 @@ export function BulkAddProducts() {
         stock: Number(row.stock) || 0,
         description: row.description || "",
         warehouse_id: row.warehouse_id || warehouses[0]?.id || null,
-        attributes: cleanedAttributes, // ترسل الآن كـ { color: "Red" } وليس كـ { color: {value: "Red"} }
+        attributes: cleanedAttributes,
 
-        // داخل handleConfirmSave عند إنشاء المصفوفة:
         units:
           row.imei || row.serial_number
             ? [
                 {
                   imei: row.imei || null,
-                  serial_number: row.serial_number || null, // إضافة هذا السطر
+                  serial_number: row.serial_number || null,
                   warehouse_id: row.warehouse_id || null,
                   purchase_price: Number(row.cost_price),
                   sell_price: Number(row.sell_price),

@@ -1,22 +1,15 @@
-// 3️⃣ brand.columns.js
-
-// 📌 تعريف أعمدة جدول العرض
-
-// اسم العمود
-
-// العنوان
-
-// هل فيه Actions؟
-
-// هل فيه Toggle؟
-
-// الهدف:
-// نفس الجدول ممكن نستخدمه لاحقاً مع DataGrid أو Table ثانية بدون تعديل المنطق
-import { Box, Checkbox, IconButton, Tooltip } from "@mui/material";
+import { IconButton, Stack, Checkbox } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-export const brandColumns = ({ onEdit, onDelete, selectedIds, toggleSelect, rows, toggleSelectAll }) => [
+export const brandColumns = (
+  onEdit,
+  onDelete,
+  selectedIds,
+  toggleSelect,
+  rows = [],
+  toggleSelectAll,
+) => [
   {
     field: "select",
     headerName: "",
@@ -55,37 +48,38 @@ export const brandColumns = ({ onEdit, onDelete, selectedIds, toggleSelect, rows
   },
   {
     field: "is_active",
-    headerName: "Status",
+    headerName: "Active",
     width: 120,
     renderCell: (params) => (params.value ? "Active" : "Inactive"),
   },
   {
     field: "actions",
     headerName: "Actions",
-    width: 140,
+    width: 160,
     sortable: false,
     filterable: false,
     disableExport: true,
-    renderCell: (params) => {
-      const row = params.row;
-      return (
-        <Box sx={{ display: "flex", gap: 0.5 }}>
-          <Tooltip title="Edit">
-            <IconButton aria-label="edit brand" onClick={() => onEdit(row)}>
-              <EditNoteIcon />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Delete">
-            <IconButton
-              aria-label="delete brand"
-              color="error"
-              onClick={() => onDelete(row)}
-            >
-              <DeleteIcon />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      );
-    },
+    renderCell: (params) => (
+      <Stack direction="row" spacing={1}>
+        <IconButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(params.row);
+          }}
+          color="error"
+        >
+          <EditNoteIcon />
+        </IconButton>
+        <IconButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(params.row);
+          }}
+          color="primary"
+        >
+          <DeleteIcon />
+        </IconButton>
+      </Stack>
+    ),
   },
 ];

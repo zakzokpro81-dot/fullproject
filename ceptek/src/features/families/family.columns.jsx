@@ -1,5 +1,5 @@
 // family.columns.jsx
-// تعريف أعمدة DataGrid لميزة Families
+// DataGrid column definitions for Families
 
 import { IconButton, Stack, Checkbox } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";

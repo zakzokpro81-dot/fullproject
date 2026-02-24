@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -6,154 +6,126 @@ import {
   DialogActions,
   Button,
   TextField,
-  Box,
   MenuItem,
   Stack,
   FormControlLabel,
   Switch,
+  CircularProgress,
 } from "@mui/material";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { customerSchema } from "./customer.schema";
-import { createCustomer, updateCustomer } from "./customer.api";
+import { customerSchema, customerDefaults } from "./customer.schema";
 
 export default function CustomerForm({
   open,
+  mode = "add",
+  initialData = null,
   onClose,
-  initialData,
-  customerTypes,
+  onSubmit,
+  isPending = false,
+  customerTypes = [],
 }) {
-  const queryClient = useQueryClient();
-  const isEditMode = !!initialData;
-
   const {
     register,
     handleSubmit,
-    control,
-    formState: { errors },
     reset,
+    watch,
+    setValue,
+    formState: { errors },
   } = useForm({
     resolver: zodResolver(customerSchema),
-    defaultValues: initialData || {
-      name: "",
-      store_name: "",
-      email: "",
-      phone: "",
-      address: "",
-      customer_type_id: "",
-      is_active: true,
-    },
+    defaultValues: customerDefaults,
   });
 
-  // Mutation للحفظ أو التعديل
-  const mutation = useMutation({
-    mutationFn: isEditMode ? updateCustomer : createCustomer,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["customers"]);
-      onClose();
-      reset();
-    },
-  });
-
-  const onSubmit = (data) => {
-    // التأكد من إرسال الـ ID في حالة التعديل
-    if (isEditMode) {
-      mutation.mutate({ id: initialData.id, ...data });
+  useEffect(() => {
+    if (mode === "edit" && initialData) {
+      reset({ ...customerDefaults, ...initialData });
     } else {
-      mutation.mutate(data);
+      reset(customerDefaults);
     }
-  };
+  }, [mode, initialData, reset]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>
-        {isEditMode ? "Edit Customer Details" : "Add New Customer"}
+      <DialogTitle sx={{ fontWeight: "bold" }}>
+        {mode === "edit" ? "Edit Customer" : "Add Customer"}
       </DialogTitle>
 
-      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
-        <DialogContent dividers>
-          {/* استخدام Stack لترتيب الحقول عمودياً بشكل تلقائي */}
-          <Stack spacing={2.5}>
-            <TextField
-              {...register("name")}
-              label="Full Name"
-              fullWidth
-              error={!!errors.name}
-              helperText={errors.name?.message}
-            />
+      <DialogContent dividers>
+        <Stack spacing={2} mt={1}>
+          <TextField
+            label="Full Name"
+            {...register("name")}
+            error={!!errors.name}
+            helperText={errors.name?.message}
+            fullWidth
+            margin="normal"
+          />
 
-            <TextField
-              {...register("store_name")}
-              label="Store Name"
-              fullWidth
-            />
+          <TextField label="Store Name" {...register("store_name")} fullWidth />
 
-            <TextField
-              {...register("email")}
-              label="Email Address"
-              fullWidth
-              error={!!errors.email}
-              helperText={errors.email?.message}
-            />
+          <TextField
+            label="Email Address"
+            {...register("email")}
+            error={!!errors.email}
+            helperText={errors.email?.message}
+            fullWidth
+          />
 
-            <TextField {...register("phone")} label="Phone Number" fullWidth />
+          <TextField label="Phone Number" {...register("phone")} fullWidth />
 
-            <TextField
-              {...register("address")}
-              label="Address"
-              fullWidth
-              multiline
-              rows={3}
-            />
+          <TextField
+            label="Address"
+            {...register("address")}
+            fullWidth
+            multiline
+            rows={3}
+          />
 
-            <TextField
-              select
-              fullWidth
-              label="Customer Type"
-              {...register("customer_type_id")}
-              defaultValue={initialData?.customer_type_id || ""}
-              error={!!errors.customer_type_id}
-            >
-              <MenuItem value="">None</MenuItem>
-              {customerTypes?.map((type) => (
-                <MenuItem key={type.id} value={type.id}>
-                  {type.type_name}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <Controller
-              name="is_active"
-              control={control}
-              render={({ field }) => (
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={field.value}
-                      onChange={(e) => field.onChange(e.target.checked)}
-                    />
-                  }
-                  label="Active Status"
-                />
-              )}
-            />
-          </Stack>
-        </DialogContent>
-
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={onClose} color="inherit">
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={mutation.isLoading}
+          <TextField
+            select
+            label="Customer Type"
+            {...register("customer_type_id")}
+            error={!!errors.customer_type_id}
+            helperText={errors.customer_type_id?.message}
+            fullWidth
+            value={watch("customer_type_id") ?? ""}
           >
-            {mutation.isLoading ? "Saving..." : "Save Customer"}
-          </Button>
-        </DialogActions>
-      </Box>
+            <MenuItem value="">None</MenuItem>
+            {customerTypes.map((type) => (
+              <MenuItem key={type.id} value={type.id}>
+                {type.type_name}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={!!watch("is_active")}
+                onChange={(e) => setValue("is_active", e.target.checked)}
+              />
+            }
+            label="Active"
+          />
+        </Stack>
+      </DialogContent>
+
+      <DialogActions sx={{ p: 2 }}>
+        <Button onClick={onClose} disabled={isPending}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSubmit(onSubmit)}
+          disabled={isPending}
+          startIcon={
+            isPending ? <CircularProgress size={20} color="inherit" /> : null
+          }
+        >
+          {isPending ? "Saving..." : "Save"}
+        </Button>
+      </DialogActions>
     </Dialog>
   );
 }

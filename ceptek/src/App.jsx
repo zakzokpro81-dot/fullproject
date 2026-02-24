@@ -1,9 +1,7 @@
-import * as React from "react";
+import { useState, useMemo } from "react";
 
 import Box from "@mui/material/Box";
-import { useState } from "react";
 import CssBaseline from "@mui/material/CssBaseline";
-import Typography from "@mui/material/Typography";
 import { createTheme, styled, ThemeProvider } from "@mui/material/styles";
 import { TopBar } from "./components/TopBar";
 import { SideBar } from "./components/SideBar";
@@ -20,7 +18,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 }));
 
 export default function App() {
-  const [open, setOpen] = React.useState(false);
+  const [open, setOpen] = useState(false);
 
   const handleDrawerOpen = () => {
     setOpen(true);
@@ -32,9 +30,9 @@ export default function App() {
   const [mode, setMode] = useState(
     localStorage.getItem("currentMode")
       ? localStorage.getItem("currentMode")
-      : "light"
+      : "light",
   );
-  const theme = React.useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
+  const theme = useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -49,23 +47,19 @@ export default function App() {
 
         <SideBar open={open} handleDrawerClose={handleDrawerClose} />
 
-        <Box component="main" sx={{ flexGrow: 1, minWidth: 0 , p: 3 }}>
+        <Box component="main" sx={{ flexGrow: 1, minWidth: 0 }}>
           <DrawerHeader />
 
           <Box
-           
             sx={{
               flexGrow: 1,
               width: "100%",
-              minWidth: 0,    
+              minWidth: 0,
               overflowX: "hidden",
             }}
           >
             <Outlet />
           </Box>
-
-
-
         </Box>
       </Box>
     </ThemeProvider>

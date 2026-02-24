@@ -13,14 +13,8 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQuery } from "@tanstack/react-query";
 
 import { productTypeSchema, productTypeDefaults } from "./productType.schema";
-import { getCategories } from "../categories/category.api";
-import {
-  getVariantStrategiesFromDB,
-  getTrackingTypes,
-} from "./productType.api";
 
 export default function ProductTypeForm({
   open,
@@ -29,6 +23,9 @@ export default function ProductTypeForm({
   onClose,
   onSubmit,
   isPending,
+  categories = [],
+  trackingTypes = [],
+  variantStrategies = [],
 }) {
   const {
     register,
@@ -40,26 +37,6 @@ export default function ProductTypeForm({
   } = useForm({
     resolver: zodResolver(productTypeSchema),
     defaultValues: productTypeDefaults,
-  });
-
-  // Dropdown data
-  const { data: categoriesResult } = useQuery({
-    queryKey: ["categories"],
-    queryFn: getCategories,
-    staleTime: 1000 * 60 * 10, // 10 minutes
-  });
-  const categories = categoriesResult?.data ?? [];
-
-  const { data: trackingTypes = [] } = useQuery({
-    queryKey: ["trackingTypes"],
-    queryFn: getTrackingTypes,
-    staleTime: 1000 * 60 * 10,
-  });
-
-  const { data: variantStrategies = [] } = useQuery({
-    queryKey: ["variantStrategies"],
-    queryFn: getVariantStrategiesFromDB,
-    staleTime: 1000 * 60 * 10,
   });
 
   useEffect(() => {
@@ -101,6 +78,7 @@ export default function ProductTypeForm({
           fullWidth
           margin="normal"
         >
+          <MenuItem value="">Select Category...</MenuItem>
           {categories.map((cat) => (
             <MenuItem key={cat.id} value={cat.id}>
               {cat.name}
@@ -116,6 +94,7 @@ export default function ProductTypeForm({
           fullWidth
           margin="normal"
         >
+          <MenuItem value="">Select Product Structure...</MenuItem>
           {variantStrategies.map((vs) => (
             <MenuItem key={vs.id} value={vs.id}>
               {vs.name}
@@ -131,6 +110,7 @@ export default function ProductTypeForm({
           fullWidth
           margin="normal"
         >
+          <MenuItem value="">Select Tracking Type...</MenuItem>
           {trackingTypes.map((type) => (
             <MenuItem key={type.id} value={type.id}>
               {type.name}

@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   Drawer,
   Box,
@@ -35,10 +34,10 @@ export default function ProductDetailsDrawer({
       open={detailDrawerOpen}
       onClose={() => setDetailDrawerOpen(false)}
     >
-      <Box sx={{ width: 400, p: 10 }}>
+      <Box sx={{ width: 400, p: 3 }}>
         <Stack
           direction="row"
-          justifyContent="right"
+          justifyContent="space-between"
           alignItems="center"
           mb={2}
         >

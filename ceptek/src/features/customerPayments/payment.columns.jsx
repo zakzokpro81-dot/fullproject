@@ -1,5 +1,5 @@
 import { IconButton, Stack, Checkbox } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 export const paymentColumns = (
@@ -11,20 +11,28 @@ export const paymentColumns = (
   toggleSelectAll,
 ) => [
   {
-    field: "selection",
+    field: "select",
     headerName: "",
-    width: 50,
-    renderHeader: () => (
-      <Checkbox
-        indeterminate={selectedIds.size > 0 && selectedIds.size < rows.length}
-        checked={rows.length > 0 && selectedIds.size === rows.length}
-        onChange={toggleSelectAll}
-      />
-    ),
+    width: 60,
+    sortable: false,
+    disableColumnMenu: true,
+    renderHeader: () => {
+      const allSelected =
+        rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+      return (
+        <Checkbox
+          checked={allSelected}
+          indeterminate={selectedIds.size > 0 && !allSelected}
+          onClick={(e) => e.stopPropagation()}
+          onChange={toggleSelectAll}
+        />
+      );
+    },
     renderCell: (params) => (
       <Checkbox
-        checked={params?.row ? selectedIds.has(params.row.id) : false}
-        onChange={() => params?.row && toggleSelect(params.row.id)}
+        checked={selectedIds.has(params.row.id)}
+        onClick={(e) => e.stopPropagation()}
+        onChange={() => toggleSelect(params.row.id)}
       />
     ),
   },
@@ -33,9 +41,8 @@ export const paymentColumns = (
     field: "invoice_info",
     headerName: "Invoice / Customer",
     flex: 1.5,
-    // جلب رقم الفاتورة واسم الزبون المرتبط بها
-    valueGetter: (params) => {
-      const inv = params.row?.invoices;
+    valueGetter: (value, row) => {
+      const inv = row?.invoices;
       const custName = inv?.customers?.name || "Unknown";
       const invNum = inv?.invoice_number || `#${inv?.id}`;
       return `${invNum} - ${custName}`;
@@ -46,22 +53,28 @@ export const paymentColumns = (
   {
     field: "actions",
     headerName: "Actions",
-    width: 100,
+    width: 120,
+    sortable: false,
+    filterable: false,
+    disableExport: true,
     renderCell: (params) => (
-      <Stack direction="row" spacing={0.5}>
+      <Stack direction="row" spacing={1}>
         <IconButton
-          color="primary"
-          size="small"
-          onClick={() => onEdit(params.row)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(params.row);
+          }}
         >
-          <EditIcon fontSize="small" />
+          <EditNoteIcon />
         </IconButton>
         <IconButton
           color="error"
-          size="small"
-          onClick={() => onDelete(params.row)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(params.row);
+          }}
         >
-          <DeleteIcon fontSize="small" />
+          <DeleteIcon />
         </IconButton>
       </Stack>
     ),

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -41,7 +41,7 @@ const AddProductForm = ({ open, onClose, showSnackbar }) => {
   const watchedCategory = watch("category");
   const watchedProductType = watch("productType");
 
-  // جلب البيانات
+  // Fetch form data
   const { data: categories } = useQuery({
     queryKey: ["categories"],
     queryFn: getCategories,
@@ -70,7 +70,6 @@ const AddProductForm = ({ open, onClose, showSnackbar }) => {
   const mutation = useMutation({
     mutationFn: saveProduct,
     onSuccess: () => {
-      // هذا السطر يخبر التطبيق: "البيانات التي لديك قديمة، اطلب الصفحة الحالية مرة أخرى من السيرفر"
       queryClient.invalidateQueries(["products"]);
       onClose();
       reset();

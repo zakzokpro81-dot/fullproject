@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   Drawer,
   Box,
@@ -127,7 +126,7 @@ export function ProductDetailsDrawer({
                   variant="outlined"
                   sx={{ bgcolor: "#fafafa", borderRadius: 2, p: 2 }}
                 >
-                  {/* إذا كانت البيانات مصفوفة نعرضها بـ map، وإذا كانت كائناً نعرضها مباشرة */}
+                  {/* Handle both array and single object warehouse_stock */}
                   {Array.isArray(selectedProduct.warehouse_stock) ? (
                     selectedProduct.warehouse_stock.map((item, index) => (
                       <Box
@@ -152,7 +151,6 @@ export function ProductDetailsDrawer({
                       </Box>
                     ))
                   ) : (
-                    // في حال وصولها ككائن واحد (وهو سبب الخطأ لديك حالياً)
                     <Box>
                       <Typography variant="body2" sx={{ fontWeight: "bold" }}>
                         Warehouse Inventory:{" "}

@@ -96,6 +96,7 @@ export default function FamilyForm({
               fullWidth
               margin="normal"
             >
+              <MenuItem value="">Select Brand...</MenuItem>
               {brands.map((b) => (
                 <MenuItem key={b.id} value={b.id}>
                   {b.name}
@@ -119,6 +120,7 @@ export default function FamilyForm({
               fullWidth
               margin="normal"
             >
+              <MenuItem value="">Select Product Type...</MenuItem>
               {productTypes.map((pt) => (
                 <MenuItem key={pt.id} value={pt.id}>
                   {pt.name}

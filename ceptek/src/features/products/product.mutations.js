@@ -22,7 +22,6 @@ export const createProductWithStock = async (data) => {
     .single();
 
   if (productError) {
-    console.error("Product insert error:", productError);
     throw productError;
   }
 
@@ -34,7 +33,6 @@ export const createProductWithStock = async (data) => {
   });
 
   if (stockError) {
-    console.error("Warehouse stock insert error:", stockError);
     throw stockError;
   }
 
@@ -151,16 +149,12 @@ export async function saveProduct(data) {
         });
 
       if (movementError) {
-        console.error(
-          "Error creating stock movement:",
-          movementError.message,
-        );
+        throw new Error(movementError.message);
       }
     }
 
     return product;
   } catch (err) {
-    console.error("Error saving product:", err);
     throw err;
   }
 }
@@ -274,7 +268,6 @@ export async function updateProduct(id, data) {
 
     return true;
   } catch (err) {
-    console.error("Update error detailed:", err);
     throw err;
   }
 }
@@ -313,13 +306,11 @@ export async function adjustProductStock(id, data) {
       });
 
     if (insertError) {
-      console.error("Supabase Insert Error:", insertError);
       throw insertError;
     }
 
     return true;
   } catch (err) {
-    console.error("Critical Error in adjustProductStock:", err.message);
     throw err;
   }
 }
@@ -523,32 +514,25 @@ export async function saveBulkProducts(productsData) {
       const { error: itemsErr } = await supabase
         .from("product_units")
         .insert(productItemsToInsert);
-      if (itemsErr) console.error("Error inserting units:", itemsErr.message);
+      if (itemsErr) throw new Error(itemsErr.message);
     }
 
     if (movementsToInsert.length > 0) {
       const { error: movError } = await supabase
         .from("stock_movements")
         .insert(movementsToInsert);
-      if (movError)
-        console.error("Error inserting movements:", movError.message);
+      if (movError) throw new Error(movError.message);
     }
 
     if (attributeValuesToInsert.length > 0) {
       const { error: attrInsertError } = await supabase
         .from("product_attribute_values")
         .insert(attributeValuesToInsert);
-      if (attrInsertError) {
-        console.error(
-          "Error inserting attribute values:",
-          attrInsertError.message,
-        );
-      }
+      if (attrInsertError) throw new Error(attrInsertError.message);
     }
 
     return insertedProducts;
   } catch (err) {
-    console.error("Error in Bulk Saving Process:", err);
     throw err;
   }
 }

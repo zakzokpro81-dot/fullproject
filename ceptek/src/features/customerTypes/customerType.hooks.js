@@ -1,55 +1,54 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getCustomerTypes,
   createCustomerType,
   updateCustomerType,
   deleteCustomerType,
+  deleteCustomerTypes,
   CUSTOMER_TYPE_QUERY_KEY,
 } from "./customerType.api";
 
-/**
- * Fetches the customer type list with server-side pagination.
- */
 export function useCustomerTypeQuery() {
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 10,
-  });
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
+  const [searchText, setSearchText] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const rowCountRef = useRef(0);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchText);
+      setPaginationModel((prev) => ({ ...prev, page: 0 }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
 
   const { data, isLoading, isFetching, isError, error } = useQuery({
-    queryKey: [CUSTOMER_TYPE_QUERY_KEY, paginationModel],
+    queryKey: [CUSTOMER_TYPE_QUERY_KEY, paginationModel, debouncedSearch],
     queryFn: () =>
       getCustomerTypes({
         page: paginationModel.page,
         pageSize: paginationModel.pageSize,
+        searchText: debouncedSearch,
       }),
     staleTime: 1000 * 60 * 5,
     placeholderData: (prev) => prev,
   });
 
-  if (data?.count !== undefined) {
-    rowCountRef.current = data.count;
-  }
-
   return {
     rows: data?.data || [],
-    rowCount: rowCountRef.current,
+    rowCount: data?.count || 0,
     isLoading,
     isFetching,
     isError,
     error,
     paginationModel,
     setPaginationModel,
+    searchText,
+    setSearchText,
   };
 }
 
-/**
- * Returns create / update / delete mutations with cache invalidation.
- */
-export function useCustomerTypeMutations({ onSuccess, showSnackbar }) {
+export function useCustomerTypeMutations({ onSuccess, showMessageDialog }) {
   const queryClient = useQueryClient();
 
   const invalidate = () =>
@@ -59,11 +58,11 @@ export function useCustomerTypeMutations({ onSuccess, showSnackbar }) {
     mutationFn: createCustomerType,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Customer type created successfully", "success");
-      onSuccess();
+      onSuccess?.();
+      showMessageDialog?.("Created successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to create customer type", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to create", "error");
     },
   });
 
@@ -71,11 +70,11 @@ export function useCustomerTypeMutations({ onSuccess, showSnackbar }) {
     mutationFn: ({ id, data }) => updateCustomerType(id, data),
     onSuccess: () => {
       invalidate();
-      showSnackbar("Customer type updated successfully", "success");
-      onSuccess();
+      onSuccess?.();
+      showMessageDialog?.("Updated successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to update customer type", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to update", "error");
     },
   });
 
@@ -83,12 +82,23 @@ export function useCustomerTypeMutations({ onSuccess, showSnackbar }) {
     mutationFn: deleteCustomerType,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Customer type deleted successfully", "success");
+      showMessageDialog?.("Deleted successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to delete customer type", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to delete", "error");
     },
   });
 
-  return { createMutation, updateMutation, deleteMutation };
+  const deleteMultipleMutation = useMutation({
+    mutationFn: deleteCustomerTypes,
+    onSuccess: () => {
+      invalidate();
+      showMessageDialog?.("Deleted successfully", "success");
+    },
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to delete", "error");
+    },
+  });
+
+  return { createMutation, updateMutation, deleteMutation, deleteMultipleMutation };
 }

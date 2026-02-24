@@ -9,9 +9,12 @@ export const productTypeSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
-/**
- * Generates a blank object with all schema defaults applied.
- * Used by the Form component so defaults stay in sync with the schema.
- */
-export const productTypeDefaults = productTypeSchema.partial().parse({});
+export const productTypeDefaults = {
+  name: "",
+  slug: "",
+  category_id: "",
+  variant_strategy_id: "",
+  tracking_type_id: "",
+  is_active: true,
+};
 

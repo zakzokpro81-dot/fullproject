@@ -1,20 +1,3 @@
-// 1️⃣ brand.api.js
-
-// 📌 مسؤول فقط عن التواصل مع Supabase
-
-// جلب البيانات
-
-// إضافة
-
-// تعديل
-
-// حذف
-
-// ❌ لا React
-// ❌ لا UI
-// ❌ لا state
-
-// هذا الملف “غبي” لكنه موثوق
 
 import supabase from "../../config/supabase";
 

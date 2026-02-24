@@ -13,6 +13,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import {
   useProductTypeQuery,
   useProductTypeMutations,
+  useProductTypeFormOptions,
 } from "./productType.hooks";
 import { productTypeColumns } from "./productType.columns";
 import ProductTypeForm from "./ProductTypeForm";
@@ -63,6 +64,9 @@ export function ProductTypeList() {
     onSuccess: handleCloseForm,
     showMessageDialog,
   });
+
+  const { categories, trackingTypes, variantStrategies } =
+    useProductTypeFormOptions();
 
   // Handlers
   const handleOpenAdd = () => {
@@ -214,6 +218,9 @@ export function ProductTypeList() {
         mode={mode}
         initialData={selectedItem}
         isPending={createMutation.isPending || updateMutation.isPending}
+        categories={categories}
+        trackingTypes={trackingTypes}
+        variantStrategies={variantStrategies}
       />
 
       <ConfirmDeleteDialog

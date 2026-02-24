@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getPayments,
+  getInvoicesForSelect,
   createPayment,
   updatePayment,
   deletePayment,
@@ -9,15 +10,8 @@ import {
   PAYMENT_QUERY_KEY,
 } from "./payment.api";
 
-/**
- * Fetches the payment list with server-side pagination and debounced search.
- */
 export function usePaymentQuery() {
-  const [paginationModel, setPaginationModel] = useState({
-    page: 0,
-    pageSize: 10,
-  });
-
+  const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchText, setSearchText] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -28,8 +22,6 @@ export function usePaymentQuery() {
     }, 500);
     return () => clearTimeout(timer);
   }, [searchText]);
-
-  const rowCountRef = useRef(0);
 
   const { data, isLoading, isFetching, isError, error } = useQuery({
     queryKey: [PAYMENT_QUERY_KEY, paginationModel, debouncedSearch],
@@ -43,13 +35,9 @@ export function usePaymentQuery() {
     placeholderData: (prev) => prev,
   });
 
-  if (data?.count !== undefined) {
-    rowCountRef.current = data.count;
-  }
-
   return {
     rows: data?.data || [],
-    rowCount: rowCountRef.current,
+    rowCount: data?.count || 0,
     isLoading,
     isFetching,
     isError,
@@ -61,10 +49,15 @@ export function usePaymentQuery() {
   };
 }
 
-/**
- * Returns create / update / delete mutations with cache invalidation.
- */
-export function usePaymentMutations({ onSuccess, showSnackbar }) {
+export function usePaymentFormOptions() {
+  const { data: invoices = [] } = useQuery({
+    queryKey: ["invoicesSelect"],
+    queryFn: getInvoicesForSelect,
+  });
+  return { invoices };
+}
+
+export function usePaymentMutations({ onSuccess, showMessageDialog }) {
   const queryClient = useQueryClient();
 
   const invalidate = () =>
@@ -74,11 +67,11 @@ export function usePaymentMutations({ onSuccess, showSnackbar }) {
     mutationFn: createPayment,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Payment created successfully", "success");
-      onSuccess();
+      onSuccess?.();
+      showMessageDialog?.("Created successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to create payment", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to create", "error");
     },
   });
 
@@ -86,11 +79,11 @@ export function usePaymentMutations({ onSuccess, showSnackbar }) {
     mutationFn: ({ id, data }) => updatePayment(id, data),
     onSuccess: () => {
       invalidate();
-      showSnackbar("Payment updated successfully", "success");
-      onSuccess();
+      onSuccess?.();
+      showMessageDialog?.("Updated successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to update payment", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to update", "error");
     },
   });
 
@@ -98,10 +91,10 @@ export function usePaymentMutations({ onSuccess, showSnackbar }) {
     mutationFn: deletePayment,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Payment deleted successfully", "success");
+      showMessageDialog?.("Deleted successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to delete payment", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to delete", "error");
     },
   });
 
@@ -109,10 +102,10 @@ export function usePaymentMutations({ onSuccess, showSnackbar }) {
     mutationFn: deletePayments,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Payments deleted successfully", "success");
+      showMessageDialog?.("Deleted successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to delete payments", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to delete", "error");
     },
   });
 

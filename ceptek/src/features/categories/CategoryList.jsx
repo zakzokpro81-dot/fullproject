@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -188,7 +188,7 @@ export function CategoryList() {
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationChange}
           pageSizeOptions={[10, 25, 50]}
-          disableSelectionOnClick
+          disableRowSelectionOnClick
           sx={{ width: "100%" }}
         />
       </Paper>

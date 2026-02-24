@@ -13,7 +13,7 @@ export async function getAttributes({
 
   let query = supabase
     .from("attributes")
-    .select("*", { count: "exact" })
+    .select("id, name, slug, data_type, has_options, is_active", { count: "exact" })
     .order("name", { ascending: true })
     .range(from, to);
 

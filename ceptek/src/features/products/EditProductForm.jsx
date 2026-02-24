@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -32,9 +32,9 @@ import { StockAdjustmentDialog } from "./StockAdjustmentDialog";
 const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
   const queryClient = useQueryClient();
   const [isReady, setIsReady] = useState(false);
-  // تعريف حالة لفتح وإغلاق نافذة التسوية المخزنية
-  const [openAdjustment, setOpenAdjustment] = React.useState(false);
-  // تم إضافة watch هنا لحل الخطأ الذي ظهر لك
+  // State for stock adjustment dialog
+  const [openAdjustment, setOpenAdjustment] = useState(false);
+  // Added watch to resolve form value errors
   const {
     control,
     handleSubmit,
@@ -87,8 +87,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
       onClose();
     },
     onError: (err) => {
-      console.error("Update Error:", err);
-      showSnackbar?.("Failed to update product", "error");
+      showSnackbar?.(err?.message || "Failed to update product", "error");
     },
   });
 
@@ -107,7 +106,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
       currentAttrValues &&
       categories
     ) {
-      // 1. تعبئة القيم الأساسية
+      // 1. Set basic values
       setValue("sellPrice", product.sell_price || 0);
       setValue("costPrice", product.cost_price || 0);
       setValue("stock", product.stock || 0);
@@ -116,7 +115,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
 
       // Warehouse is set below via currentStockEntry or product.warehouse_id
 
-      // 2. ربط الكاتاغوري بناءً على category_id
+      // 2. Set category from category_id
       if (product.category_id) {
         const currentCat = categories.find(
           (c) => Number(c.id) === Number(product.category_id),
@@ -124,7 +123,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
         if (currentCat) setValue("category", currentCat);
       }
 
-      // 3. ربط السمات (Attributes)
+      // 3. Set attributes
       const attrMap = {};
       attributes.forEach((attr) => {
         const match = currentAttrValues.find((v) => v.attribute_id === attr.id);
@@ -144,13 +143,13 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
       });
       setValue("attributes", attrMap);
 
-      // 4. معالجة المستودع
-      // نستخدم البيانات القادمة من الاستعلام الخاص بالمخزن (getProductStockLocation)
-      // لأنها الأكثر دقة "مصدر الحقيقة"
+      // 4. Set warehouse
+      // Use data from getProductStockLocation query (source of truth)
+      // as it is the most accurate source of truth
       if (currentStockEntry?.warehouse) {
         setValue("warehouse", currentStockEntry.warehouse);
       } else if (product.warehouse_id) {
-        // كخيار احتياطي إذا لم يتوفر الاستعلام الخاص
+        // Fallback if stock query unavailable
         const currentWarehouse = warehouses.find(
           (w) => Number(w.id) === Number(product.warehouse_id),
         );
@@ -159,7 +158,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
 
       setIsReady(true);
     }
-    // التعديل الجوهري هنا: إضافة currentStockEntry للمصفوفة
+    // Note: currentStockEntry added to deps array
   }, [
     open,
     attributes,
@@ -185,7 +184,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
       cost_price: Number(data.costPrice),
       stock: Number(data.stock),
       description: data.description,
-      // تحديث الحقول الهامة بناءً على التعديلات الأخيرة
+      // Update key fields from form data
       category_id: data.category?.id || product.category_id,
       warehouse_id: data.warehouse?.id || product.warehouse_id,
       attributes: formattedAttributes,
@@ -209,7 +208,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
               label="Category"
               fullWidth
               margin="normal"
-              // استخدام watch هنا يضمن ظهور القيمة التي تم ضبطها في useEffect
+              // Use watch to ensure value set in useEffect is displayed
               value={watch("category")?.name || "N/A"}
               disabled
             />
@@ -316,12 +315,12 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
                     margin="normal"
                     fullWidth
                     InputProps={{
-                      readOnly: true, // للقراءة فقط
+                      readOnly: true,
                       endAdornment: (
                         <Button
                           variant="contained"
                           size="small"
-                          onClick={() => setOpenAdjustment(true)} // هنا يتم استدعاء الدالة المعرفة أعلاه
+                          onClick={() => setOpenAdjustment(true)}
                           sx={{ minWidth: "fit-content", ml: 1 }}
                         >
                           Adjust
@@ -367,21 +366,20 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
                 />
               )}
             />
-            {/* --- قسم المخزن الحالي (للعرض فقط) --- */}
+            {/* --- Current Warehouse (read-only) --- */}
             <Divider sx={{ my: 2 }}>Current Location</Divider>
             <TextField
               label="Current Warehouse"
               fullWidth
               margin="normal"
-              // التعديل الجوهري: نقرأ من البيانات الأصلية مباشرة وليس من watch
-              // وبهذا يظل ثابتاً حتى لو اخترت مستودعاً جديداً بالأسفل
+              // Read from original data directly (stays fixed even if new warehouse selected)
               value={
                 currentStockEntry?.warehouse?.name || "No Warehouse Assigned"
               }
               disabled
               helperText="This is the fixed current location."
             />
-            {/* --- قسم نقل المنتج (قابل للتعديل) --- */}
+            {/* --- Transfer Product to New Warehouse --- */}
             <Controller
               name="warehouse"
               control={control}
@@ -394,7 +392,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
                     Number(o.id) === Number(v?.id)
                   }
                   value={field.value || null}
-                  onChange={(_, v) => field.onChange(v)} // هنا تتحدث "warehouse" في الفورم فقط
+                  onChange={(_, v) => field.onChange(v)}
                   renderInput={(p) => (
                     <TextField
                       {...p}

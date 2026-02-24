@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getProducts,
@@ -35,8 +35,6 @@ export function useProductQuery({ warehouseId, typeId } = {}) {
     return () => clearTimeout(timer);
   }, [searchText]);
 
-  const rowCountRef = useRef(0);
-
   const { data, isLoading, isFetching, isError, error } = useQuery({
     queryKey: [PRODUCT_QUERY_KEY, paginationModel, debouncedSearch, warehouseId, typeId],
     queryFn: () =>
@@ -51,13 +49,9 @@ export function useProductQuery({ warehouseId, typeId } = {}) {
     placeholderData: (prev) => prev,
   });
 
-  if (data?.count !== undefined) {
-    rowCountRef.current = data.count;
-  }
-
   return {
     rows: data?.data || [],
-    rowCount: rowCountRef.current,
+    rowCount: data?.count || 0,
     isLoading,
     isFetching,
     isError,
@@ -91,7 +85,7 @@ export function useProductReferenceData() {
 /**
  * Returns deactivate / delete mutations with cache invalidation.
  */
-export function useProductMutations({ onSuccess, showSnackbar }) {
+export function useProductMutations({ onSuccess, showMessageDialog }) {
   const queryClient = useQueryClient();
 
   const invalidate = () =>
@@ -101,11 +95,11 @@ export function useProductMutations({ onSuccess, showSnackbar }) {
     mutationFn: deactivateProduct,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Product deactivated successfully", "success");
+      showMessageDialog?.("Product deactivated successfully", "success");
       onSuccess?.();
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to deactivate product", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to deactivate product", "error");
     },
   });
 
@@ -113,11 +107,11 @@ export function useProductMutations({ onSuccess, showSnackbar }) {
     mutationFn: deactivateMultipleProducts,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Products deactivated successfully", "success");
+      showMessageDialog?.("Products deactivated successfully", "success");
       onSuccess?.();
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to deactivate products", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to deactivate products", "error");
     },
   });
 
@@ -125,10 +119,10 @@ export function useProductMutations({ onSuccess, showSnackbar }) {
     mutationFn: deleteProduct,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Product deleted successfully", "success");
+      showMessageDialog?.("Product deleted successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to delete product", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to delete product", "error");
     },
   });
 
@@ -136,10 +130,10 @@ export function useProductMutations({ onSuccess, showSnackbar }) {
     mutationFn: deleteProducts,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Products deleted successfully", "success");
+      showMessageDialog?.("Products deleted successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to delete products", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to delete products", "error");
     },
   });
 
@@ -147,10 +141,10 @@ export function useProductMutations({ onSuccess, showSnackbar }) {
     mutationFn: softDeleteProduct,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Product archived successfully", "success");
+      showMessageDialog?.("Product archived successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to archive product", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to archive product", "error");
     },
   });
 

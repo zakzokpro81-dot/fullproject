@@ -1,12 +1,12 @@
-import * as React from "react";
+import { useState } from "react";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
 import { invoiceItemColumns } from "./invoiceItem.columns";
-import InvoiceItemForm from "./InvoiceItemForm"; // استدعاء الفورم الفرعي
+import InvoiceItemForm from "./InvoiceItemForm";
 
 export function InvoiceItemsList({ items, onItemsChange }) {
-  const [openForm, setOpenForm] = React.useState(false);
+  const [openForm, setOpenForm] = useState(false);
 
   const handleDelete = (id) => {
     onItemsChange(items.filter((item) => item.id !== id));
@@ -24,14 +24,12 @@ export function InvoiceItemsList({ items, onItemsChange }) {
   };
 
   const handleAddItem = (newItemData) => {
-    // newItemData قادم من الفورم الفرعي
     const formattedItem = {
       ...newItemData,
-      id: `temp-${Date.now()}`, // ضروري جداً لـ DataGrid
-      // نركب الكائن يدوياً ليتناسب مع ما يطلبه ملف invoiceItem.columns.js
+      id: `temp-${Date.now()}`,
       product_variants: {
         products: {
-          name: newItemData.product_name, // تأكد أن الفورم يرسل اسم المنتج أيضاً
+          name: newItemData.product_name,
         },
       },
     };
@@ -62,11 +60,10 @@ export function InvoiceItemsList({ items, onItemsChange }) {
           columns={invoiceItemColumns(handleDelete)}
           processRowUpdate={processRowUpdate}
           hideFooter
-          disableSelectionOnClick
+          disableRowSelectionOnClick
         />
       </Box>
 
-      {/* الفورم الذي سيفتح عند الضغط على زر الإضافة */}
       <InvoiceItemForm
         open={openForm}
         onClose={() => setOpenForm(false)}

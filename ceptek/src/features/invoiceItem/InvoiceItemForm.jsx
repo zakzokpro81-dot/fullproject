@@ -1,4 +1,4 @@
-import * as React from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -15,20 +15,19 @@ import {
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import supabase from "../../config/supabase";
-import {
-  saveCompleteInvoice,
-  getInvoiceStatuses,
-  getCustomersForSelect,
-} from "./invoiceItem.api";
-import { invoiceFormSchema } from "./invoiceItem.schema";
+import { invoiceFormSchema, invoiceFormDefaults } from "./invoiceItem.schema";
 
-export default function InvoiceForm({ open, onClose }) {
-  const queryClient = useQueryClient();
-
+export default function InvoiceItemForm({
+  open,
+  onClose,
+  onSubmit: onSubmitProp,
+  isPending,
+  customers,
+  statuses,
+  variants,
+}) {
   const {
     register,
     handleSubmit,
@@ -36,71 +35,35 @@ export default function InvoiceForm({ open, onClose }) {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(invoiceFormSchema),
-    defaultValues: {
-      customer_id: "",
-      status_id: "",
-      invoice_date: new Date().toISOString().split("T")[0],
-    },
+    defaultValues: invoiceFormDefaults,
   });
 
-  // State for items (dynamic list, not part of the Zod schema)
-  const [items, setItems] = React.useState([]);
-
-  // State for temp item being added
-  const [tempProduct, setTempProduct] = React.useState({
+  const [items, setItems] = useState([]);
+  const [tempProduct, setTempProduct] = useState({
     variant_id: "",
     qty: 1,
     price: 0,
   });
 
-  // Fetch reference data
-  const { data: customers } = useQuery({
-    queryKey: ["customers"],
-    queryFn: getCustomersForSelect,
-  });
-  const { data: statuses } = useQuery({
-    queryKey: ["statuses"],
-    queryFn: getInvoiceStatuses,
-  });
-  const { data: variants } = useQuery({
-    queryKey: ["variants"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("product_variants")
-        .select("id, sku, products(name)");
-      return data;
-    },
-  });
-
-  // Save mutation
-  const mutation = useMutation({
-    mutationFn: (data) => saveCompleteInvoice(data.invoice, data.items),
-    onSuccess: () => {
-      queryClient.invalidateQueries(["invoices"]);
-      reset();
-      setItems([]);
-      onClose();
-    },
-  });
-
   const addItem = () => {
     if (!tempProduct.variant_id) return;
     const variant = variants.find((v) => v.id === tempProduct.variant_id);
+    if (!variant) return;
     const newItem = {
       id: Date.now(),
       product_variant_id: tempProduct.variant_id,
-      product_name: `${variant.products.name} (${variant.sku})`,
+      product_name: `${variant.products?.name || "Unknown"} (${variant.sku})`,
       quantity: Number(tempProduct.qty),
       unit_price: Number(tempProduct.price),
       total_price: Number(tempProduct.qty) * Number(tempProduct.price),
     };
-    setItems([...items, newItem]);
+    setItems((prev) => [...prev, newItem]);
     setTempProduct({ variant_id: "", qty: 1, price: 0 });
   };
 
-  const removeItem = (id) => setItems(items.filter((i) => i.id !== id));
+  const removeItem = (id) => setItems((prev) => prev.filter((i) => i.id !== id));
 
-  const onSubmit = (formData) => {
+  const handleFormSubmit = (formData) => {
     if (items.length === 0) return;
     const total = items.reduce((sum, i) => sum + i.total_price, 0);
     const invoiceData = {
@@ -110,7 +73,9 @@ export default function InvoiceForm({ open, onClose }) {
       total_amount: total,
       paid_amount: 0,
     };
-    mutation.mutate({ invoice: invoiceData, items });
+    onSubmitProp?.({ invoice: invoiceData, items });
+    reset(invoiceFormDefaults);
+    setItems([]);
   };
 
   return (
@@ -118,7 +83,6 @@ export default function InvoiceForm({ open, onClose }) {
       <DialogTitle>Create New Invoice</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={3}>
-          {/* Invoice header fields */}
           <Stack direction="row" spacing={2}>
             <TextField
               select
@@ -155,18 +119,18 @@ export default function InvoiceForm({ open, onClose }) {
               {...register("invoice_date")}
               error={!!errors.invoice_date}
               helperText={errors.invoice_date?.message}
-              InputLabelProps={{ shrink: true }}
+              slotProps={{ inputLabel: { shrink: true } }}
             />
           </Stack>
 
           <Divider>Invoice Items</Divider>
 
-          {/* إضافة صنف جديد */}
+          {/* Add new item */}
           <Stack direction="row" spacing={1} alignItems="center">
             <TextField
               select
               label="Product"
-              flex={2}
+              sx={{ flex: 2 }}
               value={tempProduct.variant_id}
               onChange={(e) =>
                 setTempProduct({ ...tempProduct, variant_id: e.target.value })
@@ -174,7 +138,7 @@ export default function InvoiceForm({ open, onClose }) {
             >
               {variants?.map((v) => (
                 <MenuItem key={v.id} value={v.id}>
-                  {v.products.name} - {v.sku}
+                  {v.products?.name || "Unknown"} - {v.sku}
                 </MenuItem>
               ))}
             </TextField>
@@ -205,14 +169,14 @@ export default function InvoiceForm({ open, onClose }) {
             </Button>
           </Stack>
 
-          {/* عرض الأصناف المضافة */}
-          <Box sx={{ border: "1px solid #eee", borderRadius: 1 }}>
+          {/* Items list */}
+          <Box sx={{ border: 1, borderColor: "divider", borderRadius: 1 }}>
             {items.map((item) => (
               <Stack
                 key={item.id}
                 direction="row"
                 justifyContent="space-between"
-                sx={{ p: 1, borderBottom: "1px solid #eee" }}
+                sx={{ p: 1, borderBottom: 1, borderColor: "divider" }}
               >
                 <Typography>
                   {item.product_name} (x{item.quantity})
@@ -242,10 +206,10 @@ export default function InvoiceForm({ open, onClose }) {
         <Button onClick={onClose}>Cancel</Button>
         <Button
           variant="contained"
-          onClick={handleSubmit(onSubmit)}
-          disabled={items.length === 0 || mutation.isPending}
+          onClick={handleSubmit(handleFormSubmit)}
+          disabled={items.length === 0 || isPending}
         >
-          {mutation.isPending ? "Saving..." : "Save Invoice"}
+          {isPending ? "Saving..." : "Save Invoice"}
         </Button>
       </DialogActions>
     </Dialog>

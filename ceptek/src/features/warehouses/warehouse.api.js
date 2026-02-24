@@ -2,7 +2,7 @@ import supabase from "../../config/supabase";
 
 export const WAREHOUSE_QUERY_KEY = "warehouses";
 
-// جلب المخازن مع pagination و search
+// Fetch warehouses with pagination and search
 export async function getWarehouses({ page = 0, pageSize = 10, searchText = "" } = {}) {
   const from = page * pageSize;
   const to = from + pageSize - 1;
@@ -22,7 +22,7 @@ export async function getWarehouses({ page = 0, pageSize = 10, searchText = "" }
   return { data, count };
 }
 
-// إنشاء مخزن جديد
+// Create a new warehouse
 export async function createWarehouse(payload) {
   const { data, error } = await supabase
     .from("warehouses")
@@ -34,7 +34,7 @@ export async function createWarehouse(payload) {
   return data;
 }
 
-// تعديل مخزن
+// Update warehouse
 export async function updateWarehouse(id, payload) {
   const { data, error } = await supabase
     .from("warehouses")
@@ -47,14 +47,14 @@ export async function updateWarehouse(id, payload) {
   return data;
 }
 
-// حذف مخزن واحد
+// Delete single warehouse
 export async function deleteWarehouse(id) {
   const { error } = await supabase.from("warehouses").delete().eq("id", id);
   if (error) throw error;
   return true;
 }
 
-// حذف مخازن متعددة
+// Delete multiple warehouses
 export async function deleteWarehouses(ids) {
   const { error } = await supabase.from("warehouses").delete().in("id", ids);
   if (error) throw error;

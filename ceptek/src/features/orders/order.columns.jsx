@@ -1,10 +1,9 @@
-// order.columns.js
 import { Chip } from "@mui/material";
 
 export const orderColumns = [
   { field: "id", headerName: "ID", width: 70 },
   {
-    field: "display_date", // نستخدم الحقل المعالج هنا
+    field: "display_date",
     headerName: "Order Date",
     width: 130,
   },
@@ -14,12 +13,12 @@ export const orderColumns = [
     width: 200,
   },
   {
-    field: "status_display", // نستخدم الحقل المعالج هنا
+    field: "status_display",
     headerName: "Status",
     width: 130,
     renderCell: (params) => {
       const status = params.value;
-      let color = "warning"; // الافتراضي Pending (أصفر)
+      let color = "warning";
 
       if (status === "Confirmed") color = "info";
       if (status === "Invoiced") color = "success";

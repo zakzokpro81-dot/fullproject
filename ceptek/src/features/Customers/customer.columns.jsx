@@ -1,5 +1,5 @@
 import { IconButton, Stack, Chip, Checkbox } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
+import EditNoteIcon from "@mui/icons-material/EditNote";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 export const customerColumns = (
@@ -7,45 +7,42 @@ export const customerColumns = (
   onDelete,
   selectedIds,
   toggleSelect,
-  rows,
+  rows = [],
   toggleSelectAll,
 ) => [
   {
-    field: "selection",
+    field: "select",
     headerName: "",
-    width: 50,
+    width: 60,
     sortable: false,
-    renderHeader: () => (
-      <Checkbox
-        // حماية: التأكد من وجود rows قبل قراءة الطول
-        indeterminate={
-          selectedIds.size > 0 && selectedIds.size < (rows?.length || 0)
-        }
-        checked={(rows?.length || 0) > 0 && selectedIds.size === rows?.length}
-        onChange={toggleSelectAll}
-      />
-    ),
+    disableColumnMenu: true,
+    renderHeader: () => {
+      const allSelected =
+        rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+      return (
+        <Checkbox
+          checked={allSelected}
+          indeterminate={selectedIds.size > 0 && !allSelected}
+          onClick={(e) => e.stopPropagation()}
+          onChange={toggleSelectAll}
+        />
+      );
+    },
     renderCell: (params) => (
       <Checkbox
-        // حماية: التأكد من وجود params.row
-        checked={params?.row ? selectedIds.has(params.row.id) : false}
-        onChange={() => params?.row && toggleSelect(params.row.id)}
+        checked={selectedIds.has(params.row.id)}
         onClick={(e) => e.stopPropagation()}
+        onChange={() => toggleSelect(params.row.id)}
       />
     ),
   },
-  { field: "id", headerName: "ID", width: 70 },
+  { field: "id", headerName: "ID", width: 80 },
   { field: "name", headerName: "Full Name", flex: 1.5 },
   {
     field: "customer_type",
     headerName: "Type",
     flex: 1,
-    // التعديل الجذري: نستخدم renderCell بدلاً من valueGetter لضمان الوصول للـ Row
-    renderCell: (params) => {
-      // نصل للبيانات مباشرة من الكائن الذي رأيناه في الـ Console
-      const typeName = params?.row?.customer_types?.type_name;
-      return typeName || "N/A";
-    },
+    valueGetter: (value, row) => row?.customer_types?.type_name || "N/A",
   },
   { field: "phone", headerName: "Phone", width: 130 },
   {
@@ -54,8 +51,8 @@ export const customerColumns = (
     width: 100,
     renderCell: (params) => (
       <Chip
-        label={params?.row?.is_active ? "Active" : "Inactive"}
-        color={params?.row?.is_active ? "success" : "default"}
+        label={params.row?.is_active ? "Active" : "Inactive"}
+        color={params.row?.is_active ? "success" : "default"}
         size="small"
       />
     ),
@@ -63,29 +60,29 @@ export const customerColumns = (
   {
     field: "actions",
     headerName: "Actions",
-    width: 110,
+    width: 160,
     sortable: false,
+    filterable: false,
+    disableExport: true,
     renderCell: (params) => (
-      <Stack direction="row" spacing={0.5}>
+      <Stack direction="row" spacing={1}>
         <IconButton
-          color="primary"
-          size="small"
           onClick={(e) => {
             e.stopPropagation();
-            if (params?.row) onEdit(params.row);
+            onEdit(params.row);
           }}
+          color="error"
         >
-          <EditIcon fontSize="small" />
+          <EditNoteIcon />
         </IconButton>
         <IconButton
-          color="error"
-          size="small"
           onClick={(e) => {
             e.stopPropagation();
-            if (params?.row) onDelete(params.row);
+            onDelete(params.row);
           }}
+          color="primary"
         >
-          <DeleteIcon fontSize="small" />
+          <DeleteIcon />
         </IconButton>
       </Stack>
     ),

@@ -4,19 +4,18 @@ import {
   Button,
   Typography,
   Alert,
-  Snackbar,
   TextField,
-  InputAdornment,
+  Paper,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import { DataGrid } from "@mui/x-data-grid";
 
 import { useBrandQuery, useBrandMutations } from "./brand.hooks";
 import { brandColumns } from "./brand.columns";
 import BrandForm from "./BrandForm";
 import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
+import MessageDialog from "../../components/MessageDialog";
 import ScrollToTopButton from "../../components/ScrollToTopButton";
-import { useSnackbar } from "../../hooks/useSnackbar";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function BrandList() {
   const [selectedItem, setSelectedItem] = useState(null);
@@ -24,9 +23,16 @@ export function BrandList() {
   const [openDelete, setOpenDelete] = useState(false);
   const [openDeleteSelected, setOpenDeleteSelected] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
-  const [mode, setMode] = useState("add"); // "add" | "edit"
+  const [mode, setMode] = useState("add");
 
-  const { snackbar, showSnackbar, closeSnackbar } = useSnackbar();
+  function handleCloseForm() {
+    setOpenForm(false);
+    setSelectedItem(null);
+  }
+
+  const { messageDialog, showMessageDialog, closeMessageDialog } =
+    useMessageDialog();
+
   const {
     rows,
     rowCount,
@@ -39,12 +45,14 @@ export function BrandList() {
     searchText,
     setSearchText,
   } = useBrandQuery();
-  const { createMutation, updateMutation, deleteMutation, deleteMultipleMutation } = useBrandMutations({
-    onSuccess: handleCloseForm,
-    showSnackbar,
-  });
 
-  // ── Open / Close ──
+  const {
+    createMutation,
+    updateMutation,
+    deleteMutation,
+    deleteMultipleMutation,
+  } = useBrandMutations({ onSuccess: handleCloseForm, showMessageDialog });
+
   const handleOpenAdd = () => {
     setMode("add");
     setSelectedItem(null);
@@ -57,12 +65,6 @@ export function BrandList() {
     setOpenForm(true);
   };
 
-  function handleCloseForm() {
-    setOpenForm(false);
-    setSelectedItem(null);
-  }
-
-  // ── Submit ──
   const handleFormSubmit = (data) => {
     if (mode === "add") {
       createMutation.mutate(data);
@@ -71,7 +73,6 @@ export function BrandList() {
     }
   };
 
-  // ── Delete ──
   const handleDeleteClick = (row) => {
     setSelectedItem(row);
     setOpenDelete(true);
@@ -87,18 +88,11 @@ export function BrandList() {
     });
   };
 
-  const handleDeleteClose = () => {
-    setOpenDelete(false);
-    setSelectedItem(null);
-  };
-
-  // ── Pagination (clear selection on page change) ──
   const handlePaginationChange = (newModel) => {
     setSelectedIds(new Set());
     setPaginationModel(newModel);
   };
 
-  // ── Checkbox Selection ──
   const toggleSelectAll = () => {
     const allSelected =
       rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
@@ -115,7 +109,6 @@ export function BrandList() {
     setSelectedIds(newSet);
   };
 
-  // ── Bulk Delete ──
   const handleDeleteSelectedConfirm = () => {
     if (selectedIds.size === 0) return;
     deleteMultipleMutation.mutate(Array.from(selectedIds), {
@@ -125,8 +118,6 @@ export function BrandList() {
       },
     });
   };
-
-  const isFormPending = createMutation.isPending || updateMutation.isPending;
 
   return (
     <Box>
@@ -153,41 +144,45 @@ export function BrandList() {
         </Box>
       </Box>
 
+      <Box mb={2}>
+        <TextField
+          label="Search"
+          variant="outlined"
+          size="small"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          fullWidth
+          sx={{ maxWidth: 400 }}
+        />
+      </Box>
+
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {error?.message || "Failed to load brands."}
+          Failed to load data: {error?.message || "Unknown error"}
         </Alert>
       )}
 
-      <TextField
-        value={searchText}
-        onChange={(e) => setSearchText(e.target.value)}
-        placeholder="Search brands..."
-        size="small"
-        sx={{ mb: 2, width: 300 }}
-        slotProps={{
-          input: {
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          },
-        }}
-      />
-
-      <DataGrid
-        rows={rows}
-        columns={brandColumns({ onEdit: handleOpenEdit, onDelete: handleDeleteClick, selectedIds, toggleSelect, rows, toggleSelectAll })}
-        loading={isLoading || isFetching}
-        paginationMode="server"
-        rowCount={rowCount}
-        paginationModel={paginationModel}
-        onPaginationModelChange={handlePaginationChange}
-        pageSizeOptions={[10, 25, 50]}
-        disableRowSelectionOnClick
-        sx={{ width: "100%", height: 600 }}
-      />
+      <Paper sx={{ height: 650, width: "100%" }}>
+        <DataGrid
+          rows={rows}
+          rowCount={rowCount}
+          columns={brandColumns(
+            handleOpenEdit,
+            handleDeleteClick,
+            selectedIds,
+            toggleSelect,
+            rows,
+            toggleSelectAll,
+          )}
+          loading={isLoading || isFetching}
+          paginationMode="server"
+          paginationModel={paginationModel}
+          onPaginationModelChange={handlePaginationChange}
+          pageSizeOptions={[10, 25, 50]}
+          disableRowSelectionOnClick
+          sx={{ width: "100%" }}
+        />
+      </Paper>
 
       <BrandForm
         open={openForm}
@@ -195,39 +190,35 @@ export function BrandList() {
         initialData={selectedItem}
         onClose={handleCloseForm}
         onSubmit={handleFormSubmit}
-        isPending={isFormPending}
+        isPending={createMutation.isPending || updateMutation.isPending}
       />
 
       <ConfirmDeleteDialog
         open={openDelete}
-        itemName={selectedItem?.name}
-        onClose={handleDeleteClose}
+        itemName={selectedItem?.name || ""}
+        onClose={() => {
+          setOpenDelete(false);
+          setSelectedItem(null);
+        }}
         onConfirm={handleDeleteConfirm}
         isPending={deleteMutation.isPending}
       />
 
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected item${selectedIds.size !== 1 ? "s" : ""}`}
+        itemName={`${selectedIds.size} selected items`}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}
       />
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={closeSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={closeSnackbar}
-          severity={snackbar.severity}
-          variant="filled"
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+      <MessageDialog
+        open={messageDialog.open}
+        title={messageDialog.title}
+        message={messageDialog.message}
+        severity={messageDialog.severity}
+        onClose={closeMessageDialog}
+      />
 
       <ScrollToTopButton />
     </Box>

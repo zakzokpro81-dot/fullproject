@@ -1,5 +1,5 @@
 // FamilyList.jsx
-// صفحة عرض Families — thin UI shell (named export)
+// Families list page — thin UI shell (named export)
 
 import { useState } from "react";
 import {
@@ -196,7 +196,7 @@ export function FamilyList() {
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationChange}
           pageSizeOptions={[10, 25, 50]}
-          disableSelectionOnClick
+          disableRowSelectionOnClick
           sx={{ width: "100%" }}
         />
       </Paper>

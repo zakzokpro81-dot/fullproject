@@ -1,21 +1,3 @@
-// 4️⃣ BrandForm.jsx
-
-// 📌 الفورم (Add / Edit)
-
-// يستقبل:
-
-// mode (add | edit)
-
-// initialData
-
-// يستخدم:
-
-// schema
-
-// react-hook-form
-
-// لا يجلب بيانات بنفسه
-
 import { useEffect } from "react";
 import {
   Dialog,

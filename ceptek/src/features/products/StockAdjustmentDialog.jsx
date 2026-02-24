@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -13,8 +13,6 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { adjustProductStock } from "./product.api";
 
-// ... الاستيرادات كما هي
-
 export function StockAdjustmentDialog({
   open,
   onClose,
@@ -26,7 +24,7 @@ export function StockAdjustmentDialog({
   const [newQuantity, setNewQuantity] = useState(0);
   const [reason, setReason] = useState("");
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       setNewQuantity(product?.stock || 0);
       setReason("");
@@ -40,13 +38,12 @@ export function StockAdjustmentDialog({
       onClose();
       showSnackbar?.("Stock Updated Successfully", "success");
     },
-    onError: (error) => {
-      console.error("Critical Mutation Error:", error);
+    onError: (err) => {
+      showSnackbar?.(err?.message || "Stock update failed", "error");
     },
   });
 
   const handleConfirm = () => {
-    // الحل النهائي: نستخدم warehouseId القادم من الأب، أو المخزن المسجل بالمنتج
     const finalWarehouseId = warehouseId || product?.warehouse_id;
 
     if (!finalWarehouseId) {
@@ -63,8 +60,6 @@ export function StockAdjustmentDialog({
       reason: reason,
     });
   };
-
-  // ... باقي كود الـ Return كما هو بدون أي تغيير
 
   const difference = Number(newQuantity) - Number(product?.stock || 0);
 

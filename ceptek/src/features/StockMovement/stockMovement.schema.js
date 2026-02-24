@@ -8,3 +8,11 @@ export const stockMovementSchema = z.object({
   unit_cost:z.coerce.number(),
   reference_type: z.string().optional().nullable(),
 });
+export const stockMovementDefaults = {
+  product_id: "",
+  warehouse_id: "",
+  movement_type_id: "",
+  quantity: 0,
+  unit_cost: 0,
+  reference_type: "",
+};

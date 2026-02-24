@@ -1,5 +1,5 @@
 // model.columns.jsx
-// تعريف أعمدة DataGrid للموديلات — لا API imports
+// DataGrid column definitions for Models — no API imports
 
 import { IconButton, Stack, Checkbox } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";

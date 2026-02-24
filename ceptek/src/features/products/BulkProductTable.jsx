@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, Fragment } from "react";
 import {
   Box,
   Typography,
@@ -41,15 +41,15 @@ function CollapsibleRow({
     onRowUpdate({ ...row, attributes: updatedAttrs }, row);
   };
 
-  // ستايل موحد للحقول لضمان التناغم
+  // Unified field styles for consistency
   const fieldStyle = {
     "& .MuiInputBase-root": { fontSize: "0.85rem", backgroundColor: "#fff" },
     "& .MuiInputLabel-root": { fontSize: "0.85rem" },
   };
 
   return (
-    <React.Fragment>
-      {/* السطر الرئيسي */}
+    <Fragment>
+      {/* Main row */}
       <TableRow
         sx={{
           bgcolor: open ? "rgba(25, 118, 210, 0.04)" : "inherit",
@@ -97,7 +97,7 @@ function CollapsibleRow({
         </TableCell>
       </TableRow>
 
-      {/* السطر الفرعي - التصميم المتناغم */}
+      {/* Expandable detail row */}
       <TableRow>
         <TableCell
           style={{
@@ -118,7 +118,7 @@ function CollapsibleRow({
                 boxShadow: "inset 0px 2px 4px rgba(0,0,0,0.05)",
               }}
             >
-              {/* قسم تفاصيل المنتج - حقول تأخذ مساحة المحتوى فقط */}
+              {/* Product details section */}
               <Typography
                 variant="subtitle2"
                 sx={{
@@ -143,13 +143,13 @@ function CollapsibleRow({
               <Box
                 sx={{
                   display: "flex",
-                  flexWrap: "wrap", // يسمح بنزول الحقول لسطر جديد إذا ضاق المكان
+                  flexWrap: "wrap",
                   alignItems: "center",
-                  gap: 1.5, // المسافة بين الحقول
+                  gap: 1.5,
                   mb: 3,
                 }}
               >
-                {/* الموديل: نعطيه عرضاً أدنى ليظل مقروءاً */}
+                {/* Model autocomplete */}
                 <Box sx={{ minWidth: "250px", flex: "4 1 auto" }}>
                   <ModelAutocomplete
                     label="Model Selection"
@@ -157,12 +157,12 @@ function CollapsibleRow({
                     backgroundColor="#1976d2"
                     selectedCategory={row.category}
                     selectedProductType={row.productType}
-                    // التعديل هنا: استخدام model_id داخل الكائن
+                    // Use model_id inside object
                     value={
                       row.model_id
                         ? {
                             label: row.name,
-                            model_id: row.model_id, // تغيير id إلى model_id
+                            model_id: row.model_id,
                             brand_id: row.brand_id,
                           }
                         : null
@@ -173,7 +173,7 @@ function CollapsibleRow({
                           {
                             ...row,
                             name: model.label,
-                            model_id: model.model_id, // التأكد من استخدام المسمى الجديد
+                            model_id: model.model_id,
                             brand_id: model.brand_id,
                           },
                           row,
@@ -183,7 +183,7 @@ function CollapsibleRow({
                   />
                 </Box>
 
-                {/* الحقول الرقمية: عرض ثابت وصغير لأن محتواها أرقام فقط */}
+                {/* Numeric fields */}
                 <Box sx={{ width: "100px" }}>
                   <TextField
                     label="Sell Price"
@@ -223,7 +223,7 @@ function CollapsibleRow({
                   />
                 </Box>
 
-                {/* المستودع: عرض متوسط */}
+                {/* Warehouse */}
                 <Box sx={{ minWidth: "180px", flex: "1 1 auto" }}>
                   <Autocomplete
                     options={warehouses || []}
@@ -248,7 +248,7 @@ function CollapsibleRow({
                   />
                 </Box>
 
-                {/* الملاحظات: تأخذ ما تبقى من مساحة السطر */}
+                {/* Notes */}
                 <Box sx={{ minWidth: "200px", flex: "1 1 auto" }}>
                   <TextField
                     label="Notes"
@@ -265,7 +265,7 @@ function CollapsibleRow({
 
               <Divider sx={{ my: 2.5, borderStyle: "dashed" }} />
 
-              {/* قسم السمات - حقول موزعة بانتظام تفتد على السطر */}
+              {/* Attributes section */}
               <Typography
                 variant="subtitle2"
                 sx={{
@@ -344,7 +344,7 @@ function CollapsibleRow({
 
               <Divider sx={{ my: 2.5, borderStyle: "dashed" }} />
 
-              {/* قسم بيانات الوحدة - يظهر فقط إذا كان هناك IMEI أو Serial */}
+              {/* Unit tracking section (IMEI/Serial) */}
               {row.imei && (
                 <>
                   <Divider sx={{ my: 2.5, borderStyle: "dashed" }} />
@@ -364,7 +364,7 @@ function CollapsibleRow({
                         width: 8,
                         height: 8,
                         borderRadius: "50%",
-                        bgcolor: "#f44336", // لون مختلف لتمييز قسم التتبع
+                        bgcolor: "#f44336",
                       }}
                     />
                     Unit Tracking Details (IMEI/Serial)
@@ -377,7 +377,7 @@ function CollapsibleRow({
                       gap: 2,
                       alignItems: "center",
                       p: 1,
-                      bgcolor: "rgba(244, 67, 54, 0.02)", // خلفية خفيفة جداً للتمييز
+                      bgcolor: "rgba(244, 67, 54, 0.02)",
                       borderRadius: 1,
                     }}
                   >
@@ -400,7 +400,7 @@ function CollapsibleRow({
                       />
                     </Box>
 
-                    {/* يمكنك إضافة Serial Number هنا أيضاً إذا كان جدولك يدعمهما معاً */}
+                    {/* Serial Number field */}
                     <Box sx={{ minWidth: "250px", flex: "1 1 auto" }}>
                       <TextField
                         label="Serial Number"
@@ -421,7 +421,7 @@ function CollapsibleRow({
           </Collapse>
         </TableCell>
       </TableRow>
-    </React.Fragment>
+    </Fragment>
   );
 }
 

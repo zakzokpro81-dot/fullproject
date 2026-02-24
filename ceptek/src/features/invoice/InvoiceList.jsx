@@ -1,35 +1,45 @@
-import * as React from "react";
-// استيراد المكونات من مكتبة MUI
-import { Box, Button, Typography, Paper, Grid, Card, CardContent } from "@mui/material";
+import { useState } from "react";
+import {
+  Box,
+  Button,
+  Typography,
+  Paper,
+  Grid,
+  Card,
+  CardContent,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet"; // أيقونة الصندوق
-import { useQuery } from "@tanstack/react-query";
-import InvoiceDetailsDrawer from "./InvoiceDetailsDrawer";
 
-// استيراد الدوال والأعمدة الخاصة بالموديول
-import { getInvoices, getDailySummary } from "./invoice.api"; // أضفنا دالة الملخص
 import { invoiceColumns } from "./invoice.columns";
 import InvoiceForm from "./InvoiceForm";
+import InvoiceDetailsDrawer from "./InvoiceDetailsDrawer";
+import {
+  useInvoiceQuery,
+  useDailySummaryQuery,
+  useInvoiceFormOptions,
+  useInvoiceMutations,
+} from "./invoice.hooks";
+import { useMessageDialog } from "../../hooks/useMessageDialog";
+import MessageDialog from "../../components/MessageDialog";
+import ScrollToTopButton from "../../components/ScrollToTopButton";
 
 export function InvoiceList() {
-  // حالة التحكم في فتح وإغلاق نافذة البيع (الـ POS)
-  const [openForm, setOpenForm] = React.useState(false);
-const [selectedInvoice, setSelectedInvoice] = React.useState(null);
+  const [openForm, setOpenForm] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
 
-  // جلب بيانات الفواتير باستخدام React Query
-  const { data, isLoading, isError, error } = useQuery({
-    queryKey: ["invoices"],
-    queryFn: getInvoices,
+  const { messageDialog, showMessageDialog, closeMessageDialog } =
+    useMessageDialog();
+
+  const { rows, isLoading, isError, error } = useInvoiceQuery();
+  const { summary } = useDailySummaryQuery();
+  const { customers, warehouses, accounts } = useInvoiceFormOptions();
+
+  const { createMutation } = useInvoiceMutations({
+    onSuccess: () => setOpenForm(false),
+    showMessageDialog,
   });
 
-  // جلب ملخص الجرد اليومي (الميزة الجديدة)
-  const { data: summary } = useQuery({
-    queryKey: ["dailySummary"],
-    queryFn: getDailySummary,
-  });
-
-  // معالجة حالة الخطأ في جلب البيانات
   if (isError) {
     return (
       <Typography color="error">
@@ -40,32 +50,47 @@ const [selectedInvoice, setSelectedInvoice] = React.useState(null);
 
   return (
     <Box sx={{ p: 3 }}>
-      
-      {/* قسم الجرد السريع (إضافة جديدة دون المساس بالأصل) */}
+      {/* Daily summary cards */}
       <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={12} md={3}>
-          <Card sx={{ bgcolor: "#e8f5e9", borderLeft: "5px solid #4caf50" }}>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card
+            sx={{
+              bgcolor: "success.50",
+              borderLeft: "5px solid",
+              borderColor: "success.main",
+            }}
+          >
             <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
-              <Typography variant="caption" color="textSecondary">Daily Cash (Total Paid)</Typography>
-             <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2e7d32" }}>
-  ${Number(summary?.total_cash || 0).toFixed(2)}
-</Typography>
+              <Typography variant="caption" color="text.secondary">
+                Daily Cash (Total Paid)
+              </Typography>
+              <Typography variant="h6" fontWeight="bold" color="success.dark">
+                ${Number(summary?.total_cash || 0).toFixed(2)}
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} md={3}>
-          <Card sx={{ bgcolor: "#fff3e0", borderLeft: "5px solid #ff9800" }}>
+        <Grid size={{ xs: 12, md: 3 }}>
+          <Card
+            sx={{
+              bgcolor: "warning.50",
+              borderLeft: "5px solid",
+              borderColor: "warning.main",
+            }}
+          >
             <CardContent sx={{ py: 2, "&:last-child": { pb: 2 } }}>
-              <Typography variant="caption" color="textSecondary">Daily Debt (Credit)</Typography>
-            <Typography variant="h6" sx={{ fontWeight: "bold", color: "#ef6c00" }}>
-  ${Number(summary?.total_credit || 0).toFixed(2)}
-</Typography>
+              <Typography variant="caption" color="text.secondary">
+                Daily Debt (Credit)
+              </Typography>
+              <Typography variant="h6" fontWeight="bold" color="warning.dark">
+                ${Number(summary?.total_credit || 0).toFixed(2)}
+              </Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* رأس الصفحة الأصلي */}
+      {/* Page header */}
       <Box
         sx={{
           display: "flex",
@@ -74,53 +99,51 @@ const [selectedInvoice, setSelectedInvoice] = React.useState(null);
           mb: 3,
         }}
       >
-        <Typography variant="h5" sx={{ fontWeight: "bold", color: "#1a237e" }}>
-          Invoices & Sales Archive 
+        <Typography variant="h5" fontWeight="bold">
+          Invoices & Sales Archive
         </Typography>
 
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setOpenForm(true)}
-          sx={{ borderRadius: 2, px: 3 }}
         >
-          New Sale 
+          New Sale
         </Button>
       </Box>
 
-      {/* جدول البيانات الرئيسي الأصلي */}
-      <Paper sx={{ height: 600, width: "100%", boxShadow: 3, borderRadius: 2 }}>
+      {/* Data grid */}
+      <Paper sx={{ height: 600, width: "100%" }}>
         <DataGrid
-          rows={data || []}
-          columns={invoiceColumns} // بقيت كما هي لضمان عدم حدوث أخطاء
+          rows={rows}
+          columns={invoiceColumns}
           loading={isLoading}
-           onRowClick={(params) => {
-    setSelectedInvoice(params.row);
-  }}
+          onRowClick={(params) => setSelectedInvoice(params.row)}
           pageSizeOptions={[10, 25, 50]}
           initialState={{
-            pagination: {
-              paginationModel: { pageSize: 10 },
-            },
+            pagination: { paginationModel: { pageSize: 10 } },
           }}
           disableRowSelectionOnClick
-          sx={{
-            border: 0,
-            "& .MuiDataGrid-columnHeaders": {
-              backgroundColor: "#f5f5f5",
-              fontWeight: "bold",
-            },
-          }}
         />
       </Paper>
-          <InvoiceDetailsDrawer
-  invoice={selectedInvoice}
-  onClose={() => setSelectedInvoice(null)}
-/>
 
+      <InvoiceDetailsDrawer
+        invoice={selectedInvoice}
+        onClose={() => setSelectedInvoice(null)}
+      />
 
-      {/* استدعاء الفورم (نافذة البيع) */}
-      <InvoiceForm open={openForm} onClose={() => setOpenForm(false)} />
+      <InvoiceForm
+        open={openForm}
+        onClose={() => setOpenForm(false)}
+        onSubmit={(payload) => createMutation.mutate(payload)}
+        isPending={createMutation.isPending}
+        customers={customers}
+        warehouses={warehouses}
+        accounts={accounts}
+      />
+
+      <MessageDialog {...messageDialog} onClose={closeMessageDialog} />
+      <ScrollToTopButton />
     </Box>
   );
 }

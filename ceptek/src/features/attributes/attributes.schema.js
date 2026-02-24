@@ -8,7 +8,10 @@ export const attributeSchema = z.object({
   is_active: z.boolean().default(true),
 });
 
-/**
- * Generates a blank object with all schema defaults applied.
- */
-export const attributeDefaults = attributeSchema.partial().parse({});
+export const attributeDefaults = {
+  name: "",
+  slug: "",
+  data_type: "text",
+  has_options: false,
+  is_active: true,
+};

@@ -69,7 +69,6 @@ export default function AttributeForm({
           select
           label="Data Type"
           {...register("data_type")}
-          defaultValue="text"
           fullWidth
           margin="normal"
         >

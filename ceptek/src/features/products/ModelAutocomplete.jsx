@@ -16,14 +16,14 @@ export function ModelAutocomplete({
   selectedProductType,
 }) {
   const { data: models = [], isLoading } = useQuery({
-    // المفتاح يعتمد على التصنيف والنوع لضمان تحديث البيانات عند التغيير
+    // Query key depends on category and product type to refetch on change
     queryKey: [
       "models-for-products",
       selectedCategory?.id,
       selectedProductType?.id,
     ],
     queryFn: async () => {
-      // إذا لم يتم اختيار تصنيف، لا نعرض موديلات
+      // If no category selected, show no models
       if (!selectedCategory?.id) return [];
 
       let query = supabase
@@ -36,14 +36,14 @@ export function ModelAutocomplete({
         )
         .eq("is_active", true);
 
-      // المنطق الديناميكي:
-      // إذا كان التصنيف لا يدعم إظهار الكل (show_all_models = false)
+      // Dynamic filter logic:
+      // If category doesn't support showing all (show_all_models = false)
       if (!selectedCategory.show_all_models) {
         if (selectedProductType?.id) {
-          // نفلتر حسب النوع المختار
+          // Filter by selected product type
           query = query.eq("families.product_type_id", selectedProductType.id);
         } else {
-          // إذا كان التصنيف يتطلب نوعاً ولم يتم اختياره بعد
+          // Category requires a type but none selected yet
           return [];
         }
       }
@@ -52,7 +52,7 @@ export function ModelAutocomplete({
       if (error) throw error;
       return data;
     },
-    enabled: !!selectedCategory?.id, // يعمل فقط عند اختيار تصنيف
+    enabled: !!selectedCategory?.id, // Only run when a category is selected
   });
 
   const modelOptions = models.map((m) => ({
@@ -66,8 +66,8 @@ export function ModelAutocomplete({
   return (
     <Autocomplete
       options={modelOptions}
-      value={value || null} // قيمة الفورم
-      onChange={(e, val) => onChange(val)} // تحديث الفورم
+      value={value || null} // Form value
+      onChange={(e, val) => onChange(val)} // Update form
       getOptionLabel={(option) => option?.label || ""}
       isOptionEqualToValue={(option, val) => option.model_id === val?.model_id}
       filterOptions={(opts, state) => {

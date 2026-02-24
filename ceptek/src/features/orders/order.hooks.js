@@ -2,12 +2,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getOrders,
   createOrderAction,
+  confirmAndShipOrder,
+  getOrderFormData,
+  getProductsForOrder,
   ORDER_QUERY_KEY,
 } from "./order.api";
 
-/**
- * Fetches the order list.
- */
 export function useOrderQuery() {
   const { data, isLoading, isFetching, isError, error } = useQuery({
     queryKey: [ORDER_QUERY_KEY],
@@ -24,10 +24,27 @@ export function useOrderQuery() {
   };
 }
 
-/**
- * Returns create mutation with cache invalidation.
- */
-export function useOrderMutations({ onSuccess, showSnackbar }) {
+export function useOrderFormOptions(warehouseId) {
+  const { data: formData } = useQuery({
+    queryKey: ["orderFormData"],
+    queryFn: getOrderFormData,
+  });
+
+  const { data: products, isLoading: loadingProducts } = useQuery({
+    queryKey: ["productsForOrder", warehouseId],
+    queryFn: () => getProductsForOrder(warehouseId),
+    enabled: !!warehouseId,
+  });
+
+  return {
+    customers: formData?.customers || [],
+    warehouses: formData?.warehouses || [],
+    products: products || [],
+    loadingProducts,
+  };
+}
+
+export function useOrderMutations({ onSuccess, showMessageDialog }) {
   const queryClient = useQueryClient();
 
   const invalidate = () =>
@@ -37,13 +54,25 @@ export function useOrderMutations({ onSuccess, showSnackbar }) {
     mutationFn: createOrderAction,
     onSuccess: () => {
       invalidate();
-      showSnackbar("Order created successfully", "success");
-      onSuccess();
+      onSuccess?.();
+      showMessageDialog?.("Order created successfully", "success");
     },
-    onError: (error) => {
-      showSnackbar(error.message || "Failed to create order", "error");
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Failed to create order", "error");
     },
   });
 
-  return { createMutation };
+  const confirmMutation = useMutation({
+    mutationFn: ({ orderId, warehouseId, items }) =>
+      confirmAndShipOrder(orderId, warehouseId, items),
+    onSuccess: () => {
+      invalidate();
+      showMessageDialog?.("Order shipped successfully", "success");
+    },
+    onError: (err) => {
+      showMessageDialog?.(err?.message || "Shipping failed", "error");
+    },
+  });
+
+  return { createMutation, confirmMutation };
 }
