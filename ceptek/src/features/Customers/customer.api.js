@@ -10,7 +10,7 @@ export async function getCustomers({ page = 0, pageSize = 10, searchText = "", c
 
   let query = supabase
     .from(TABLE_NAME)
-    .select("id, name, store_name, email, phone, address, customer_type_id, is_active, customer_types(type_name)", { count: "exact" })
+    .select("*, customer_types(type_name)", { count: "exact" })
     .order("id", { ascending: false })
     .range(from, to);
 

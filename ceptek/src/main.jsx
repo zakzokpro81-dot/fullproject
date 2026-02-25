@@ -28,7 +28,6 @@ import { AttributeList } from "./features/attributes/AttributeList";
 import { CustomerList } from "./features/Customers/CustomerList";
 import { CustomerTypeList } from "./features/customerTypes/CustomerTypeList";
 import { PaymentList } from "./features/customerPayments/PaymentList";
-import { InvoiceItemsList } from "./features/invoiceItem/InvoiceItemsList";
 import { StockMovementList } from "./features/StockMovement/StockMovementList";
 import { AccountList } from "./features/accounts/AccountList";
 import { InvoiceList } from "./features/invoice/InvoiceList";
@@ -51,6 +50,7 @@ import { PurchaseOrderList } from "./features/purchaseOrders/PurchaseOrderList";
 import PurchaseInvoiceList from "./features/purchaseInvoices/PurchaseInvoiceList";
 import SupplierPaymentList from "./features/supplierPayments/SupplierPaymentList";
 import PurchaseReturnList from "./features/purchaseReturns/PurchaseReturnList";
+import SalesReturnList from "./features/salesReturns/SalesReturnList";
 
 const queryClient = new QueryClient();
 
@@ -78,7 +78,6 @@ const router = createBrowserRouter(
       <Route path="/customers" element={<CustomerList />} />
       <Route path="/customer-types" element={<CustomerTypeList />} />
       <Route path="/payments" element={<PaymentList />} />
-      <Route path="/invoice-items" element={<InvoiceItemsList />} />
       <Route path="/stock-movements" element={<StockMovementList />} />
       <Route path="/accounts" element={<AccountList />} />
       <Route path="/invoices" element={<InvoiceList />} />
@@ -101,6 +100,7 @@ const router = createBrowserRouter(
       <Route path="/purchase-invoices" element={<PurchaseInvoiceList />} />
       <Route path="/supplier-payments" element={<SupplierPaymentList />} />
       <Route path="/purchase-returns" element={<PurchaseReturnList />} />
+      <Route path="/sales-returns" element={<SalesReturnList />} />
     </Route>,
   ),
 );

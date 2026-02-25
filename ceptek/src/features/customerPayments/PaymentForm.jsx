@@ -23,6 +23,7 @@ export default function PaymentForm({
   onSubmit,
   isPending,
   invoices = [],
+  accounts = [],
 }) {
   const { t } = useTranslation(["customerPayments", "common"]);
 
@@ -70,6 +71,25 @@ export default function PaymentForm({
             </TextField>
 
             <TextField
+              select
+              label={t("customerPayments:account")}
+              fullWidth
+              {...register("account_id")}
+              defaultValue={initialData?.account_id ?? ""}
+              error={!!errors.account_id}
+              helperText={errors.account_id?.message}
+            >
+              <MenuItem value="">
+                {t("customerPayments:selectAccount")}
+              </MenuItem>
+              {accounts.map((acc) => (
+                <MenuItem key={acc.id} value={acc.id}>
+                  {acc.name} ({acc.account_type})
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
               label={t("common:amount")}
               type="number"
               fullWidth
@@ -86,6 +106,19 @@ export default function PaymentForm({
               error={!!errors.date}
               helperText={errors.date?.message}
             />
+            <TextField
+              select
+              label={t("customerPayments:paymentMethod")}
+              fullWidth
+              {...register("method")}
+              defaultValue={initialData?.method ?? "cash"}
+              error={!!errors.method}
+              helperText={errors.method?.message}
+            >
+              <MenuItem value="cash">{t("customerPayments:cash")}</MenuItem>
+              <MenuItem value="bank">{t("customerPayments:bank")}</MenuItem>
+              <MenuItem value="check">{t("customerPayments:check")}</MenuItem>
+            </TextField>
             <TextField
               label={t("common:notes")}
               multiline

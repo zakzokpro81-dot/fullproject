@@ -10,12 +10,12 @@ export async function getPayments({ page = 0, pageSize = 10, searchText = "" } =
 
   let query = supabase
     .from(TABLE_NAME)
-    .select("id, invoice_id, amount, date, notes, invoices(id, invoice_number, customers(name))", { count: "exact" })
+    .select("id, invoice_id, account_id, amount, date, method, notes, invoices(id, invoice_number, customers(name)), accounts(id, name)", { count: "exact" })
     .order("id", { ascending: false })
     .range(from, to);
 
   if (searchText) {
-    query = query.ilike("notes", `%${searchText}%`);
+    query = query.or(`notes.ilike.%${searchText}%,method.ilike.%${searchText}%`);
   }
 
   const { data, error, count } = await query;
@@ -28,6 +28,16 @@ export async function getInvoicesForSelect() {
     .from("invoices")
     .select("id, invoice_number, customers(name)")
     .order("id", { ascending: false });
+  if (error) throw error;
+  return data;
+}
+
+export async function getAccountsForSelect() {
+  const { data, error } = await supabase
+    .from("accounts")
+    .select("id, name, account_type")
+    .eq("is_active", true)
+    .order("name", { ascending: true });
   if (error) throw error;
   return data;
 }

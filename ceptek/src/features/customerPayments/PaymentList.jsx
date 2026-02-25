@@ -37,7 +37,7 @@ export function PaymentList() {
     setSearchText,
   } = usePaymentQuery();
 
-  const { invoices } = usePaymentFormOptions();
+  const { invoices, accounts } = usePaymentFormOptions();
 
   const [openForm, setOpenForm] = useState(false);
   const [formMode, setFormMode] = useState("add");
@@ -212,6 +212,7 @@ export function PaymentList() {
           onSubmit={handleFormSubmit}
           isPending={createMutation.isPending || updateMutation.isPending}
           invoices={invoices}
+          accounts={accounts}
         />
       )}
 

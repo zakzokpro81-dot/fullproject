@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  getPurchaseInvoices, createPurchaseInvoice, updatePurchaseInvoice, deletePurchaseInvoice, deletePurchaseInvoices, PURCHASE_INVOICE_QUERY_KEY,
+  getPurchaseInvoices, createPurchaseInvoice, updatePurchaseInvoice, deletePurchaseInvoice, deletePurchaseInvoices,
+  getPurchaseInvoiceItems, getProductsForPurchase, PURCHASE_INVOICE_QUERY_KEY,
 } from "./purchaseInvoice.api";
 import supabase from "../../config/supabase";
 
@@ -88,4 +89,22 @@ export function usePurchaseInvoiceFormOptions() {
   });
 
   return { suppliers, purchaseOrders, invoiceStatuses };
+}
+
+export function useProductsForPurchase() {
+  const { data: products = [] } = useQuery({
+    queryKey: ["products_for_purchase"],
+    queryFn: getProductsForPurchase,
+    staleTime: 1000 * 60 * 10,
+  });
+  return products;
+}
+
+export function usePurchaseInvoiceItems(invoiceId) {
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["purchase_invoice_items", invoiceId],
+    queryFn: () => getPurchaseInvoiceItems(invoiceId),
+    enabled: !!invoiceId,
+  });
+  return { items, isLoading };
 }

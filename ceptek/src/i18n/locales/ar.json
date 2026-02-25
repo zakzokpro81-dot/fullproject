@@ -64,7 +64,10 @@
     "stockLevels": "مستويات المخزون",
     "stockHistory": "سجل المخزون",
     "accountsCustomers": "الحسابات والعملاء",
+    "customersSales": "العملاء والمبيعات",
+    "finance": "المالية",
     "accounts": "الحسابات",
+    "customerPayments": "دفعات العملاء",
     "customers": "العملاء",
     "customerTypes": "أنواع العملاء",
     "invoices": "الفواتير",
@@ -96,7 +99,8 @@
     "purchaseOrders": "أوامر الشراء",
     "purchaseInvoices": "فواتير الشراء",
     "supplierPayments": "مدفوعات الموردين",
-    "purchaseReturns": "مرتجعات الشراء"
+    "purchaseReturns": "مرتجعات الشراء",
+    "salesReturns": "مرتجعات المبيعات"
   },
   "departments": {
     "title": "الأقسام",
@@ -232,7 +236,16 @@
     "purchaseOrder": "أمر الشراء",
     "invoiceDate": "تاريخ الفاتورة",
     "totalAmount": "المبلغ الإجمالي",
-    "paidAmount": "المبلغ المدفوع"
+    "paidAmount": "المبلغ المدفوع",
+    "items": "البنود",
+    "product": "المنتج",
+    "qty": "الكمية",
+    "unitCost": "سعر الوحدة",
+    "lineTotal": "الإجمالي",
+    "noItems": "لم يتم إضافة بنود بعد",
+    "searchProduct": "بحث عن منتج...",
+    "balance": "الرصيد",
+    "paymentSummary": "ملخص الدفع"
   },
   "supplierPayments": {
     "title": "مدفوعات الموردين",
@@ -255,6 +268,21 @@
     "returnDate": "تاريخ الإرجاع",
     "quantity": "الكمية",
     "creditAmount": "مبلغ الائتمان",
+    "reason": "السبب"
+  },
+  "salesReturns": {
+    "title": "مرتجعات المبيعات",
+    "entity": "مرتجع مبيعات",
+    "entityPlural": "مرتجعات المبيعات",
+    "invoice": "الفاتورة",
+    "selectInvoice": "اختر الفاتورة...",
+    "invoiceNumber": "رقم الفاتورة",
+    "invoiceItem": "بند الفاتورة",
+    "selectItem": "اختر البند...",
+    "customer": "العميل",
+    "returnDate": "تاريخ الإرجاع",
+    "quantity": "الكمية",
+    "refundAmount": "مبلغ الاسترداد",
     "reason": "السبب"
   },
   "brands": {
@@ -363,6 +391,8 @@
     "storeName": "اسم المتجر",
     "emailAddress": "البريد الإلكتروني",
     "phoneNumber": "رقم الهاتف",
+    "phone2": "الهاتف 2",
+    "taxNumber": "الرقم الضريبي",
     "customerType": "نوع العميل"
   },
   "customerTypesFeature": {
@@ -372,11 +402,17 @@
     "typeName": "اسم النوع"
   },
   "customerPayments": {
-    "title": "المدفوعات",
+    "title": "دفعات العملاء",
     "entity": "دفعة",
     "entityPlural": "المدفوعات",
     "invoice": "الفاتورة",
     "customer": "العميل",
+    "account": "الحساب",
+    "selectAccount": "اختر الحساب...",
+    "paymentMethod": "طريقة الدفع",
+    "cash": "نقدي",
+    "bank": "بنك",
+    "check": "شيك",
     "searchByNote": "البحث حسب الملاحظة أو اسم العميل"
   },
   "invoiceFeature": {

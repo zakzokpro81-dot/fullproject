@@ -11,6 +11,7 @@ import {
   FormControlLabel,
   Switch,
   CircularProgress,
+  Grid,
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,69 +49,116 @@ export default function CustomerForm({
   }, [mode, initialData, reset]);
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ fontWeight: "bold" }}>
         {mode === "edit" ? t("common.editItem") : t("common.addNew")}
       </DialogTitle>
 
       <DialogContent dividers>
-        <Stack spacing={2} mt={1}>
-          <TextField
-            label={t("customersFeature.fullName")}
-            {...register("name")}
-            error={!!errors.name}
-            helperText={errors.name?.message}
-            fullWidth
-            margin="normal"
-          />
+        <Grid container spacing={2} sx={{ mt: 0.5 }}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              label={t("customersFeature.fullName")}
+              {...register("name")}
+              error={!!errors.name}
+              helperText={errors.name?.message}
+              fullWidth
+            />
+          </Grid>
 
-          <TextField label={t("customersFeature.storeName")} {...register("store_name")} fullWidth />
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              label={t("customersFeature.storeName")}
+              {...register("store_name")}
+              fullWidth
+            />
+          </Grid>
 
-          <TextField
-            label={t("customersFeature.emailAddress")}
-            {...register("email")}
-            error={!!errors.email}
-            helperText={errors.email?.message}
-            fullWidth
-          />
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              label={t("customersFeature.emailAddress")}
+              {...register("email")}
+              error={!!errors.email}
+              helperText={errors.email?.message}
+              fullWidth
+            />
+          </Grid>
 
-          <TextField label={t("customersFeature.phoneNumber")} {...register("phone")} fullWidth />
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              label={t("customersFeature.phoneNumber")}
+              {...register("phone")}
+              fullWidth
+            />
+          </Grid>
 
-          <TextField
-            label={t("common.address")}
-            {...register("address")}
-            fullWidth
-            multiline
-            rows={3}
-          />
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              label={t("customersFeature.phone2")}
+              {...register("phone2")}
+              fullWidth
+            />
+          </Grid>
 
-          <TextField
-            select
-            label={t("customersFeature.customerType")}
-            {...register("customer_type_id")}
-            error={!!errors.customer_type_id}
-            helperText={errors.customer_type_id?.message}
-            fullWidth
-            value={watch("customer_type_id") ?? ""}
-          >
-            <MenuItem value="">None</MenuItem>
-            {customerTypes.map((type) => (
-              <MenuItem key={type.id} value={type.id}>
-                {type.type_name}
-              </MenuItem>
-            ))}
-          </TextField>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              label={t("customersFeature.taxNumber")}
+              {...register("tax_number")}
+              fullWidth
+            />
+          </Grid>
 
-          <FormControlLabel
-            control={
-              <Switch
-                checked={!!watch("is_active")}
-                onChange={(e) => setValue("is_active", e.target.checked)}
-              />
-            }
-            label={t("common.active")}
-          />
-        </Stack>
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              label={t("common.address")}
+              {...register("address")}
+              fullWidth
+              multiline
+              rows={2}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <TextField
+              select
+              label={t("customersFeature.customerType")}
+              {...register("customer_type_id")}
+              error={!!errors.customer_type_id}
+              helperText={errors.customer_type_id?.message}
+              fullWidth
+              value={watch("customer_type_id") ?? ""}
+            >
+              <MenuItem value="">None</MenuItem>
+              {customerTypes.map((type) => (
+                <MenuItem key={type.id} value={type.id}>
+                  {type.type_name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={!!watch("is_active")}
+                  onChange={(e) => setValue("is_active", e.target.checked)}
+                />
+              }
+              label={t("common.active")}
+            />
+          </Grid>
+
+          <Grid size={{ xs: 12 }}>
+            <TextField
+              label={t("common.notes")}
+              {...register("notes")}
+              fullWidth
+              multiline
+              rows={2}
+            />
+          </Grid>
+        </Grid>
       </DialogContent>
 
       <DialogActions sx={{ p: 2 }}>

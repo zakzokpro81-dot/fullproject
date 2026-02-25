@@ -3,27 +3,24 @@ import { useTranslation } from "react-i18next";
 import { Box, Button, Dialog } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
-import { getPurchaseInvoiceColumns } from "./purchaseInvoice.columns";
+import { getSalesReturnColumns } from "./salesReturn.columns";
 import {
-  usePurchaseInvoiceQuery,
-  usePurchaseInvoiceMutations,
-} from "./purchaseInvoice.hooks";
-import { getPurchaseInvoiceItems } from "./purchaseInvoice.api";
-import PurchaseInvoiceForm from "./PurchaseInvoiceForm";
-import PurchaseInvoiceDetailsDrawer from "./PurchaseInvoiceDetailsDrawer";
+  useSalesReturnQuery,
+  useSalesReturnMutations,
+} from "./salesReturn.hooks";
+import SalesReturnForm from "./SalesReturnForm";
 import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
 import FilterBar from "../../components/FilterBar";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 import MessageDialog from "../../components/MessageDialog";
 
-export default function PurchaseInvoiceList() {
+export default function SalesReturnList() {
   const { t } = useTranslation();
   const [formOpen, setFormOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [openDeleteSelected, setOpenDeleteSelected] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
 
   const { messageDialogState, showMessageDialog, closeMessageDialog } =
     useMessageDialog();
@@ -37,14 +34,14 @@ export default function PurchaseInvoiceList() {
     setPaginationModel,
     searchText,
     setSearchText,
-  } = usePurchaseInvoiceQuery();
+  } = useSalesReturnQuery();
 
   const {
     createMutation,
     updateMutation,
     deleteMutation,
     deleteMultipleMutation,
-  } = usePurchaseInvoiceMutations({
+  } = useSalesReturnMutations({
     onSuccess: () => {
       setFormOpen(false);
       setEditData(null);
@@ -52,31 +49,15 @@ export default function PurchaseInvoiceList() {
     showMessageDialog,
   });
 
-  const handleEdit = useCallback(async (row) => {
-    // Load existing items for this invoice
-    let existingItems = [];
-    try {
-      const items = await getPurchaseInvoiceItems(row.id);
-      existingItems = items.map((item) => ({
-        product_id: item.product_id,
-        product_name: item.products?.name || `Product #${item.product_id}`,
-        quantity: item.quantity,
-        unit_cost: item.unit_cost,
-      }));
-    } catch {
-      /* items may not exist yet */
-    }
-
+  const handleEdit = useCallback((row) => {
     setEditData({
-      invoice_number: row.invoice_number || "",
-      supplier_id: row.supplier_id || "",
-      purchase_order_id: row.purchase_order_id || "",
+      invoice_id: row.invoice_id || "",
+      invoice_item_id: row.invoice_item_id || "",
+      return_date: row.return_date ? row.return_date.split("T")[0] : "",
+      quantity: row.quantity ?? 1,
+      reason: row.reason || "",
+      refund_amount: row.refund_amount ?? 0,
       status_id: row.status_id || "",
-      invoice_date: row.invoice_date ? row.invoice_date.split("T")[0] : "",
-      total_amount: row.total_amount ?? 0,
-      paid_amount: row.paid_amount ?? 0,
-      notes: row.notes || "",
-      items: existingItems,
       id: row.id,
     });
     setFormOpen(true);
@@ -88,9 +69,7 @@ export default function PurchaseInvoiceList() {
 
   const handleFormSubmit = (data) => {
     const cleaned = { ...data };
-    if (!cleaned.purchase_order_id) delete cleaned.purchase_order_id;
-    if (!cleaned.notes) delete cleaned.notes;
-    if (!cleaned.invoice_number) delete cleaned.invoice_number;
+    if (!cleaned.reason) delete cleaned.reason;
 
     if (editData?.id) {
       updateMutation.mutate({ id: editData.id, data: cleaned });
@@ -110,15 +89,18 @@ export default function PurchaseInvoiceList() {
     setSelectedIds(new Set());
     setPaginationModel(m);
   };
+
   const toggleSelectAll = () => {
     const all = rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
     setSelectedIds(all ? new Set() : new Set(rows.map((r) => r.id)));
   };
+
   const toggleSelect = (id) => {
     const s = new Set(selectedIds);
     s.has(id) ? s.delete(id) : s.add(id);
     setSelectedIds(s);
   };
+
   const handleDeleteSelectedConfirm = () => {
     if (selectedIds.size === 0) return;
     deleteMultipleMutation.mutate(Array.from(selectedIds), {
@@ -129,7 +111,7 @@ export default function PurchaseInvoiceList() {
     });
   };
 
-  const columns = getPurchaseInvoiceColumns(
+  const columns = getSalesReturnColumns(
     handleEdit,
     handleDelete,
     selectedIds,
@@ -161,7 +143,7 @@ export default function PurchaseInvoiceList() {
               setFormOpen(true);
             }}
           >
-            {t("common.addNew")} {t("purchaseInvoices.entity")}
+            {t("common.addNew")} {t("salesReturns.entity")}
           </Button>
         </Box>
       </Box>
@@ -176,8 +158,7 @@ export default function PurchaseInvoiceList() {
         onPaginationModelChange={handlePaginationChange}
         pageSizeOptions={[10, 25, 50]}
         disableRowSelectionOnClick
-        onRowClick={(params) => setSelectedInvoice(params.row)}
-        sx={{ bgcolor: "background.paper", cursor: "pointer" }}
+        sx={{ bgcolor: "background.paper" }}
       />
 
       <Dialog
@@ -186,7 +167,7 @@ export default function PurchaseInvoiceList() {
         maxWidth="md"
         fullWidth
       >
-        <PurchaseInvoiceForm
+        <SalesReturnForm
           open={formOpen}
           onClose={() => setFormOpen(false)}
           onSubmit={handleFormSubmit}
@@ -198,8 +179,8 @@ export default function PurchaseInvoiceList() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleConfirmDelete}
-        title={`${t("common.deleteSelected")} ${t("purchaseInvoices.entity")}`}
-        message={`Are you sure you want to delete invoice "${deleteTarget?.invoice_number || deleteTarget?.id}"?`}
+        title={`${t("common.deleteSelected")} ${t("salesReturns.entity")}`}
+        message={`Are you sure you want to delete this return (ID: ${deleteTarget?.id})?`}
       />
 
       <ConfirmDeleteDialog
@@ -211,11 +192,6 @@ export default function PurchaseInvoiceList() {
       />
 
       <MessageDialog {...messageDialogState} onClose={closeMessageDialog} />
-
-      <PurchaseInvoiceDetailsDrawer
-        invoice={selectedInvoice}
-        onClose={() => setSelectedInvoice(null)}
-      />
     </Box>
   );
 }

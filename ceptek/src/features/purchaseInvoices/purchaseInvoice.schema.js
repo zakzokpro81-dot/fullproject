@@ -9,6 +9,16 @@ export const purchaseInvoiceSchema = z.object({
   status_id: z.coerce.number().positive("Status is required"),
   invoice_number: z.string().optional().or(z.literal("")),
   notes: z.string().optional().or(z.literal("")),
+  items: z
+    .array(
+      z.object({
+        product_id: z.coerce.number().positive(),
+        product_name: z.string().optional(),
+        quantity: z.coerce.number().min(1, "Qty ≥ 1"),
+        unit_cost: z.coerce.number().min(0),
+      }),
+    )
+    .default([]),
 });
 
 export const purchaseInvoiceDefaults = {
@@ -20,4 +30,5 @@ export const purchaseInvoiceDefaults = {
   status_id: 1,
   invoice_number: "",
   notes: "",
+  items: [],
 };

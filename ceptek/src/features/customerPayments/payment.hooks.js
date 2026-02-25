@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getPayments,
   getInvoicesForSelect,
+  getAccountsForSelect,
   createPayment,
   updatePayment,
   deletePayment,
@@ -54,7 +55,11 @@ export function usePaymentFormOptions() {
     queryKey: ["invoicesSelect"],
     queryFn: getInvoicesForSelect,
   });
-  return { invoices };
+  const { data: accounts = [] } = useQuery({
+    queryKey: ["accountsSelectForPayment"],
+    queryFn: getAccountsForSelect,
+  });
+  return { invoices, accounts };
 }
 
 export function usePaymentMutations({ onSuccess, showMessageDialog }) {

@@ -64,7 +64,10 @@
     "stockLevels": "Stock Levels",
     "stockHistory": "Stock History",
     "accountsCustomers": "Accounts & Customers",
+    "customersSales": "Customers & Sales",
+    "finance": "Finance",
     "accounts": "Accounts",
+    "customerPayments": "Customer Payments",
     "customers": "Customers",
     "customerTypes": "Customer Types",
     "invoices": "Invoices",
@@ -96,7 +99,8 @@
     "purchaseOrders": "Purchase Orders",
     "purchaseInvoices": "Purchase Invoices",
     "supplierPayments": "Supplier Payments",
-    "purchaseReturns": "Purchase Returns"
+    "purchaseReturns": "Purchase Returns",
+    "salesReturns": "Sales Returns"
   },
   "departments": {
     "title": "Departments",
@@ -232,7 +236,16 @@
     "purchaseOrder": "Purchase Order",
     "invoiceDate": "Invoice Date",
     "totalAmount": "Total Amount",
-    "paidAmount": "Paid Amount"
+    "paidAmount": "Paid Amount",
+    "items": "Items",
+    "product": "Product",
+    "qty": "Qty",
+    "unitCost": "Unit Cost",
+    "lineTotal": "Total",
+    "noItems": "No items added yet",
+    "searchProduct": "Search product...",
+    "balance": "Balance",
+    "paymentSummary": "Payment Summary"
   },
   "supplierPayments": {
     "title": "Supplier Payments",
@@ -255,6 +268,21 @@
     "returnDate": "Return Date",
     "quantity": "Quantity",
     "creditAmount": "Credit Amount",
+    "reason": "Reason"
+  },
+  "salesReturns": {
+    "title": "Sales Returns",
+    "entity": "Sales Return",
+    "entityPlural": "Sales Returns",
+    "invoice": "Invoice",
+    "selectInvoice": "Select Invoice...",
+    "invoiceNumber": "Invoice Number",
+    "invoiceItem": "Invoice Item",
+    "selectItem": "Select Item...",
+    "customer": "Customer",
+    "returnDate": "Return Date",
+    "quantity": "Quantity",
+    "refundAmount": "Refund Amount",
     "reason": "Reason"
   },
   "brands": {
@@ -363,6 +391,8 @@
     "storeName": "Store Name",
     "emailAddress": "Email Address",
     "phoneNumber": "Phone Number",
+    "phone2": "Phone 2",
+    "taxNumber": "Tax Number",
     "customerType": "Customer Type"
   },
   "customerTypesFeature": {
@@ -372,11 +402,17 @@
     "typeName": "Type Name"
   },
   "customerPayments": {
-    "title": "Payments",
+    "title": "Customer Payments",
     "entity": "Payment",
     "entityPlural": "Payments",
     "invoice": "Invoice",
     "customer": "Customer",
+    "account": "Account",
+    "selectAccount": "Select Account...",
+    "paymentMethod": "Payment Method",
+    "cash": "Cash",
+    "bank": "Bank",
+    "check": "Check",
     "searchByNote": "Search by note or customer name"
   },
   "invoiceFeature": {

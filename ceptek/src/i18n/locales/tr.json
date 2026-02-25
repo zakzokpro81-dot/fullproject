@@ -64,7 +64,10 @@
     "stockLevels": "Stok Seviyeleri",
     "stockHistory": "Stok Geçmişi",
     "accountsCustomers": "Hesaplar ve Müşteriler",
+    "customersSales": "Müşteriler ve Satış",
+    "finance": "Finans",
     "accounts": "Hesaplar",
+    "customerPayments": "Müşteri Ödemeleri",
     "customers": "Müşteriler",
     "customerTypes": "Müşteri Türleri",
     "invoices": "Faturalar",
@@ -96,7 +99,8 @@
     "purchaseOrders": "Satın Alma Siparişleri",
     "purchaseInvoices": "Satın Alma Faturaları",
     "supplierPayments": "Tedarikçi Ödemeleri",
-    "purchaseReturns": "Satın Alma İadeleri"
+    "purchaseReturns": "Satın Alma İadeleri",
+    "salesReturns": "Satış İadeleri"
   },
   "departments": {
     "title": "Departmanlar",
@@ -232,7 +236,16 @@
     "purchaseOrder": "Satın Alma Siparişi",
     "invoiceDate": "Fatura Tarihi",
     "totalAmount": "Toplam Tutar",
-    "paidAmount": "Ödenen Tutar"
+    "paidAmount": "Ödenen Tutar",
+    "items": "Kalemler",
+    "product": "Ürün",
+    "qty": "Miktar",
+    "unitCost": "Birim Maliyet",
+    "lineTotal": "Toplam",
+    "noItems": "Henüz kalem eklenmedi",
+    "searchProduct": "Ürün ara...",
+    "balance": "Bakiye",
+    "paymentSummary": "Ödeme Özeti"
   },
   "supplierPayments": {
     "title": "Tedarikçi Ödemeleri",
@@ -255,6 +268,21 @@
     "returnDate": "İade Tarihi",
     "quantity": "Miktar",
     "creditAmount": "Alacak Tutarı",
+    "reason": "Sebep"
+  },
+  "salesReturns": {
+    "title": "Satış İadeleri",
+    "entity": "Satış İadesi",
+    "entityPlural": "Satış İadeleri",
+    "invoice": "Fatura",
+    "selectInvoice": "Fatura Seçin...",
+    "invoiceNumber": "Fatura Numarası",
+    "invoiceItem": "Fatura Kalemi",
+    "selectItem": "Kalem Seçin...",
+    "customer": "Müşteri",
+    "returnDate": "İade Tarihi",
+    "quantity": "Miktar",
+    "refundAmount": "İade Tutarı",
     "reason": "Sebep"
   },
   "brands": {
@@ -363,6 +391,8 @@
     "storeName": "Mağaza Adı",
     "emailAddress": "E-posta Adresi",
     "phoneNumber": "Telefon Numarası",
+    "phone2": "Telefon 2",
+    "taxNumber": "Vergi Numarası",
     "customerType": "Müşteri Türü"
   },
   "customerTypesFeature": {
@@ -372,11 +402,17 @@
     "typeName": "Tür Adı"
   },
   "customerPayments": {
-    "title": "Ödemeler",
+    "title": "Müşteri Ödemeleri",
     "entity": "Ödeme",
     "entityPlural": "Ödemeler",
     "invoice": "Fatura",
     "customer": "Müşteri",
+    "account": "Hesap",
+    "selectAccount": "Hesap Seçin...",
+    "paymentMethod": "Ödeme Yöntemi",
+    "cash": "Nakit",
+    "bank": "Banka",
+    "check": "Çek",
     "searchByNote": "Not veya müşteri adına göre ara"
   },
   "invoiceFeature": {

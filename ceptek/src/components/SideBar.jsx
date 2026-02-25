@@ -111,33 +111,82 @@ const getMenuGroups = (t) => [
     color: "#ed6c02",
     icon: <Inventory2Outlined />,
     children: [
-      { text: t("sidebar.products"), path: "/products", icon: <Inventory2Outlined /> },
-      { text: t("sidebar.bulkImport"), path: "/products/bulk-add", icon: <AddBoxOutlined /> },
-      { text: t("sidebar.stockLevels"), path: "/warehouse-stock", icon: <WarehouseOutlined /> },
-      { text: t("sidebar.stockHistory"), path: "/stock-movements", icon: <HistoryOutlined /> },
+      {
+        text: t("sidebar.products"),
+        path: "/products",
+        icon: <Inventory2Outlined />,
+      },
+      {
+        text: t("sidebar.bulkImport"),
+        path: "/products/bulk-add",
+        icon: <AddBoxOutlined />,
+      },
+      {
+        text: t("sidebar.stockLevels"),
+        path: "/warehouse-stock",
+        icon: <WarehouseOutlined />,
+      },
+      {
+        text: t("sidebar.stockHistory"),
+        path: "/stock-movements",
+        icon: <HistoryOutlined />,
+      },
     ],
   },
   {
-    id: "accounts",
-    title: t("sidebar.accountsCustomers"),
+    id: "customers",
+    title: t("sidebar.customersSales"),
     color: "#1976d2",
-    icon: <AccountBalanceOutlined />,
+    icon: <PeopleOutline />,
     children: [
-      { text: t("sidebar.accounts"), path: "/accounts", icon: <AccountBalanceOutlined /> },
-      { text: t("sidebar.customers"), path: "/customers", icon: <PeopleOutline /> },
-      { text: t("sidebar.customerTypes"), path: "/customer-types", icon: <GroupOutlined /> },
-      { text: t("sidebar.invoices"), path: "/invoices", icon: <DescriptionOutlined /> },
-      { text: t("sidebar.invoiceItems"), path: "/invoice-items", icon: <ReceiptLongOutlined /> },
-      { text: t("sidebar.payments"), path: "/payments", icon: <PaymentOutlined /> },
+      {
+        text: t("sidebar.customers"),
+        path: "/customers",
+        icon: <PeopleOutline />,
+      },
+      {
+        text: t("sidebar.customerTypes"),
+        path: "/customer-types",
+        icon: <GroupOutlined />,
+      },
+      {
+        text: t("sidebar.invoices"),
+        path: "/invoices",
+        icon: <DescriptionOutlined />,
+      },
+      {
+        text: t("sidebar.orders"),
+        path: "/orders",
+        icon: <LocalShippingOutlined />,
+      },
+      {
+        text: t("sidebar.salesReturns"),
+        path: "/sales-returns",
+        icon: <AssignmentReturnOutlined />,
+      },
     ],
   },
   {
-    id: "orders",
-    title: t("sidebar.orders"),
+    id: "finance",
+    title: t("sidebar.finance"),
     color: "#2e7d32",
-    icon: <ShoppingCartOutlined />,
+    icon: <AccountBalanceWalletOutlined />,
     children: [
-      { text: t("sidebar.orderList"), path: "/orders", icon: <LocalShippingOutlined /> },
+      {
+        text: t("sidebar.accounts"),
+        path: "/accounts",
+        icon: <AccountBalanceOutlined />,
+      },
+      {
+        text: t("sidebar.customerPayments"),
+        path: "/payments",
+        icon: <PaymentOutlined />,
+      },
+      {
+        text: t("sidebar.supplierPayments"),
+        path: "/supplier-payments",
+        icon: <LocalAtmOutlined />,
+      },
     ],
   },
   {
@@ -147,13 +196,41 @@ const getMenuGroups = (t) => [
     icon: <CategoryOutlined />,
     children: [
       { text: t("sidebar.brands"), path: "/brands", icon: <LabelOutlined /> },
-      { text: t("sidebar.families"), path: "/families", icon: <ClassOutlined /> },
-      { text: t("sidebar.models"), path: "/models", icon: <ViewListOutlined /> },
-      { text: t("sidebar.warehouses"), path: "/warehouses", icon: <WarehouseOutlined /> },
-      { text: t("sidebar.attributes"), path: "/attributes", icon: <TuneOutlined /> },
-      { text: t("sidebar.attributeOptions"), path: "/attribute-options", icon: <ListAltOutlined /> },
-      { text: t("sidebar.productTypes"), path: "/product-types", icon: <CategoryOutlined /> },
-      { text: t("sidebar.categories"), path: "/categories", icon: <ClassOutlined /> },
+      {
+        text: t("sidebar.families"),
+        path: "/families",
+        icon: <ClassOutlined />,
+      },
+      {
+        text: t("sidebar.models"),
+        path: "/models",
+        icon: <ViewListOutlined />,
+      },
+      {
+        text: t("sidebar.warehouses"),
+        path: "/warehouses",
+        icon: <WarehouseOutlined />,
+      },
+      {
+        text: t("sidebar.attributes"),
+        path: "/attributes",
+        icon: <TuneOutlined />,
+      },
+      {
+        text: t("sidebar.attributeOptions"),
+        path: "/attribute-options",
+        icon: <ListAltOutlined />,
+      },
+      {
+        text: t("sidebar.productTypes"),
+        path: "/product-types",
+        icon: <CategoryOutlined />,
+      },
+      {
+        text: t("sidebar.categories"),
+        path: "/categories",
+        icon: <ClassOutlined />,
+      },
     ],
   },
   {
@@ -162,14 +239,42 @@ const getMenuGroups = (t) => [
     color: "#0288d1",
     icon: <BadgeOutlined />,
     children: [
-      { text: t("sidebar.departments"), path: "/departments", icon: <BusinessOutlined /> },
-      { text: t("sidebar.jobTitles"), path: "/job-titles", icon: <WorkOutlineOutlined /> },
-      { text: t("sidebar.employees"), path: "/employees", icon: <PeopleOutline /> },
+      {
+        text: t("sidebar.departments"),
+        path: "/departments",
+        icon: <BusinessOutlined />,
+      },
+      {
+        text: t("sidebar.jobTitles"),
+        path: "/job-titles",
+        icon: <WorkOutlineOutlined />,
+      },
+      {
+        text: t("sidebar.employees"),
+        path: "/employees",
+        icon: <PeopleOutline />,
+      },
       { text: t("sidebar.roles"), path: "/roles", icon: <SecurityOutlined /> },
-      { text: t("sidebar.salaryComponents"), path: "/salary-components", icon: <MonetizationOnOutlined /> },
-      { text: t("sidebar.payroll"), path: "/payroll", icon: <AccountBalanceWalletOutlined /> },
-      { text: t("sidebar.advances"), path: "/employee-advances", icon: <SavingsOutlined /> },
-      { text: t("sidebar.attendance"), path: "/attendance", icon: <EventAvailableOutlined /> },
+      {
+        text: t("sidebar.salaryComponents"),
+        path: "/salary-components",
+        icon: <MonetizationOnOutlined />,
+      },
+      {
+        text: t("sidebar.payroll"),
+        path: "/payroll",
+        icon: <AccountBalanceWalletOutlined />,
+      },
+      {
+        text: t("sidebar.advances"),
+        path: "/employee-advances",
+        icon: <SavingsOutlined />,
+      },
+      {
+        text: t("sidebar.attendance"),
+        path: "/attendance",
+        icon: <EventAvailableOutlined />,
+      },
     ],
   },
   {
@@ -178,12 +283,31 @@ const getMenuGroups = (t) => [
     color: "#d32f2f",
     icon: <StorefrontOutlined />,
     children: [
-      { text: t("sidebar.supplierTypes"), path: "/supplier-types", icon: <GroupOutlined /> },
-      { text: t("sidebar.suppliers"), path: "/suppliers", icon: <StorefrontOutlined /> },
-      { text: t("sidebar.purchaseOrders"), path: "/purchase-orders", icon: <ShoppingCartOutlined /> },
-      { text: t("sidebar.purchaseInvoices"), path: "/purchase-invoices", icon: <DescriptionOutlined /> },
-      { text: t("sidebar.supplierPayments"), path: "/supplier-payments", icon: <LocalAtmOutlined /> },
-      { text: t("sidebar.purchaseReturns"), path: "/purchase-returns", icon: <AssignmentReturnOutlined /> },
+      {
+        text: t("sidebar.supplierTypes"),
+        path: "/supplier-types",
+        icon: <GroupOutlined />,
+      },
+      {
+        text: t("sidebar.suppliers"),
+        path: "/suppliers",
+        icon: <StorefrontOutlined />,
+      },
+      {
+        text: t("sidebar.purchaseOrders"),
+        path: "/purchase-orders",
+        icon: <ShoppingCartOutlined />,
+      },
+      {
+        text: t("sidebar.purchaseInvoices"),
+        path: "/purchase-invoices",
+        icon: <DescriptionOutlined />,
+      },
+      {
+        text: t("sidebar.purchaseReturns"),
+        path: "/purchase-returns",
+        icon: <AssignmentReturnOutlined />,
+      },
     ],
   },
 ];
@@ -299,7 +423,10 @@ export function SideBar({ open, handleDrawerClose }) {
                       "&:hover": {
                         bgcolor: group.color,
                         color: "#fff",
-                        transform: theme.direction === "rtl" ? "translateX(-4px)" : "translateX(4px)",
+                        transform:
+                          theme.direction === "rtl"
+                            ? "translateX(-4px)"
+                            : "translateX(4px)",
                         boxShadow: "0 0 15px rgba(0,0,0,0.35)",
                         backgroundImage:
                           "linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0))",
@@ -359,7 +486,10 @@ export function SideBar({ open, handleDrawerClose }) {
                             "&:hover": {
                               bgcolor: `${group.color}aa`,
                               color: "#fff",
-                              transform: theme.direction === "rtl" ? "translateX(-6px)" : "translateX(6px)",
+                              transform:
+                                theme.direction === "rtl"
+                                  ? "translateX(-6px)"
+                                  : "translateX(6px)",
                             },
                           }}
                         >

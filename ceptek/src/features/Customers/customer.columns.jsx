@@ -38,21 +38,29 @@ export const customerColumns = (
     ),
   },
   { field: "id", headerName: "ID", width: 80 },
-  { field: "name", headerName: t("customersFeature.fullName"), flex: 1.5 },
+  { field: "name", headerName: t("customersFeature.fullName"), flex: 1.2 },
+  { field: "store_name", headerName: t("customersFeature.storeName"), flex: 1 },
   {
     field: "customer_type",
     headerName: t("customersFeature.customerType"),
-    flex: 1,
+    width: 130,
     valueGetter: (value, row) => row?.customer_types?.type_name || "N/A",
   },
   { field: "phone", headerName: t("customersFeature.phoneNumber"), width: 130 },
+  {
+    field: "tax_number",
+    headerName: t("customersFeature.taxNumber"),
+    width: 130,
+  },
   {
     field: "is_active",
     headerName: t("common.status"),
     width: 100,
     renderCell: (params) => (
       <Chip
-        label={params.row?.is_active ? t("common.active") : t("common.inactive")}
+        label={
+          params.row?.is_active ? t("common.active") : t("common.inactive")
+        }
         color={params.row?.is_active ? "success" : "default"}
         size="small"
       />

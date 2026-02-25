@@ -1,4 +1,4 @@
-import { IconButton, Stack, Checkbox } from "@mui/material";
+import { IconButton, Stack, Checkbox, Chip } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import DeleteIcon from "@mui/icons-material/Delete";
 
@@ -49,8 +49,40 @@ export const paymentColumns = (
       return `${invNum} - ${custName}`;
     },
   },
-  { field: "amount", headerName: t("common:amount"), width: 110, type: "number" },
-  { field: "notes", headerName: t("common:notes"), flex: 1.5 },
+  {
+    field: "account_name",
+    headerName: t("customerPayments:account"),
+    width: 140,
+    valueGetter: (value, row) => row?.accounts?.name || "—",
+  },
+  {
+    field: "method",
+    headerName: t("customerPayments:paymentMethod"),
+    width: 120,
+    renderCell: (params) => {
+      const methodColors = {
+        cash: "success",
+        bank: "primary",
+        check: "warning",
+      };
+      const val = params.value || "cash";
+      return (
+        <Chip
+          label={t(`customerPayments:${val}`)}
+          color={methodColors[val] || "default"}
+          size="small"
+          variant="outlined"
+        />
+      );
+    },
+  },
+  {
+    field: "amount",
+    headerName: t("common:amount"),
+    width: 110,
+    type: "number",
+  },
+  { field: "notes", headerName: t("common:notes"), flex: 1 },
   {
     field: "actions",
     headerName: t("common:actions"),
