@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 
+import { useTranslation } from "react-i18next";
 import { useAccountQuery, useAccountMutations } from "./account.hooks";
 import { accountColumns } from "./account.columns";
 import AccountForm from "./AccountForm";
@@ -18,6 +19,7 @@ import ScrollToTopButton from "../../components/ScrollToTopButton";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function AccountList() {
+  const { t } = useTranslation();
   const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -130,7 +132,7 @@ export function AccountList() {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">Financial Accounts</Typography>
+        <Typography variant="h5">{t("accountsFeature.title")}</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (
             <Button
@@ -138,18 +140,18 @@ export function AccountList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t("common.deleteSelected", { count: selectedIds.size })}
             </Button>
           )}
           <Button variant="contained" onClick={handleOpenAdd}>
-            Add Account
+            {t("common.addNew", { item: t("accountsFeature.entity") })}
           </Button>
         </Box>
       </Box>
 
       <Box mb={2}>
         <TextField
-          label="Search"
+          label={t("common.search")}
           variant="outlined"
           size="small"
           value={searchText}
@@ -161,7 +163,7 @@ export function AccountList() {
 
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load data: {error?.message || "Unknown error"}
+          {t("common.failedToLoad", { error: error?.message || t("common.unknownError") })}
         </Alert>
       )}
 
@@ -176,6 +178,7 @@ export function AccountList() {
             toggleSelect,
             rows,
             toggleSelectAll,
+            t,
           )}
           loading={isLoading || isFetching}
           paginationMode="server"
@@ -209,7 +212,7 @@ export function AccountList() {
 
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={t("common.selectedItems", { count: selectedIds.size })}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

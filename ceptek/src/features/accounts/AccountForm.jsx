@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import { accountSchema, accountDefaults } from "./account.schema";
 
 export default function AccountForm({
@@ -24,6 +25,7 @@ export default function AccountForm({
   onSubmit,
   isPending = false,
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -47,13 +49,13 @@ export default function AccountForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ fontWeight: "bold" }}>
-        {mode === "edit" ? "Edit Account" : "Add Account"}
+        {mode === "edit" ? t("common.editItem", { item: t("accountsFeature.entity") }) : t("common.addNew", { item: t("accountsFeature.entity") })}
       </DialogTitle>
 
       <DialogContent dividers>
         <Stack spacing={2} mt={1}>
           <TextField
-            label="Account Name"
+            label={t("accountsFeature.accountName")}
             {...register("name")}
             error={!!errors.name}
             helperText={errors.name?.message}
@@ -75,7 +77,7 @@ export default function AccountForm({
           </TextField>
 
           <TextField
-            label="Initial Balance"
+            label={t("accountsFeature.initialBalance")}
             type="number"
             {...register("balance")}
             error={!!errors.balance}
@@ -90,14 +92,14 @@ export default function AccountForm({
                 onChange={(e) => setValue("is_active", e.target.checked)}
               />
             }
-            label="Active"
+            label={t("common.active")}
           />
         </Stack>
       </DialogContent>
 
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -107,7 +109,7 @@ export default function AccountForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

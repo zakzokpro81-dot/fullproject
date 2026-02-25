@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import { modelSchema, modelDefaults } from "./model.schema";
 
 export default function ModelForm({
@@ -25,6 +26,8 @@ export default function ModelForm({
   brands = [],
   families = [],
 }) {
+  const { t } = useTranslation();
+
   const {
     register,
     handleSubmit,
@@ -79,7 +82,7 @@ export default function ModelForm({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth>
-      <DialogTitle>{mode === "edit" ? "Edit Model" : "Add Model"}</DialogTitle>
+      <DialogTitle>{mode === "edit" ? t("common.editItem") : t("common.addNew")}</DialogTitle>
 
       <DialogContent>
         {/* Brand */}
@@ -87,7 +90,7 @@ export default function ModelForm({
           select
           fullWidth
           margin="normal"
-          label="Brand"
+          label={t("modelsFeature.brand")}
           {...register("brand", { valueAsNumber: true })}
           error={!!errors.brand}
           helperText={errors.brand?.message}
@@ -104,7 +107,7 @@ export default function ModelForm({
           select
           fullWidth
           margin="normal"
-          label="Family"
+          label={t("modelsFeature.family")}
           {...register("family", { valueAsNumber: true })}
           error={!!errors.family}
           helperText={errors.family?.message}
@@ -121,7 +124,7 @@ export default function ModelForm({
         <TextField
           fullWidth
           margin="normal"
-          label="Model Name"
+          label={t("modelsFeature.modelName")}
           {...register("name")}
           error={!!errors.name}
           helperText={errors.name?.message}
@@ -132,7 +135,7 @@ export default function ModelForm({
         <TextField
           fullWidth
           margin="normal"
-          label="Slug"
+          label={t("modelsFeature.slug")}
           {...register("slug")}
           error={!!errors.slug}
           helperText={errors.slug?.message}
@@ -142,13 +145,13 @@ export default function ModelForm({
         {/* is_active */}
         <FormControlLabel
           control={<Switch defaultChecked {...register("is_active")} />}
-          label="Active"
+          label={t("common.active")}
         />
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -158,7 +161,7 @@ export default function ModelForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

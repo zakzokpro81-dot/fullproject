@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -38,6 +39,7 @@ export default function InvoiceItemForm({
     defaultValues: invoiceFormDefaults,
   });
 
+  const { t } = useTranslation();
   const [items, setItems] = useState([]);
   const [tempProduct, setTempProduct] = useState({
     variant_id: "",
@@ -80,13 +82,13 @@ export default function InvoiceItemForm({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Create New Invoice</DialogTitle>
+      <DialogTitle>{t("common.addNew")} {t("invoiceFeature.entity")}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={3}>
           <Stack direction="row" spacing={2}>
             <TextField
               select
-              label="Customer"
+              label={t("invoiceFeature.customer")}
               fullWidth
               {...register("customer_id")}
               error={!!errors.customer_id}
@@ -100,7 +102,7 @@ export default function InvoiceItemForm({
             </TextField>
             <TextField
               select
-              label="Status"
+              label={t("common.status")}
               fullWidth
               {...register("status_id")}
               error={!!errors.status_id}
@@ -114,7 +116,7 @@ export default function InvoiceItemForm({
             </TextField>
             <TextField
               type="date"
-              label="Date"
+              label={t("common.date")}
               fullWidth
               {...register("invoice_date")}
               error={!!errors.invoice_date}
@@ -123,13 +125,13 @@ export default function InvoiceItemForm({
             />
           </Stack>
 
-          <Divider>Invoice Items</Divider>
+          <Divider>{t("invoiceFeature.entityPlural")}</Divider>
 
           {/* Add new item */}
           <Stack direction="row" spacing={1} alignItems="center">
             <TextField
               select
-              label="Product"
+              label={t("invoiceItems.product")}
               sx={{ flex: 2 }}
               value={tempProduct.variant_id}
               onChange={(e) =>
@@ -143,7 +145,7 @@ export default function InvoiceItemForm({
               ))}
             </TextField>
             <TextField
-              label="Qty"
+              label={t("invoiceItems.qty")}
               type="number"
               value={tempProduct.qty}
               onChange={(e) =>
@@ -152,7 +154,7 @@ export default function InvoiceItemForm({
               sx={{ width: 80 }}
             />
             <TextField
-              label="Price"
+              label={t("invoiceItems.price")}
               type="number"
               value={tempProduct.price}
               onChange={(e) =>
@@ -203,13 +205,13 @@ export default function InvoiceItemForm({
           Grand Total:{" "}
           {items.reduce((sum, i) => sum + i.total_price, 0).toFixed(2)}
         </Typography>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t("common.cancel")}</Button>
         <Button
           variant="contained"
           onClick={handleSubmit(handleFormSubmit)}
           disabled={items.length === 0 || isPending}
         >
-          {isPending ? "Saving..." : "Save Invoice"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

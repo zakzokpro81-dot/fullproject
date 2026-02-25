@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -23,6 +24,7 @@ export default function SupplierTypeForm({
   onSubmit,
   isPending = false,
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -44,11 +46,11 @@ export default function SupplierTypeForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {mode === "edit" ? "Edit Supplier Type" : "Add Supplier Type"}
+        {mode === "edit" ? t("common.editItem") : t("common.addNew")}
       </DialogTitle>
       <DialogContent dividers>
         <TextField
-          label="Type Name"
+          label={t("supplierTypes.typeName")}
           fullWidth
           margin="normal"
           {...register("type_name")}
@@ -58,7 +60,7 @@ export default function SupplierTypeForm({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -68,7 +70,7 @@ export default function SupplierTypeForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

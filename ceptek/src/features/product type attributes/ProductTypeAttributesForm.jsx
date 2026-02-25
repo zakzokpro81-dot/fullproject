@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -26,6 +27,7 @@ export default function ProductTypeAttributesForm({
   productTypes = [],
   attributes = [],
 }) {
+  const { t } = useTranslation();
   const {
     control,
     handleSubmit,
@@ -51,8 +53,8 @@ export default function ProductTypeAttributesForm({
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
         {mode === "edit"
-          ? "Edit Product Type Attribute"
-          : "Add Product Type Attribute"}
+          ? t("common.editItem", { item: t("productTypeAttributes.entity") })
+          : t("common.addNew")}
       </DialogTitle>
 
       <DialogContent>
@@ -71,7 +73,7 @@ export default function ProductTypeAttributesForm({
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Product Type"
+                    label={t("productTypeAttributes.productType")}
                     error={!!errors.product_type_id}
                     helperText={errors.product_type_id?.message}
                   />
@@ -94,7 +96,7 @@ export default function ProductTypeAttributesForm({
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Attribute"
+                    label={t("productTypeAttributes.attribute")}
                     error={!!errors.attribute_id}
                     helperText={errors.attribute_id?.message}
                   />
@@ -106,13 +108,13 @@ export default function ProductTypeAttributesForm({
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t("common.cancel")}</Button>
         <Button
           variant="contained"
           onClick={handleSubmit(onSubmit)}
           disabled={isPending}
         >
-          {mode === "edit" ? "Update" : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

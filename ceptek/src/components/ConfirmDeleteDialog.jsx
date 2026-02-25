@@ -5,6 +5,7 @@ import {
   DialogActions,
   Button,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 export default function ConfirmDeleteDialog({
   open,
@@ -13,16 +14,16 @@ export default function ConfirmDeleteDialog({
   onConfirm,
   isPending = false,
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: "bold" }}>Confirm Delete</DialogTitle>
+      <DialogTitle sx={{ fontWeight: "bold" }}>{t("common.confirmDelete")}</DialogTitle>
       <DialogContent>
-        Are you sure you want to delete <strong>{itemName}</strong>? This action
-        cannot be undone.
+        {t("common.confirmDeleteMsg", { item: itemName })}
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -30,7 +31,7 @@ export default function ConfirmDeleteDialog({
           onClick={onConfirm}
           disabled={isPending}
         >
-          {isPending ? "Deleting..." : "Delete"}
+          {isPending ? t("common.deleting") : t("common.delete")}
         </Button>
       </DialogActions>
     </Dialog>

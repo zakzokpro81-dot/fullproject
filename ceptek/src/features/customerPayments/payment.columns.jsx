@@ -9,6 +9,7 @@ export const paymentColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -36,10 +37,10 @@ export const paymentColumns = (
       />
     ),
   },
-  { field: "date", headerName: "Date", width: 120 },
+  { field: "date", headerName: t("common:date"), width: 120 },
   {
     field: "invoice_info",
-    headerName: "Invoice / Customer",
+    headerName: `${t("customerPayments:invoice")} / ${t("customerPayments:customer")}`,
     flex: 1.5,
     valueGetter: (value, row) => {
       const inv = row?.invoices;
@@ -48,11 +49,11 @@ export const paymentColumns = (
       return `${invNum} - ${custName}`;
     },
   },
-  { field: "amount", headerName: "Amount", width: 110, type: "number" },
-  { field: "notes", headerName: "Notes", flex: 1.5 },
+  { field: "amount", headerName: t("common:amount"), width: 110, type: "number" },
+  { field: "notes", headerName: t("common:notes"), flex: 1.5 },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common:actions"),
     width: 120,
     sortable: false,
     filterable: false,

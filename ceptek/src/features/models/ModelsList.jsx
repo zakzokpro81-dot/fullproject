@@ -8,6 +8,7 @@ import {
   Paper,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import { useTranslation } from "react-i18next";
 
 import { useModelQuery, useModelMutations } from "./model.hooks";
 import { modelColumns } from "./model.columns";
@@ -18,6 +19,8 @@ import ScrollToTopButton from "../../components/ScrollToTopButton";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function ModelsList() {
+  const { t } = useTranslation();
+
   // ── UI state only ──
   const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
@@ -134,7 +137,7 @@ export function ModelsList() {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">Models</Typography>
+        <Typography variant="h5">{t("modelsFeature.title")}</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (
             <Button
@@ -142,11 +145,11 @@ export function ModelsList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t("common.deleteSelected")} ({selectedIds.size})
             </Button>
           )}
           <Button variant="contained" onClick={handleOpenAdd}>
-            Add Model
+            {t("common.addNew")}
           </Button>
         </Box>
       </Box>
@@ -154,7 +157,7 @@ export function ModelsList() {
       {/* ── Search Field ── */}
       <Box mb={2}>
         <TextField
-          label="Search"
+          label={t("common.search")}
           variant="outlined"
           size="small"
           value={searchText}
@@ -167,7 +170,7 @@ export function ModelsList() {
       {/* ── Error Banner ── */}
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load data: {error?.message || "Unknown error"}
+          {t("common.failedToLoad")}: {error?.message || t("common.unknownError")}
         </Alert>
       )}
 
@@ -183,6 +186,7 @@ export function ModelsList() {
             toggleSelect,
             rows,
             toggleSelectAll,
+            t,
           )}
           loading={isLoading || isFetching}
           paginationMode="server"
@@ -221,7 +225,7 @@ export function ModelsList() {
       {/* ── Delete Confirmation (bulk) ── */}
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={`${selectedIds.size} ${t("common.selectedItems")}`}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

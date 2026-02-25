@@ -15,6 +15,7 @@ export const employeeAdvanceColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -44,28 +45,28 @@ export const employeeAdvanceColumns = (
   },
   {
     field: "employee_name",
-    headerName: "Employee",
+    headerName: t("employeeAdvances.employee"),
     flex: 1,
     valueGetter: (value, row) => {
       const emp = row?.employees;
       return emp ? `${emp.first_name} ${emp.last_name}` : "";
     },
   },
-  { field: "amount", headerName: "Amount", width: 130, type: "number" },
+  { field: "amount", headerName: t("common.amount"), width: 130, type: "number" },
   {
     field: "remaining_amount",
-    headerName: "Remaining",
+    headerName: t("employeeAdvances.remaining"),
     width: 130,
     type: "number",
   },
-  { field: "reason", headerName: "Reason", flex: 1 },
+  { field: "reason", headerName: t("employeeAdvances.reason"), flex: 1 },
   {
     field: "status",
-    headerName: "Status",
+    headerName: t("common.status"),
     width: 120,
     renderCell: (params) => (
       <Chip
-        label={params.value}
+        label={t(`employeeAdvances.${params.value}`)}
         size="small"
         color={statusColors[params.value] || "default"}
       />
@@ -73,13 +74,13 @@ export const employeeAdvanceColumns = (
   },
   {
     field: "account_name",
-    headerName: "Account",
+    headerName: t("employeeAdvances.account"),
     width: 150,
     valueGetter: (value, row) => row?.accounts?.name || "",
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

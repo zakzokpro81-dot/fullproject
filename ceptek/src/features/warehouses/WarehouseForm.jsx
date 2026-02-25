@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -22,6 +23,8 @@ export default function WarehouseForm({
   onSubmit,
   isPending,
 }) {
+  const { t } = useTranslation(["warehousesFeature", "common"]);
+
   const {
     register,
     handleSubmit,
@@ -45,13 +48,13 @@ export default function WarehouseForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {mode === "edit" ? "Edit Warehouse" : "Add Warehouse"}
+        {mode === "edit" ? t("common:editItem", { item: t("warehousesFeature:entity") }) : t("common:addNew")}
       </DialogTitle>
 
       <DialogContent dividers>
         <TextField
           {...register("name")}
-          label="Name"
+          label={t("common:name")}
           fullWidth
           margin="normal"
           error={!!errors.name}
@@ -60,7 +63,7 @@ export default function WarehouseForm({
 
         <TextField
           {...register("location")}
-          label="Location"
+          label={t("warehousesFeature:location")}
           fullWidth
           margin="normal"
           error={!!errors.location}
@@ -74,13 +77,13 @@ export default function WarehouseForm({
               onChange={(e) => setValue("is_active", e.target.checked)}
             />
           }
-          label="Active"
+          label={t("common:active")}
         />
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common:cancel")}
         </Button>
         <Button
           variant="contained"
@@ -90,7 +93,7 @@ export default function WarehouseForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common:saving") : t("common:save")}
         </Button>
       </DialogActions>
     </Dialog>

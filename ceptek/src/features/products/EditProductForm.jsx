@@ -28,8 +28,10 @@ import {
   adjustProductStock,
 } from "./product.api";
 import { StockAdjustmentDialog } from "./StockAdjustmentDialog";
+import { useTranslation } from "react-i18next";
 
 const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [isReady, setIsReady] = useState(false);
   // State for stock adjustment dialog
@@ -196,7 +198,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle sx={{ fontWeight: "bold" }}>Edit Product</DialogTitle>
+      <DialogTitle sx={{ fontWeight: "bold" }}>{t("common.editItem")}</DialogTitle>
       <DialogContent dividers>
         {!isReady ? (
           <Box sx={{ display: "flex", justifyContent: "center", p: 4 }}>
@@ -205,7 +207,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
         ) : (
           <>
             <TextField
-              label="Category"
+              label={t("productsFeature.mainCategory")}
               fullWidth
               margin="normal"
               // Use watch to ensure value set in useEffect is displayed
@@ -213,14 +215,14 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
               disabled
             />
             <TextField
-              label="Product Type"
+              label={t("productsFeature.productType")}
               fullWidth
               margin="normal"
               value={product?.product_type?.name || "N/A"}
               disabled
             />
             <TextField
-              label="Model"
+              label={t("productsFeature.productName")}
               fullWidth
               margin="normal"
               value={product?.name || ""}
@@ -269,7 +271,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Sell Price"
+                  label={t("productsFeature.sellPrice")}
                   type="number"
                   margin="normal"
                   fullWidth
@@ -282,7 +284,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Cost Price"
+                  label={t("productsFeature.costPrice")}
                   type="number"
                   margin="normal"
                   fullWidth
@@ -310,7 +312,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Current Stock"
+                    label={t("productsFeature.stock")}
                     type="number"
                     margin="normal"
                     fullWidth
@@ -347,7 +349,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Description"
+                  label={t("productsFeature.generalNotes")}
                   multiline
                   rows={2}
                   margin="normal"
@@ -362,7 +364,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
               render={({ field }) => (
                 <FormControlLabel
                   control={<Switch {...field} checked={!!field.value} />}
-                  label="Active"
+                  label={t("common.active")}
                 />
               )}
             />
@@ -396,7 +398,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
                   renderInput={(p) => (
                     <TextField
                       {...p}
-                      label="Select New Warehouse"
+                      label={t("productsFeature.targetWarehouse")}
                       margin="normal"
                     />
                   )}
@@ -408,7 +410,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} color="inherit">
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -416,7 +418,7 @@ const EditProductForm = ({ open, onClose, product, showSnackbar }) => {
           disabled={mutation.isPending}
           sx={{ minWidth: 100 }}
         >
-          {mutation.isPending ? <CircularProgress size={24} /> : "Update"}
+          {mutation.isPending ? <CircularProgress size={24} /> : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

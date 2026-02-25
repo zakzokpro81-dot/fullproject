@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -30,6 +31,7 @@ export default function StockMovementForm({
   warehouses = [],
   movementTypes = [],
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -85,7 +87,7 @@ export default function StockMovementForm({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Record Stock Movement</DialogTitle>
+      <DialogTitle>{t("stockMovements.title")}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit(handleFormSubmit)}>
         <DialogContent dividers>
           <Stack spacing={3}>
@@ -121,7 +123,7 @@ export default function StockMovementForm({
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="Search Product"
+                      label={t("stockMovements.searchByProduct")}
                       fullWidth
                       error={!!error}
                       helperText={error?.message}
@@ -181,7 +183,7 @@ export default function StockMovementForm({
 
             <TextField
               select
-              label="Warehouse"
+              label={t("stockMovements.warehouse")}
               {...register("warehouse_id")}
               error={!!errors.warehouse_id}
               fullWidth
@@ -197,7 +199,7 @@ export default function StockMovementForm({
 
             <TextField
               select
-              label="Movement Type"
+              label={t("stockMovements.movementType")}
               {...register("movement_type_id")}
               error={!!errors.movement_type_id}
               fullWidth
@@ -212,7 +214,7 @@ export default function StockMovementForm({
             </TextField>
 
             <TextField
-              label="Quantity"
+              label={t("stockMovements.qty")}
               type="number"
               {...register("quantity")}
               error={!!errors.quantity}
@@ -223,7 +225,7 @@ export default function StockMovementForm({
             />
 
             <TextField
-              label="Unit Cost"
+              label={t("stockMovements.unitCost")}
               type="number"
               {...register("unit_cost")}
               error={!!errors.unit_cost}
@@ -231,7 +233,7 @@ export default function StockMovementForm({
             />
 
             <TextField
-              label="Reference Note"
+              label={t("stockMovements.referenceNote")}
               {...register("reference_type")}
               fullWidth
             />
@@ -240,10 +242,10 @@ export default function StockMovementForm({
 
         <DialogActions>
           <Button onClick={onClose} color="inherit">
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button type="submit" variant="contained" disabled={isPending}>
-            {isPending ? "Saving..." : "Save Movement"}
+            {isPending ? t("common.saving") : t("common.save")}
           </Button>
         </DialogActions>
       </Box>

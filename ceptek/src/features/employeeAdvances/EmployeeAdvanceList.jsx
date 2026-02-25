@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
@@ -21,6 +22,7 @@ import ScrollToTopButton from "../../components/ScrollToTopButton";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function EmployeeAdvanceList() {
+  const { t } = useTranslation();
   const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -119,7 +121,7 @@ export function EmployeeAdvanceList() {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">Employee Advances</Typography>
+        <Typography variant="h5">{t("employeeAdvances.title")}</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (
             <Button
@@ -127,17 +129,17 @@ export function EmployeeAdvanceList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t("common.deleteSelected")} ({selectedIds.size})
             </Button>
           )}
           <Button variant="contained" onClick={handleOpenAdd}>
-            Add Advance
+            {t("common.addNew")}
           </Button>
         </Box>
       </Box>
       <Box mb={2}>
         <TextField
-          label="Search"
+          label={t("common.search")}
           variant="outlined"
           size="small"
           value={searchText}
@@ -148,7 +150,7 @@ export function EmployeeAdvanceList() {
       </Box>
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load data: {error?.message || "Unknown error"}
+          {t("common.failedToLoad")}: {error?.message || t("common.unknownError")}
         </Alert>
       )}
       <Paper sx={{ height: 650, width: "100%" }}>
@@ -162,6 +164,7 @@ export function EmployeeAdvanceList() {
             toggleSelect,
             rows,
             toggleSelectAll,
+            t,
           )}
           loading={isLoading || isFetching}
           paginationMode="server"
@@ -194,7 +197,7 @@ export function EmployeeAdvanceList() {
       />
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={`${selectedIds.size} ${t("common.selectedItems")}`}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

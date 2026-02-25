@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
@@ -6,6 +7,7 @@ import { invoiceItemColumns } from "./invoiceItem.columns";
 import InvoiceItemForm from "./InvoiceItemForm";
 
 export function InvoiceItemsList({ items, onItemsChange }) {
+  const { t } = useTranslation();
   const [openForm, setOpenForm] = useState(false);
 
   const handleDelete = (id) => {
@@ -44,20 +46,20 @@ export function InvoiceItemsList({ items, onItemsChange }) {
         alignItems="center"
         sx={{ mb: 2 }}
       >
-        <Typography variant="h6">Invoice Items</Typography>
+        <Typography variant="h6">{t("invoiceFeature.entityPlural")}</Typography>
         <Button
           variant="outlined"
           startIcon={<AddIcon />}
           onClick={() => setOpenForm(true)}
         >
-          Add Item
+          {t("common.addNew")}
         </Button>
       </Stack>
 
       <Box sx={{ height: 300, width: "100%", bgcolor: "background.paper" }}>
         <DataGrid
           rows={items}
-          columns={invoiceItemColumns(handleDelete)}
+          columns={invoiceItemColumns(handleDelete, t)}
           processRowUpdate={processRowUpdate}
           hideFooter
           disableRowSelectionOnClick

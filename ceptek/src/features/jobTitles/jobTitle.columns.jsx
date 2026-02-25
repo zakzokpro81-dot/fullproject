@@ -9,6 +9,7 @@ export const jobTitleColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -36,22 +37,22 @@ export const jobTitleColumns = (
       />
     ),
   },
-  { field: "title", headerName: "Job Title", flex: 1 },
+  { field: "title", headerName: t("jobTitles.jobTitle"), flex: 1 },
   {
     field: "department_name",
-    headerName: "Department",
+    headerName: t("jobTitles.department"),
     flex: 1,
     valueGetter: (value, row) => row?.departments?.name || "",
   },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common.active"),
     width: 120,
-    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+    renderCell: (params) => (params.value ? t("common.active") : t("common.inactive")),
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

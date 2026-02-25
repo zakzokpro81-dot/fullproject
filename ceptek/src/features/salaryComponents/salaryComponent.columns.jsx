@@ -9,6 +9,7 @@ export const salaryComponentColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -36,14 +37,14 @@ export const salaryComponentColumns = (
       />
     ),
   },
-  { field: "name", headerName: "Component Name", flex: 1 },
+  { field: "name", headerName: t("salaryComponents.componentName"), flex: 1 },
   {
     field: "type",
-    headerName: "Type",
+    headerName: t("common.type"),
     width: 140,
     renderCell: (params) => (
       <Chip
-        label={params.value}
+        label={params.value === "allowance" ? t("salaryComponents.allowance") : t("salaryComponents.deduction")}
         size="small"
         color={params.value === "allowance" ? "success" : "error"}
       />
@@ -51,13 +52,13 @@ export const salaryComponentColumns = (
   },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common.active"),
     width: 120,
-    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+    renderCell: (params) => (params.value ? t("common.active") : t("common.inactive")),
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

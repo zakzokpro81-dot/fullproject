@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
@@ -20,6 +21,7 @@ import ScrollToTopButton from "../../components/ScrollToTopButton";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function SupplierTypeList() {
+  const { t } = useTranslation();
   const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -115,7 +117,7 @@ export function SupplierTypeList() {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">Supplier Types</Typography>
+        <Typography variant="h5">{t("supplierTypes.title")}</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (
             <Button
@@ -123,17 +125,17 @@ export function SupplierTypeList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t("common.deleteSelected")} ({selectedIds.size})
             </Button>
           )}
           <Button variant="contained" onClick={handleOpenAdd}>
-            Add Supplier Type
+            {t("common.addNew")}
           </Button>
         </Box>
       </Box>
       <Box mb={2}>
         <TextField
-          label="Search"
+          label={t("common.search")}
           variant="outlined"
           size="small"
           value={searchText}
@@ -144,7 +146,7 @@ export function SupplierTypeList() {
       </Box>
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load data: {error?.message || "Unknown error"}
+          {t("common.failedToLoad")}: {error?.message || t("common.unknownError")}
         </Alert>
       )}
       <Paper sx={{ height: 650, width: "100%" }}>
@@ -158,6 +160,7 @@ export function SupplierTypeList() {
             toggleSelect,
             rows,
             toggleSelectAll,
+            t,
           )}
           loading={isLoading || isFetching}
           paginationMode="server"
@@ -188,7 +191,7 @@ export function SupplierTypeList() {
       />
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={`${selectedIds.size} ${t("common.selectedItems")}`}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

@@ -9,6 +9,7 @@ export const customerTypeColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -43,12 +44,12 @@ export const customerTypeColumns = (
   },
   {
     field: "type_name",
-    headerName: "Type Name",
+    headerName: t("customerTypesFeature.typeName"),
     flex: 1,
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

@@ -11,6 +11,7 @@ export const payrollColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -40,36 +41,36 @@ export const payrollColumns = (
   },
   {
     field: "employee_name",
-    headerName: "Employee",
+    headerName: t("payroll:employee"),
     flex: 1,
     valueGetter: (value, row) => {
       const emp = row?.employees;
       return emp ? `${emp.first_name} ${emp.last_name}` : "";
     },
   },
-  { field: "period", headerName: "Period", width: 120 },
+  { field: "period", headerName: t("payroll:period"), width: 120 },
   {
     field: "base_salary",
-    headerName: "Base Salary",
+    headerName: t("payroll:baseSalary"),
     width: 130,
     type: "number",
   },
   {
     field: "total_allowances",
-    headerName: "Allowances",
+    headerName: t("payroll:allowances"),
     width: 130,
     type: "number",
   },
   {
     field: "total_deductions",
-    headerName: "Deductions",
+    headerName: t("payroll:deductions"),
     width: 130,
     type: "number",
   },
-  { field: "net_salary", headerName: "Net Salary", width: 130, type: "number" },
+  { field: "net_salary", headerName: t("payroll:netSalary"), width: 130, type: "number" },
   {
     field: "status",
-    headerName: "Status",
+    headerName: t("common:status"),
     width: 120,
     renderCell: (params) => (
       <Chip
@@ -81,7 +82,7 @@ export const payrollColumns = (
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common:actions"),
     width: 160,
     sortable: false,
     filterable: false,

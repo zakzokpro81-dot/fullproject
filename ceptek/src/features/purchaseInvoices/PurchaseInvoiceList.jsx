@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Button, Dialog } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
@@ -14,6 +15,7 @@ import { useMessageDialog } from "../../hooks/useMessageDialog";
 import MessageDialog from "../../components/MessageDialog";
 
 export default function PurchaseInvoiceList() {
+  const { t } = useTranslation();
   const [formOpen, setFormOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -116,6 +118,7 @@ export default function PurchaseInvoiceList() {
     toggleSelect,
     rows,
     toggleSelectAll,
+    t,
   );
 
   return (
@@ -129,7 +132,7 @@ export default function PurchaseInvoiceList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t("common.deleteSelected")} ({selectedIds.size})
             </Button>
           )}
           <Button
@@ -140,7 +143,7 @@ export default function PurchaseInvoiceList() {
               setFormOpen(true);
             }}
           >
-            Add Purchase Invoice
+            {t("common.addNew")} {t("purchaseInvoices.entity")}
           </Button>
         </Box>
       </Box>
@@ -176,13 +179,13 @@ export default function PurchaseInvoiceList() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleConfirmDelete}
-        title="Delete Purchase Invoice"
+        title={`${t("common.deleteSelected")} ${t("purchaseInvoices.entity")}`}
         message={`Are you sure you want to delete invoice "${deleteTarget?.invoice_number || deleteTarget?.id}"?`}
       />
 
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={`${selectedIds.size} ${t("common.selectedItems")}`}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

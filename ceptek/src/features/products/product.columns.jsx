@@ -9,6 +9,7 @@ export const productColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -41,45 +42,45 @@ export const productColumns = (
   },
   {
     field: "display_name",
-    headerName: "Display Name",
+    headerName: t("productsFeature.displayName"),
     flex: 2,
   },
 
   {
     field: "name",
-    headerName: "Product Name",
+    headerName: t("productsFeature.productName"),
     flex: 1,
     minWidth: 150,
   },
   {
     field: "product_type",
-    headerName: "Product Type",
+    headerName: t("productsFeature.productType"),
     width: 120,
     valueGetter: (value, row) => row?.product_type?.name || "N/A",
   },
   {
     field: "sell_price",
-    headerName: "Sell Price",
+    headerName: t("productsFeature.sellPrice"),
     width: 80,
   },
   {
     field: "cost_price",
-    headerName: "Cost Price",
+    headerName: t("productsFeature.costPrice"),
     width: 80,
   },
   {
     field: "stock",
-    headerName: "Stock",
+    headerName: t("productsFeature.stock"),
     width: 70,
   },
   {
     field: "description",
-    headerName: "Description",
+    headerName: t("productsFeature.generalNotes"),
     width: 100,
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     renderCell: (params) => (
       <Stack direction="row" spacing={1}>

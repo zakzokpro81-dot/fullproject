@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 import { useCustomerQuery, useCustomerMutations } from "./customer.hooks";
 import { getCustomerTypes } from "../customerTypes/customerType.api";
@@ -25,6 +26,7 @@ import ScrollToTopButton from "../../components/ScrollToTopButton";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function CustomerList() {
+  const { t } = useTranslation();
   const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -143,7 +145,7 @@ export function CustomerList() {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">Customers</Typography>
+        <Typography variant="h5">{t("customersFeature.title")}</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (
             <Button
@@ -151,18 +153,18 @@ export function CustomerList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t("common.deleteSelected")} ({selectedIds.size})
             </Button>
           )}
           <Button variant="contained" onClick={handleOpenAdd}>
-            Add Customer
+            {t("common.addNew")}
           </Button>
         </Box>
       </Box>
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mb={2}>
         <TextField
-          label="Search"
+          label={t("common.search")}
           variant="outlined"
           size="small"
           value={searchText}
@@ -189,7 +191,7 @@ export function CustomerList() {
 
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load data: {error?.message || "Unknown error"}
+          {t("common.failedToLoad")}: {error?.message || t("common.unknownError")}
         </Alert>
       )}
 
@@ -204,6 +206,7 @@ export function CustomerList() {
             toggleSelect,
             rows,
             toggleSelectAll,
+            t,
           )}
           loading={isLoading || isFetching}
           paginationMode="server"
@@ -238,7 +241,7 @@ export function CustomerList() {
 
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={`${selectedIds.size} ${t("common.selectedItems")}`}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

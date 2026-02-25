@@ -9,6 +9,7 @@ export const warehouseStockColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -38,36 +39,36 @@ export const warehouseStockColumns = (
   },
   {
     field: "product",
-    headerName: "Product",
+    headerName: t("warehouseStock.product"),
     flex: 1,
     valueGetter: (value, row) => row?.products?.name || "",
   },
   {
     field: "sku",
-    headerName: "SKU",
+    headerName: t("warehouseStock.sku"),
     flex: 1,
     valueGetter: (value, row) => row?.products?.sku || "",
   },
   {
     field: "brand",
-    headerName: "Brand",
+    headerName: t("warehouseStock.brand"),
     flex: 1,
     valueGetter: (value, row) => row?.products?.brands?.name || "",
   },
   {
     field: "warehouse",
-    headerName: "Warehouse",
+    headerName: t("warehouseStock.warehouse"),
     flex: 1,
     valueGetter: (value, row) => row?.warehouses?.name || "",
   },
   {
     field: "quantity",
-    headerName: "Quantity",
+    headerName: t("warehouseStock.quantity"),
     width: 120,
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

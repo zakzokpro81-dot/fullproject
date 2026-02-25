@@ -15,6 +15,7 @@ export const employeeColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -42,49 +43,56 @@ export const employeeColumns = (
       />
     ),
   },
-  { field: "first_name", headerName: "First Name", flex: 1 },
-  { field: "last_name", headerName: "Last Name", flex: 1 },
-  { field: "email", headerName: "Email", flex: 1 },
-  { field: "phone", headerName: "Phone", width: 140 },
+  { field: "first_name", headerName: t("employees.firstName"), flex: 1 },
+  { field: "last_name", headerName: t("employees.lastName"), flex: 1 },
+  { field: "email", headerName: t("common.email"), flex: 1 },
+  { field: "phone", headerName: t("common.phone"), width: 140 },
   {
     field: "department_name",
-    headerName: "Department",
+    headerName: t("employees.department"),
     flex: 1,
     valueGetter: (value, row) => row?.departments?.name || "",
   },
   {
     field: "job_title_name",
-    headerName: "Job Title",
+    headerName: t("employees.jobTitle"),
     flex: 1,
     valueGetter: (value, row) => row?.job_titles?.title || "",
   },
   {
     field: "base_salary",
-    headerName: "Base Salary",
+    headerName: t("employees.baseSalary"),
     width: 130,
     type: "number",
   },
   {
     field: "employment_status",
-    headerName: "Status",
+    headerName: t("employees.employmentStatus"),
     width: 130,
-    renderCell: (params) => (
-      <Chip
-        label={params.value}
-        size="small"
-        color={statusColors[params.value] || "default"}
-      />
-    ),
+    renderCell: (params) => {
+      const statusLabels = {
+        active: t("employees.statusActive"),
+        on_leave: t("employees.statusOnLeave"),
+        terminated: t("employees.statusTerminated"),
+      };
+      return (
+        <Chip
+          label={statusLabels[params.value] || params.value}
+          size="small"
+          color={statusColors[params.value] || "default"}
+        />
+      );
+    },
   },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common.active"),
     width: 100,
-    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+    renderCell: (params) => (params.value ? t("common.active") : t("common.inactive")),
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

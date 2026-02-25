@@ -2,6 +2,7 @@
 // Families list page — thin UI shell (named export)
 
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
@@ -32,6 +33,7 @@ export function FamilyList() {
   const [openDeleteSelected, setOpenDeleteSelected] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [mode, setMode] = useState("add"); // "add" | "edit"
+  const { t } = useTranslation(["families", "common"]);
 
   // ── Close form helper (referenced by mutations hook) ──
   function handleCloseForm() {
@@ -141,7 +143,7 @@ export function FamilyList() {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">Families</Typography>
+        <Typography variant="h5">{t("families:title")}</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (
             <Button
@@ -149,11 +151,11 @@ export function FamilyList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t("common:deleteSelected")} ({selectedIds.size})
             </Button>
           )}
           <Button variant="contained" onClick={handleOpenAdd}>
-            Add Family
+            {t("common:addNew")}
           </Button>
         </Box>
       </Box>
@@ -161,7 +163,7 @@ export function FamilyList() {
       {/* ── Search Field ── */}
       <Box mb={2}>
         <TextField
-          label="Search"
+          label={t("common:search")}
           variant="outlined"
           size="small"
           value={searchText}
@@ -174,7 +176,7 @@ export function FamilyList() {
       {/* ── Error Banner ── */}
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load data: {error?.message || "Unknown error"}
+          {t("common:failedToLoad")}: {error?.message || t("common:unknownError")}
         </Alert>
       )}
 
@@ -190,6 +192,7 @@ export function FamilyList() {
             toggleSelect,
             rows,
             toggleSelectAll,
+            t,
           )}
           loading={isLoading || isFetching}
           paginationMode="server"
@@ -228,7 +231,7 @@ export function FamilyList() {
       {/* ── Delete Confirmation (bulk) ── */}
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={`${selectedIds.size} ${t("common:selectedItems")}`}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

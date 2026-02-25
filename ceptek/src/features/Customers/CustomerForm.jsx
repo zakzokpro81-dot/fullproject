@@ -14,6 +14,7 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import { customerSchema, customerDefaults } from "./customer.schema";
 
 export default function CustomerForm({
@@ -25,6 +26,7 @@ export default function CustomerForm({
   isPending = false,
   customerTypes = [],
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -48,13 +50,13 @@ export default function CustomerForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ fontWeight: "bold" }}>
-        {mode === "edit" ? "Edit Customer" : "Add Customer"}
+        {mode === "edit" ? t("common.editItem") : t("common.addNew")}
       </DialogTitle>
 
       <DialogContent dividers>
         <Stack spacing={2} mt={1}>
           <TextField
-            label="Full Name"
+            label={t("customersFeature.fullName")}
             {...register("name")}
             error={!!errors.name}
             helperText={errors.name?.message}
@@ -62,20 +64,20 @@ export default function CustomerForm({
             margin="normal"
           />
 
-          <TextField label="Store Name" {...register("store_name")} fullWidth />
+          <TextField label={t("customersFeature.storeName")} {...register("store_name")} fullWidth />
 
           <TextField
-            label="Email Address"
+            label={t("customersFeature.emailAddress")}
             {...register("email")}
             error={!!errors.email}
             helperText={errors.email?.message}
             fullWidth
           />
 
-          <TextField label="Phone Number" {...register("phone")} fullWidth />
+          <TextField label={t("customersFeature.phoneNumber")} {...register("phone")} fullWidth />
 
           <TextField
-            label="Address"
+            label={t("common.address")}
             {...register("address")}
             fullWidth
             multiline
@@ -84,7 +86,7 @@ export default function CustomerForm({
 
           <TextField
             select
-            label="Customer Type"
+            label={t("customersFeature.customerType")}
             {...register("customer_type_id")}
             error={!!errors.customer_type_id}
             helperText={errors.customer_type_id?.message}
@@ -106,14 +108,14 @@ export default function CustomerForm({
                 onChange={(e) => setValue("is_active", e.target.checked)}
               />
             }
-            label="Active"
+            label={t("common.active")}
           />
         </Stack>
       </DialogContent>
 
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -123,7 +125,7 @@ export default function CustomerForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

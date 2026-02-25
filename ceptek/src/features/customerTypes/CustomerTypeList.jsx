@@ -8,6 +8,7 @@ import {
   Paper,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import { useTranslation } from "react-i18next";
 
 import {
   useCustomerTypeQuery,
@@ -21,6 +22,7 @@ import ScrollToTopButton from "../../components/ScrollToTopButton";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function CustomerTypeList() {
+  const { t } = useTranslation();
   const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -133,7 +135,7 @@ export function CustomerTypeList() {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">Customer Types</Typography>
+        <Typography variant="h5">{t("customerTypesFeature.title")}</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (
             <Button
@@ -141,18 +143,18 @@ export function CustomerTypeList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t("common.deleteSelected")} ({selectedIds.size})
             </Button>
           )}
           <Button variant="contained" onClick={handleOpenAdd}>
-            Add Customer Type
+            {t("common.addNew")} {t("customerTypesFeature.entity")}
           </Button>
         </Box>
       </Box>
 
       <Box mb={2}>
         <TextField
-          label="Search"
+          label={t("common.search")}
           variant="outlined"
           size="small"
           value={searchText}
@@ -164,7 +166,7 @@ export function CustomerTypeList() {
 
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load data: {error?.message || "Unknown error"}
+          {t("common.failedToLoad")}: {error?.message || t("common.unknownError")}
         </Alert>
       )}
 
@@ -179,6 +181,7 @@ export function CustomerTypeList() {
             toggleSelect,
             rows,
             toggleSelectAll,
+            t,
           )}
           loading={isLoading || isFetching}
           paginationMode="server"
@@ -212,7 +215,7 @@ export function CustomerTypeList() {
 
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={`${selectedIds.size} ${t("common.selectedItems")}`}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

@@ -9,6 +9,7 @@ export const departmentColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -36,16 +37,16 @@ export const departmentColumns = (
       />
     ),
   },
-  { field: "name", headerName: "Department Name", flex: 1 },
+  { field: "name", headerName: t("departments.departmentName"), flex: 1 },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common.active"),
     width: 120,
-    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+    renderCell: (params) => (params.value ? t("common.active") : t("common.inactive")),
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

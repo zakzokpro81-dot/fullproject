@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Box, Button, Typography, Paper } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
+import { useTranslation } from "react-i18next";
 
 import { orderColumns } from "./order.columns";
 import OrderForm from "./OrderForm";
@@ -16,6 +17,7 @@ import MessageDialog from "../../components/MessageDialog";
 import ScrollToTopButton from "../../components/ScrollToTopButton";
 
 export function OrderList() {
+  const { t } = useTranslation();
   const [openForm, setOpenForm] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [warehouseId, setWarehouseId] = useState(null);
@@ -37,14 +39,14 @@ export function OrderList() {
       {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
         <Typography variant="h5" fontWeight="bold">
-          Sales Orders Management
+          {t("ordersFeature.title")}
         </Typography>
         <Button
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => setOpenForm(true)}
         >
-          Create New Order
+          {t("common.addNew", { item: t("ordersFeature.entity") })}
         </Button>
       </Box>
 
@@ -52,7 +54,7 @@ export function OrderList() {
       <Paper sx={{ height: 600, width: "100%" }}>
         <DataGrid
           rows={rows}
-          columns={orderColumns}
+          columns={orderColumns(t)}
           loading={isLoading}
           pageSizeOptions={[10, 20]}
           initialState={{

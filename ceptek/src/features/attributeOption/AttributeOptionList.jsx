@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
@@ -24,6 +25,8 @@ import ScrollToTopButton from "../../components/ScrollToTopButton";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function AttributeOptionList() {
+  const { t } = useTranslation();
+
   // --- UI State ---
   const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
@@ -147,6 +150,7 @@ export function AttributeOptionList() {
     toggleSelect,
     rows,
     toggleSelectAll,
+    t,
   );
 
   return (
@@ -158,7 +162,7 @@ export function AttributeOptionList() {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">Attribute Options</Typography>
+        <Typography variant="h5">{t("attributeOptions.title")}</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (
             <Button
@@ -166,11 +170,11 @@ export function AttributeOptionList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t("common.deleteSelected")} ({selectedIds.size})
             </Button>
           )}
           <Button variant="contained" onClick={handleOpenAdd}>
-            Add Attribute Option
+            {t("common.addNew")}
           </Button>
         </Box>
       </Box>
@@ -180,7 +184,7 @@ export function AttributeOptionList() {
         <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
           <TextField
             select
-            label="Filter by Attribute"
+            label={t("attributeOptions.filterByAttribute")}
             size="small"
             sx={{ minWidth: 200 }}
             value={attributeId}
@@ -197,7 +201,7 @@ export function AttributeOptionList() {
             ))}
           </TextField>
           <TextField
-            label="Search"
+            label={t("common.search")}
             variant="outlined"
             size="small"
             fullWidth
@@ -211,7 +215,7 @@ export function AttributeOptionList() {
       {/* ── Error Banner ── */}
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load data: {error?.message || "Unknown error"}
+          {t("common.failedToLoad")}: {error?.message || t("common.unknownError")}
         </Alert>
       )}
 
@@ -255,7 +259,7 @@ export function AttributeOptionList() {
 
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={`${selectedIds.size} ${t("common.selectedItems")}`}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

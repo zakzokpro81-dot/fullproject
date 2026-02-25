@@ -52,6 +52,7 @@ import {
 
 import { Avatar, Tooltip, Typography } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const drawerWidth = 240;
 
@@ -103,154 +104,86 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 
 // ================= MENU STRUCTURE =================
 
-const menuGroups = [
+const getMenuGroups = (t) => [
   {
     id: "products",
-    title: "Products & Stock",
+    title: t("sidebar.productsStock"),
     color: "#ed6c02",
     icon: <Inventory2Outlined />,
     children: [
-      { text: "Products", path: "/products", icon: <Inventory2Outlined /> },
-      {
-        text: "Bulk Import",
-        path: "/products/bulk-add",
-        icon: <AddBoxOutlined />,
-      },
-      {
-        text: "Stock Levels",
-        path: "/warehouse-stock",
-        icon: <WarehouseOutlined />,
-      },
-      {
-        text: "Stock History",
-        path: "/stock-movements",
-        icon: <HistoryOutlined />,
-      },
+      { text: t("sidebar.products"), path: "/products", icon: <Inventory2Outlined /> },
+      { text: t("sidebar.bulkImport"), path: "/products/bulk-add", icon: <AddBoxOutlined /> },
+      { text: t("sidebar.stockLevels"), path: "/warehouse-stock", icon: <WarehouseOutlined /> },
+      { text: t("sidebar.stockHistory"), path: "/stock-movements", icon: <HistoryOutlined /> },
     ],
   },
   {
     id: "accounts",
-    title: "Accounts & Customers",
+    title: t("sidebar.accountsCustomers"),
     color: "#1976d2",
     icon: <AccountBalanceOutlined />,
     children: [
-      { text: "Accounts", path: "/accounts", icon: <AccountBalanceOutlined /> },
-      { text: "Customers", path: "/customers", icon: <PeopleOutline /> },
-      {
-        text: "Customer Types",
-        path: "/customer-types",
-        icon: <GroupOutlined />,
-      },
-      { text: "Invoices", path: "/invoices", icon: <DescriptionOutlined /> },
-      {
-        text: "Invoice Items",
-        path: "/invoice-items",
-        icon: <ReceiptLongOutlined />,
-      },
-      { text: "Payments", path: "/payments", icon: <PaymentOutlined /> },
+      { text: t("sidebar.accounts"), path: "/accounts", icon: <AccountBalanceOutlined /> },
+      { text: t("sidebar.customers"), path: "/customers", icon: <PeopleOutline /> },
+      { text: t("sidebar.customerTypes"), path: "/customer-types", icon: <GroupOutlined /> },
+      { text: t("sidebar.invoices"), path: "/invoices", icon: <DescriptionOutlined /> },
+      { text: t("sidebar.invoiceItems"), path: "/invoice-items", icon: <ReceiptLongOutlined /> },
+      { text: t("sidebar.payments"), path: "/payments", icon: <PaymentOutlined /> },
     ],
   },
   {
     id: "orders",
-    title: "Orders",
+    title: t("sidebar.orders"),
     color: "#2e7d32",
     icon: <ShoppingCartOutlined />,
     children: [
-      { text: "Order List", path: "/orders", icon: <LocalShippingOutlined /> },
+      { text: t("sidebar.orderList"), path: "/orders", icon: <LocalShippingOutlined /> },
     ],
   },
   {
     id: "catalog",
-    title: "Catalog & Settings",
+    title: t("sidebar.catalogSettings"),
     color: "#9c27b0",
     icon: <CategoryOutlined />,
     children: [
-      { text: "Brands", path: "/brands", icon: <LabelOutlined /> },
-      { text: "Families", path: "/families", icon: <ClassOutlined /> },
-      { text: "Models", path: "/models", icon: <ViewListOutlined /> },
-      { text: "Warehouses", path: "/warehouses", icon: <WarehouseOutlined /> },
-      { text: "Attributes", path: "/attributes", icon: <TuneOutlined /> },
-      {
-        text: "Attribute Options",
-        path: "/attribute-options",
-        icon: <ListAltOutlined />,
-      },
-      {
-        text: "Product Types",
-        path: "/product-types",
-        icon: <CategoryOutlined />,
-      },
-      { text: "Categories", path: "/categories", icon: <ClassOutlined /> },
+      { text: t("sidebar.brands"), path: "/brands", icon: <LabelOutlined /> },
+      { text: t("sidebar.families"), path: "/families", icon: <ClassOutlined /> },
+      { text: t("sidebar.models"), path: "/models", icon: <ViewListOutlined /> },
+      { text: t("sidebar.warehouses"), path: "/warehouses", icon: <WarehouseOutlined /> },
+      { text: t("sidebar.attributes"), path: "/attributes", icon: <TuneOutlined /> },
+      { text: t("sidebar.attributeOptions"), path: "/attribute-options", icon: <ListAltOutlined /> },
+      { text: t("sidebar.productTypes"), path: "/product-types", icon: <CategoryOutlined /> },
+      { text: t("sidebar.categories"), path: "/categories", icon: <ClassOutlined /> },
     ],
   },
   {
     id: "employees",
-    title: "Employees & HR",
+    title: t("sidebar.employeesHR"),
     color: "#0288d1",
     icon: <BadgeOutlined />,
     children: [
-      { text: "Departments", path: "/departments", icon: <BusinessOutlined /> },
-      {
-        text: "Job Titles",
-        path: "/job-titles",
-        icon: <WorkOutlineOutlined />,
-      },
-      { text: "Employees", path: "/employees", icon: <PeopleOutline /> },
-      { text: "Roles", path: "/roles", icon: <SecurityOutlined /> },
-      {
-        text: "Salary Components",
-        path: "/salary-components",
-        icon: <MonetizationOnOutlined />,
-      },
-      {
-        text: "Payroll",
-        path: "/payroll",
-        icon: <AccountBalanceWalletOutlined />,
-      },
-      {
-        text: "Advances",
-        path: "/employee-advances",
-        icon: <SavingsOutlined />,
-      },
-      {
-        text: "Attendance",
-        path: "/attendance",
-        icon: <EventAvailableOutlined />,
-      },
+      { text: t("sidebar.departments"), path: "/departments", icon: <BusinessOutlined /> },
+      { text: t("sidebar.jobTitles"), path: "/job-titles", icon: <WorkOutlineOutlined /> },
+      { text: t("sidebar.employees"), path: "/employees", icon: <PeopleOutline /> },
+      { text: t("sidebar.roles"), path: "/roles", icon: <SecurityOutlined /> },
+      { text: t("sidebar.salaryComponents"), path: "/salary-components", icon: <MonetizationOnOutlined /> },
+      { text: t("sidebar.payroll"), path: "/payroll", icon: <AccountBalanceWalletOutlined /> },
+      { text: t("sidebar.advances"), path: "/employee-advances", icon: <SavingsOutlined /> },
+      { text: t("sidebar.attendance"), path: "/attendance", icon: <EventAvailableOutlined /> },
     ],
   },
   {
     id: "suppliers",
-    title: "Suppliers & Purchases",
+    title: t("sidebar.suppliersPurchases"),
     color: "#d32f2f",
     icon: <StorefrontOutlined />,
     children: [
-      {
-        text: "Supplier Types",
-        path: "/supplier-types",
-        icon: <GroupOutlined />,
-      },
-      { text: "Suppliers", path: "/suppliers", icon: <StorefrontOutlined /> },
-      {
-        text: "Purchase Orders",
-        path: "/purchase-orders",
-        icon: <ShoppingCartOutlined />,
-      },
-      {
-        text: "Purchase Invoices",
-        path: "/purchase-invoices",
-        icon: <DescriptionOutlined />,
-      },
-      {
-        text: "Supplier Payments",
-        path: "/supplier-payments",
-        icon: <LocalAtmOutlined />,
-      },
-      {
-        text: "Purchase Returns",
-        path: "/purchase-returns",
-        icon: <AssignmentReturnOutlined />,
-      },
+      { text: t("sidebar.supplierTypes"), path: "/supplier-types", icon: <GroupOutlined /> },
+      { text: t("sidebar.suppliers"), path: "/suppliers", icon: <StorefrontOutlined /> },
+      { text: t("sidebar.purchaseOrders"), path: "/purchase-orders", icon: <ShoppingCartOutlined /> },
+      { text: t("sidebar.purchaseInvoices"), path: "/purchase-invoices", icon: <DescriptionOutlined /> },
+      { text: t("sidebar.supplierPayments"), path: "/supplier-payments", icon: <LocalAtmOutlined /> },
+      { text: t("sidebar.purchaseReturns"), path: "/purchase-returns", icon: <AssignmentReturnOutlined /> },
     ],
   },
 ];
@@ -261,10 +194,12 @@ export function SideBar({ open, handleDrawerClose }) {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [openGroups, setOpenGroups] = useState({});
   const [hoverOpen, setHoverOpen] = useState(false);
 
   const isDrawerOpen = open || hoverOpen;
+  const menuGroups = getMenuGroups(t);
 
   // Auto-expand group matching current route
   useEffect(() => {
@@ -319,7 +254,7 @@ export function SideBar({ open, handleDrawerClose }) {
       />
 
       <Typography align="center" sx={{ fontSize: isDrawerOpen ? "17px" : 0 }}>
-        CepTek
+        {t("common.appName")}
       </Typography>
       <Typography
         align="center"
@@ -328,7 +263,7 @@ export function SideBar({ open, handleDrawerClose }) {
           color: theme.palette.info.main,
         }}
       >
-        Admin
+        {t("common.admin")}
       </Typography>
 
       <Divider sx={{ my: 1 }} />
@@ -364,7 +299,7 @@ export function SideBar({ open, handleDrawerClose }) {
                       "&:hover": {
                         bgcolor: group.color,
                         color: "#fff",
-                        transform: "translateX(4px)",
+                        transform: theme.direction === "rtl" ? "translateX(-4px)" : "translateX(4px)",
                         boxShadow: "0 0 15px rgba(0,0,0,0.35)",
                         backgroundImage:
                           "linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0))",
@@ -424,7 +359,7 @@ export function SideBar({ open, handleDrawerClose }) {
                             "&:hover": {
                               bgcolor: `${group.color}aa`,
                               color: "#fff",
-                              transform: "translateX(6px)",
+                              transform: theme.direction === "rtl" ? "translateX(-6px)" : "translateX(6px)",
                             },
                           }}
                         >

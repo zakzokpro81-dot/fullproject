@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -22,6 +23,7 @@ export default function PurchaseInvoiceForm({
   onSubmit,
   initialData,
 }) {
+  const { t } = useTranslation();
   const isEdit = Boolean(initialData);
   const { suppliers, purchaseOrders, invoiceStatuses } =
     usePurchaseInvoiceFormOptions();
@@ -49,7 +51,7 @@ export default function PurchaseInvoiceForm({
   return (
     <>
       <DialogTitle>
-        {isEdit ? "Edit Purchase Invoice" : "Add Purchase Invoice"}
+        {isEdit ? t("common.editItem") : t("common.addNew")} {t("purchaseInvoices.entity")}
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mt: 1 }} maxWidth="md">
@@ -61,7 +63,7 @@ export default function PurchaseInvoiceForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Invoice Number"
+                  label={t("purchaseInvoices.invoiceNumber")}
                   fullWidth
                   error={!!errors.invoice_number}
                   helperText={errors.invoice_number?.message}
@@ -79,7 +81,7 @@ export default function PurchaseInvoiceForm({
                 <TextField
                   {...field}
                   select
-                  label="Supplier"
+                  label={t("purchaseInvoices.supplier")}
                   fullWidth
                   error={!!errors.supplier_id}
                   helperText={errors.supplier_id?.message}
@@ -103,7 +105,7 @@ export default function PurchaseInvoiceForm({
                 <TextField
                   {...field}
                   select
-                  label="Purchase Order"
+                  label={t("purchaseInvoices.purchaseOrder")}
                   fullWidth
                   error={!!errors.purchase_order_id}
                   helperText={errors.purchase_order_id?.message}
@@ -128,7 +130,7 @@ export default function PurchaseInvoiceForm({
                 <TextField
                   {...field}
                   select
-                  label="Status"
+                  label={t("common.status")}
                   fullWidth
                   error={!!errors.status_id}
                   helperText={errors.status_id?.message}
@@ -151,7 +153,7 @@ export default function PurchaseInvoiceForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Invoice Date"
+                  label={t("purchaseInvoices.invoiceDate")}
                   type="date"
                   fullWidth
                   InputLabelProps={{ shrink: true }}
@@ -170,7 +172,7 @@ export default function PurchaseInvoiceForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Total Amount"
+                  label={t("purchaseInvoices.totalAmount")}
                   type="number"
                   fullWidth
                   error={!!errors.total_amount}
@@ -188,7 +190,7 @@ export default function PurchaseInvoiceForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Paid Amount"
+                  label={t("purchaseInvoices.paidAmount")}
                   type="number"
                   fullWidth
                   error={!!errors.paid_amount}
@@ -206,7 +208,7 @@ export default function PurchaseInvoiceForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Notes"
+                  label={t("common.notes")}
                   fullWidth
                   multiline
                   rows={3}
@@ -219,13 +221,13 @@ export default function PurchaseInvoiceForm({
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t("common.cancel")}</Button>
         <Button
           variant="contained"
           onClick={handleSubmit(submitHandler)}
           disabled={isSubmitting}
         >
-          {isEdit ? "Update" : "Create"}
+          {isSubmitting ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </>

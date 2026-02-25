@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 
 import { productTypeSchema, productTypeDefaults } from "./productType.schema";
 
@@ -27,6 +28,8 @@ export default function ProductTypeForm({
   trackingTypes = [],
   variantStrategies = [],
 }) {
+  const { t } = useTranslation(["productTypesFeature", "common"]);
+
   const {
     register,
     handleSubmit,
@@ -50,7 +53,7 @@ export default function ProductTypeForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {mode === "edit" ? "Edit Product Type" : "Add Product Type"}
+        {mode === "edit" ? t("common:editItem", { item: t("productTypesFeature:entity") }) : t("common:addNew") + " " + t("productTypesFeature:entity")}
       </DialogTitle>
       <DialogContent dividers>
         <TextField
@@ -59,7 +62,7 @@ export default function ProductTypeForm({
           helperText={errors.name?.message}
           fullWidth
           margin="normal"
-          label="Name"
+          label={t("common:name")}
         />
         <TextField
           {...register("slug")}
@@ -67,11 +70,11 @@ export default function ProductTypeForm({
           helperText={errors.slug?.message}
           fullWidth
           margin="normal"
-          label="Slug"
+          label={t("productTypesFeature:slug")}
         />
         <TextField
           select
-          label="Category"
+          label={t("productTypesFeature:category")}
           {...register("category_id")}
           error={!!errors.category_id}
           helperText={errors.category_id?.message}
@@ -87,7 +90,7 @@ export default function ProductTypeForm({
         </TextField>
         <TextField
           select
-          label="Product Structure"
+          label={t("productTypesFeature:productStructure")}
           {...register("variant_strategy_id")}
           error={!!errors.variant_strategy_id}
           helperText={errors.variant_strategy_id?.message}
@@ -103,7 +106,7 @@ export default function ProductTypeForm({
         </TextField>
         <TextField
           select
-          label="Tracking Type"
+          label={t("productTypesFeature:trackingType")}
           {...register("tracking_type_id")}
           error={!!errors.tracking_type_id}
           helperText={errors.tracking_type_id?.message}
@@ -124,12 +127,12 @@ export default function ProductTypeForm({
               onChange={(e) => setValue("is_active", e.target.checked)}
             />
           }
-          label="Active"
+          label={t("common:active")}
         />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common:cancel")}
         </Button>
         <Button
           variant="contained"
@@ -139,7 +142,7 @@ export default function ProductTypeForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common:saving") : t("common:save")}
         </Button>
       </DialogActions>
     </Dialog>

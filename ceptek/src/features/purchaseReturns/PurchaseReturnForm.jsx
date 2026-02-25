@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -22,6 +23,7 @@ export default function PurchaseReturnForm({
   onSubmit,
   initialData,
 }) {
+  const { t } = useTranslation();
   const isEdit = Boolean(initialData);
   const { purchaseInvoiceItems, returnStatuses } =
     usePurchaseReturnFormOptions();
@@ -49,7 +51,7 @@ export default function PurchaseReturnForm({
   return (
     <>
       <DialogTitle>
-        {isEdit ? "Edit Purchase Return" : "Add Purchase Return"}
+        {isEdit ? t("common.editItem") : t("common.addNew")} {t("purchaseReturns.entity")}
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mt: 1 }}>
@@ -62,7 +64,7 @@ export default function PurchaseReturnForm({
                 <TextField
                   {...field}
                   select
-                  label="Invoice Item"
+                  label={t("purchaseReturns.invoiceItem")}
                   fullWidth
                   error={!!errors.purchase_invoice_item_id}
                   helperText={errors.purchase_invoice_item_id?.message}
@@ -87,7 +89,7 @@ export default function PurchaseReturnForm({
                 <TextField
                   {...field}
                   select
-                  label="Status"
+                  label={t("common.status")}
                   fullWidth
                   error={!!errors.status_id}
                   helperText={errors.status_id?.message}
@@ -110,7 +112,7 @@ export default function PurchaseReturnForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Return Date"
+                  label={t("purchaseReturns.returnDate")}
                   type="date"
                   fullWidth
                   InputLabelProps={{ shrink: true }}
@@ -129,7 +131,7 @@ export default function PurchaseReturnForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Quantity"
+                  label={t("purchaseReturns.quantity")}
                   type="number"
                   fullWidth
                   error={!!errors.quantity}
@@ -147,7 +149,7 @@ export default function PurchaseReturnForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Credit Amount"
+                  label={t("purchaseReturns.creditAmount")}
                   type="number"
                   fullWidth
                   error={!!errors.credit_amount}
@@ -165,7 +167,7 @@ export default function PurchaseReturnForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Reason"
+                  label={t("purchaseReturns.reason")}
                   fullWidth
                   multiline
                   rows={3}
@@ -178,13 +180,13 @@ export default function PurchaseReturnForm({
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t("common.cancel")}</Button>
         <Button
           variant="contained"
           onClick={handleSubmit(submitHandler)}
           disabled={isSubmitting}
         >
-          {isEdit ? "Update" : "Create"}
+          {t("common.save")}
         </Button>
       </DialogActions>
     </>

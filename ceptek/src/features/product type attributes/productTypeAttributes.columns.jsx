@@ -9,6 +9,7 @@ export const productTypeAttributesColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -43,19 +44,19 @@ export const productTypeAttributesColumns = (
   },
   {
     field: "product_type",
-    headerName: "Product Type",
+    headerName: t("productTypeAttributes.productType"),
     flex: 1,
     valueGetter: (value, row) => row?.product_types?.name || "",
   },
   {
     field: "attribute",
-    headerName: "Attribute",
+    headerName: t("productTypeAttributes.attribute"),
     flex: 1,
     valueGetter: (value, row) => row?.attributes?.name || "",
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 120,
     sortable: false,
     filterable: false,

@@ -20,6 +20,7 @@ import {
   Stack,
   Divider,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import { useForm, useFieldArray, Controller } from "react-hook-form";
@@ -51,6 +52,7 @@ export default function OrderForm({
     defaultValues: orderDefaults,
   });
 
+  const { t } = useTranslation();
   const [stockError, setStockError] = useState({ open: false, message: "" });
 
   const warehouseId = watch("warehouse_id");
@@ -67,7 +69,7 @@ export default function OrderForm({
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ fontWeight: "bold", textAlign: "center", py: 2 }}>
-        New Sales Order
+        {t("common.addNew", { item: t("ordersFeature.entity") })}
       </DialogTitle>
 
       <DialogContent dividers sx={{ p: 3 }}>
@@ -100,10 +102,10 @@ export default function OrderForm({
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Customer"
+                        label={t("ordersFeature.customer")}
                         error={!!errors.customer_id}
                         helperText={errors.customer_id?.message}
-                        placeholder="Search for a customer..."
+                        placeholder={t("common.search")}
                       />
                     )}
                   />
@@ -113,7 +115,7 @@ export default function OrderForm({
               <TextField
                 select
                 fullWidth
-                label="Warehouse"
+                label={t("ordersFeature.warehouse")}
                 defaultValue=""
                 {...register("warehouse_id", { valueAsNumber: true })}
                 error={!!errors.warehouse_id}
@@ -130,7 +132,7 @@ export default function OrderForm({
                 fullWidth
                 multiline
                 rows={2}
-                label="Order Notes"
+                label={t("ordersFeature.orderNotes")}
                 {...register("notes")}
               />
             </Stack>
@@ -269,7 +271,7 @@ export default function OrderForm({
 
       <DialogActions sx={{ p: 3 }}>
         <Button onClick={onClose} color="inherit" sx={{ px: 4 }}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           onClick={handleSubmit(handleFormSubmit)}
@@ -277,7 +279,7 @@ export default function OrderForm({
           disabled={isPending}
           sx={{ px: 4 }}
         >
-          {isPending ? "Saving..." : "Save Sales Order"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
 

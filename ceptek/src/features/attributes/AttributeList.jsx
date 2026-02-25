@@ -9,6 +9,7 @@ import {
   Stack,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import { useTranslation } from "react-i18next";
 
 import { useAttributeQuery, useAttributeMutations } from "./attributes.hooks";
 import { attributeColumns } from "./attributes.columns";
@@ -20,6 +21,7 @@ import ScrollToTopButton from "../../components/ScrollToTopButton";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function AttributeList() {
+  const { t } = useTranslation(["attributesFeature", "common"]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -135,6 +137,7 @@ export function AttributeList() {
     toggleSelect,
     rows,
     toggleSelectAll,
+    t,
   );
 
   return (
@@ -148,7 +151,7 @@ export function AttributeList() {
         }}
       >
         <Typography variant="h5" component="h2">
-          Attributes
+          {t("attributesFeature:title")}
         </Typography>
         <Stack direction="row" spacing={2}>
           {selectedIds.size > 0 && (
@@ -157,11 +160,11 @@ export function AttributeList() {
               color="error"
               onClick={handleDeleteSelectedClick}
             >
-              Delete ({selectedIds.size}) Selected
+              {t("common:deleteSelected")} ({selectedIds.size}) {t("common:selectedItems")}
             </Button>
           )}
           <Button variant="contained" onClick={handleOpenAdd}>
-            Add Attribute
+            {t("common:addNew")} {t("attributesFeature:entity")}
           </Button>
         </Stack>
       </Box>
@@ -170,7 +173,7 @@ export function AttributeList() {
         <TextField
           variant="outlined"
           size="small"
-          placeholder="Search..."
+          placeholder={t("common:search")}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           sx={{ flexGrow: 1 }}
@@ -178,7 +181,7 @@ export function AttributeList() {
         <AttributeFilters filters={filters} setFilters={setFilters} />
       </Stack>
 
-      {isError && <Alert severity="error">Error: {error.message}</Alert>}
+      {isError && <Alert severity="error">{t("common:failedToLoad")}: {error.message}</Alert>}
 
       <Box sx={{ height: 600, width: "100%" }}>
         <DataGrid

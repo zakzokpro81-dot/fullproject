@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import {
   customerTypeSchema,
   customerTypeDefaults,
@@ -24,6 +25,7 @@ export default function CustomerTypeForm({
   onSubmit,
   isPending = false,
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -45,13 +47,13 @@ export default function CustomerTypeForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ fontWeight: "bold" }}>
-        {mode === "edit" ? "Edit Customer Type" : "Add Customer Type"}
+        {mode === "edit" ? t("common.editItem") + " " + t("customerTypesFeature.entity") : t("common.addNew") + " " + t("customerTypesFeature.entity")}
       </DialogTitle>
 
       <DialogContent dividers>
         <Stack spacing={2} mt={1}>
           <TextField
-            label="Type Name"
+            label={t("customerTypesFeature.typeName")}
             {...register("type_name")}
             error={!!errors.type_name}
             helperText={errors.type_name?.message}
@@ -63,7 +65,7 @@ export default function CustomerTypeForm({
 
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -73,7 +75,7 @@ export default function CustomerTypeForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

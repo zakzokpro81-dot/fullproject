@@ -17,6 +17,7 @@ export const attendanceColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -46,19 +47,19 @@ export const attendanceColumns = (
   },
   {
     field: "employee_name",
-    headerName: "Employee",
+    headerName: t("attendance:employee"),
     flex: 1,
     valueGetter: (value, row) => {
       const emp = row?.employees;
       return emp ? `${emp.first_name} ${emp.last_name}` : "";
     },
   },
-  { field: "work_date", headerName: "Work Date", width: 130 },
-  { field: "check_in", headerName: "Check In", width: 110 },
-  { field: "check_out", headerName: "Check Out", width: 110 },
+  { field: "work_date", headerName: t("attendance:workDate"), width: 130 },
+  { field: "check_in", headerName: t("attendance:checkIn"), width: 110 },
+  { field: "check_out", headerName: t("attendance:checkOut"), width: 110 },
   {
     field: "status",
-    headerName: "Status",
+    headerName: t("common:status"),
     width: 120,
     renderCell: (params) => (
       <Chip
@@ -68,10 +69,10 @@ export const attendanceColumns = (
       />
     ),
   },
-  { field: "notes", headerName: "Notes", flex: 1 },
+  { field: "notes", headerName: t("attendance:notes"), flex: 1 },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common:actions"),
     width: 160,
     sortable: false,
     filterable: false,

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Paper,
@@ -10,7 +11,7 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
 
-import { stockMovementColumns } from "./stockMovement.columns";
+import { getStockMovementColumns } from "./stockMovement.columns";
 import StockMovementForm from "./StockMovementForm";
 import {
   useStockMovementQuery,
@@ -22,6 +23,7 @@ import MessageDialog from "../../components/MessageDialog";
 import ScrollToTopButton from "../../components/ScrollToTopButton";
 
 export function StockMovementList() {
+  const { t } = useTranslation();
   const {
     rows,
     rowCount,
@@ -52,20 +54,20 @@ export function StockMovementList() {
           sx={{ mb: 3 }}
         >
           <Typography variant="h5" fontWeight="bold">
-            Stock Movements
+            {t("stockMovements.title")}
           </Typography>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={() => setOpenForm(true)}
           >
-            New Movement
+            {t("common.addNew")}
           </Button>
         </Stack>
 
         <TextField
           fullWidth
-          label="Search by product name"
+          label={t("stockMovements.searchByProduct")}
           size="small"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
@@ -76,7 +78,7 @@ export function StockMovementList() {
         <DataGrid
           rows={rows}
           rowCount={rowCount}
-          columns={stockMovementColumns}
+          columns={getStockMovementColumns(t)}
           loading={isLoading || isFetching}
           paginationMode="server"
           paginationModel={paginationModel}

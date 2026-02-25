@@ -6,6 +6,7 @@ import {
   Button,
   CircularProgress,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 /**
  * Reusable form dialog wrapper.
@@ -28,6 +29,7 @@ export default function FormDialog({
   maxWidth = "sm",
   children,
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth={maxWidth}>
       <DialogTitle sx={{ fontWeight: "bold" }}>{title}</DialogTitle>
@@ -36,7 +38,7 @@ export default function FormDialog({
 
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -46,7 +48,7 @@ export default function FormDialog({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          Save
+          {t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

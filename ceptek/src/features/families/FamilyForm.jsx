@@ -2,6 +2,7 @@
 // Add / Edit dialog form for Families — default export
 
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -28,6 +29,8 @@ export default function FamilyForm({
   brands = [],
   productTypes = [],
 }) {
+  const { t } = useTranslation(["families", "common"]);
+
   const {
     register,
     handleSubmit,
@@ -60,12 +63,12 @@ export default function FamilyForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {mode === "edit" ? "Edit Family" : "Add Family"}
+        {mode === "edit" ? t("common:editItem") : t("common:addNew")}
       </DialogTitle>
 
       <DialogContent dividers>
         <TextField
-          label="Family Name"
+          label={t("families:familyName")}
           {...register("name")}
           error={!!errors.name}
           helperText={errors.name?.message}
@@ -74,7 +77,7 @@ export default function FamilyForm({
         />
 
         <TextField
-          label="Slug"
+          label={t("families:slug")}
           {...register("slug")}
           error={!!errors.slug}
           helperText={errors.slug?.message}
@@ -89,7 +92,7 @@ export default function FamilyForm({
           render={({ field }) => (
             <TextField
               select
-              label="Brand"
+              label={t("families:brand")}
               {...field}
               error={!!errors.brand}
               helperText={errors.brand?.message}
@@ -113,7 +116,7 @@ export default function FamilyForm({
           render={({ field }) => (
             <TextField
               select
-              label="Product Type"
+              label={t("families:productType")}
               {...field}
               error={!!errors.product_type_id}
               helperText={errors.product_type_id?.message}
@@ -138,14 +141,14 @@ export default function FamilyForm({
               onChange={(e) => setValue("is_active", e.target.checked)}
             />
           }
-          label="Active"
+          label={t("common:active")}
           sx={{ mt: 1 }}
         />
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common:cancel")}
         </Button>
         <Button
           variant="contained"
@@ -155,7 +158,7 @@ export default function FamilyForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common:saving") : t("common:save")}
         </Button>
       </DialogActions>
     </Dialog>

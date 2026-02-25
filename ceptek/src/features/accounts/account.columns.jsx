@@ -9,6 +9,7 @@ export const accountColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -43,12 +44,12 @@ export const accountColumns = (
   },
   {
     field: "name",
-    headerName: "Account Name",
+    headerName: t("accountsFeature.accountName"),
     flex: 1.5,
   },
   {
     field: "account_type",
-    headerName: "Type",
+    headerName: t("common.type"),
     width: 120,
     renderCell: (params) => (
       <Chip
@@ -61,7 +62,7 @@ export const accountColumns = (
   },
   {
     field: "balance",
-    headerName: "Balance",
+    headerName: t("accountsFeature.balance"),
     width: 130,
     renderCell: (params) => (
       <Typography
@@ -76,13 +77,13 @@ export const accountColumns = (
   },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common.active"),
     width: 100,
-    renderCell: (params) => (params.value ? "Yes" : "No"),
+    renderCell: (params) => (params.value ? t("common.yes") : t("common.no")),
   },
   {
     field: "created_at",
-    headerName: "Date",
+    headerName: t("common.date"),
     width: 180,
     valueGetter: (value, row) => {
       if (!row.created_at) return "N/A";
@@ -92,7 +93,7 @@ export const accountColumns = (
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

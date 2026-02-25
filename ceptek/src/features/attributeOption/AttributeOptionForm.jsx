@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -25,6 +26,8 @@ export default function AttributeOptionForm({
   isPending = false,
   attributes = [],
 }) {
+  const { t } = useTranslation();
+
   const {
     register,
     handleSubmit,
@@ -50,13 +53,13 @@ export default function AttributeOptionForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ fontWeight: "bold" }}>
-        {mode === "add" ? "Add Attribute Option" : "Edit Attribute Option"}
+        {mode === "add" ? t("common.addNew") : t("common.editItem")}
       </DialogTitle>
       <DialogContent dividers>
         {/* Attribute */}
         <TextField
           select
-          label="Attribute"
+          label={t("attributeOptions.attribute")}
           {...register("attribute_id")}
           fullWidth
           slotProps={{ select: { displayEmpty: false } }}
@@ -75,7 +78,7 @@ export default function AttributeOptionForm({
         {/* Value */}
         <TextField
           {...register("value")}
-          label="Value"
+          label={t("attributeOptions.value")}
           fullWidth
           margin="normal"
           error={!!errors.value}
@@ -85,7 +88,7 @@ export default function AttributeOptionForm({
         {/* Slug */}
         <TextField
           {...register("slug")}
-          label="Slug"
+          label={t("attributeOptions.slug")}
           fullWidth
           margin="normal"
           error={!!errors.slug}
@@ -95,7 +98,7 @@ export default function AttributeOptionForm({
       </DialogContent>
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -105,7 +108,7 @@ export default function AttributeOptionForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

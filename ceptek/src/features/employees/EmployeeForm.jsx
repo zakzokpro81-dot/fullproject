@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -26,6 +27,7 @@ export default function EmployeeForm({
   departments = [],
   jobTitles = [],
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -67,13 +69,13 @@ export default function EmployeeForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>
-        {mode === "edit" ? "Edit Employee" : "Add Employee"}
+        {mode === "edit" ? t("common.editItem", { item: t("employees.entity") }) : t("common.addNew")}
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mt: 0.5 }}>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="First Name"
+              label={t("employees.firstName")}
               fullWidth
               {...register("first_name")}
               error={!!errors.first_name}
@@ -82,7 +84,7 @@ export default function EmployeeForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Last Name"
+              label={t("employees.lastName")}
               fullWidth
               {...register("last_name")}
               error={!!errors.last_name}
@@ -91,7 +93,7 @@ export default function EmployeeForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Email"
+              label={t("common.email")}
               fullWidth
               {...register("email")}
               error={!!errors.email}
@@ -100,7 +102,7 @@ export default function EmployeeForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Phone"
+              label={t("common.phone")}
               fullWidth
               {...register("phone")}
               error={!!errors.phone}
@@ -108,18 +110,18 @@ export default function EmployeeForm({
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <TextField label="Address" fullWidth {...register("address")} />
+            <TextField label={t("common.address")} fullWidth {...register("address")} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="National ID"
+              label={t("employees.nationalId")}
               fullWidth
               {...register("national_id")}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Base Salary"
+              label={t("employees.baseSalary")}
               type="number"
               fullWidth
               {...register("base_salary")}
@@ -129,7 +131,7 @@ export default function EmployeeForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Hire Date"
+              label={t("employees.hireDate")}
               type="date"
               fullWidth
               InputLabelProps={{ shrink: true }}
@@ -140,7 +142,7 @@ export default function EmployeeForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="End Date"
+              label={t("employees.endDate")}
               type="date"
               fullWidth
               InputLabelProps={{ shrink: true }}
@@ -154,13 +156,13 @@ export default function EmployeeForm({
               render={({ field }) => (
                 <TextField
                   select
-                  label="Department"
+                  label={t("employees.department")}
                   {...field}
                   error={!!errors.department_id}
                   helperText={errors.department_id?.message}
                   fullWidth
                 >
-                  <MenuItem value="">Select Department...</MenuItem>
+                  <MenuItem value="">{t("employees.selectDepartment")}</MenuItem>
                   {departments.map((d) => (
                     <MenuItem key={d.id} value={d.id}>
                       {d.name}
@@ -177,13 +179,13 @@ export default function EmployeeForm({
               render={({ field }) => (
                 <TextField
                   select
-                  label="Job Title"
+                  label={t("employees.jobTitle")}
                   {...field}
                   error={!!errors.job_title_id}
                   helperText={errors.job_title_id?.message}
                   fullWidth
                 >
-                  <MenuItem value="">Select Job Title...</MenuItem>
+                  <MenuItem value="">{t("employees.selectJobTitle")}</MenuItem>
                   {jobTitles.map((j) => (
                     <MenuItem key={j.id} value={j.id}>
                       {j.title}
@@ -200,13 +202,13 @@ export default function EmployeeForm({
               render={({ field }) => (
                 <TextField
                   select
-                  label="Employment Status"
+                  label={t("employees.employmentStatus")}
                   {...field}
                   fullWidth
                 >
-                  <MenuItem value="active">Active</MenuItem>
-                  <MenuItem value="on_leave">On Leave</MenuItem>
-                  <MenuItem value="terminated">Terminated</MenuItem>
+                  <MenuItem value="active">{t("employees.statusActive")}</MenuItem>
+                  <MenuItem value="on_leave">{t("employees.statusOnLeave")}</MenuItem>
+                  <MenuItem value="terminated">{t("employees.statusTerminated")}</MenuItem>
                 </TextField>
               )}
             />
@@ -219,14 +221,14 @@ export default function EmployeeForm({
                   onChange={(e) => setValue("is_active", e.target.checked)}
                 />
               }
-              label="Active"
+              label={t("common.active")}
             />
           </Grid>
         </Grid>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -236,7 +238,7 @@ export default function EmployeeForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

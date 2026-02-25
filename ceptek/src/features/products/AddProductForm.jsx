@@ -23,8 +23,10 @@ import {
   getWarehouses,
 } from "./product.api";
 import { ModelAutocomplete } from "./ModelAutocomplete";
+import { useTranslation } from "react-i18next";
 
 const AddProductForm = ({ open, onClose, showSnackbar }) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const {
     control,
@@ -132,7 +134,7 @@ const AddProductForm = ({ open, onClose, showSnackbar }) => {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Add Product</DialogTitle>
+      <DialogTitle>{t("common.addNew")}</DialogTitle>
       <DialogContent>
         <Controller
           name="category"
@@ -146,7 +148,7 @@ const AddProductForm = ({ open, onClose, showSnackbar }) => {
               isOptionEqualToValue={(option, value) => option.id === value?.id}
               onChange={(e, value) => field.onChange(value)}
               renderInput={(params) => (
-                <TextField {...params} label="Category" margin="normal" />
+                <TextField {...params} label={t("productsFeature.mainCategory")} margin="normal" />
               )}
             />
           )}
@@ -164,7 +166,7 @@ const AddProductForm = ({ open, onClose, showSnackbar }) => {
                 getOptionLabel={(option) => option.name}
                 onChange={(e, value) => field.onChange(value)}
                 renderInput={(params) => (
-                  <TextField {...params} label="Product Type" margin="normal" />
+                  <TextField {...params} label={t("productsFeature.productType")} margin="normal" />
                 )}
               />
             )}
@@ -179,7 +181,7 @@ const AddProductForm = ({ open, onClose, showSnackbar }) => {
               <ModelAutocomplete
                 value={field.value}
                 onChange={field.onChange}
-                label="Model"
+                label={t("productsFeature.productName")}
                 selectedCategory={watchedCategory}
                 selectedProductType={watchedProductType}
               />
@@ -229,7 +231,7 @@ const AddProductForm = ({ open, onClose, showSnackbar }) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Sell Price"
+              label={t("productsFeature.sellPrice")}
               type="number"
               margin="normal"
               fullWidth
@@ -255,7 +257,7 @@ const AddProductForm = ({ open, onClose, showSnackbar }) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Stock"
+              label={t("productsFeature.stock")}
               type="number"
               margin="normal"
               fullWidth
@@ -275,7 +277,7 @@ const AddProductForm = ({ open, onClose, showSnackbar }) => {
                 getOptionLabel={(option) => option.name}
                 onChange={(e, value) => field.onChange(value)}
                 renderInput={(params) => (
-                  <TextField {...params} label="Warehouse" margin="normal" />
+                  <TextField {...params} label={t("productsFeature.targetWarehouse")} margin="normal" />
                 )}
               />
             )}
@@ -288,7 +290,7 @@ const AddProductForm = ({ open, onClose, showSnackbar }) => {
           render={({ field }) => (
             <TextField
               {...field}
-              label="Description"
+              label={t("productsFeature.generalNotes")}
               multiline
               rows={3}
               margin="normal"
@@ -298,13 +300,13 @@ const AddProductForm = ({ open, onClose, showSnackbar }) => {
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t("common.cancel")}</Button>
         <Button
           variant="contained"
           onClick={handleSubmit(onSubmit)}
           disabled={mutation.isPending}
         >
-          {mutation.isPending ? "Saving..." : "Save"}
+          {mutation.isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

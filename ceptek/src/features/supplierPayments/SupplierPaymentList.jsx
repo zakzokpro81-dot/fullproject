@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Button, Dialog } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
@@ -14,6 +15,7 @@ import { useMessageDialog } from "../../hooks/useMessageDialog";
 import MessageDialog from "../../components/MessageDialog";
 
 export default function SupplierPaymentList() {
+  const { t } = useTranslation();
   const [formOpen, setFormOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -113,12 +115,13 @@ export default function SupplierPaymentList() {
     toggleSelect,
     rows,
     toggleSelectAll,
+    t,
   );
 
   return (
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-        <FilterBar searchText={searchText} onSearchChange={setSearchText} />
+        <FilterBar searchText={searchText} onSearchChange={setSearchText} placeholder={t('common.search')} />
         <Box sx={{ display: "flex", gap: 1 }}>
           {selectedIds.size > 0 && (
             <Button
@@ -126,7 +129,7 @@ export default function SupplierPaymentList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t('common.deleteSelected')} ({selectedIds.size})
             </Button>
           )}
           <Button
@@ -137,7 +140,7 @@ export default function SupplierPaymentList() {
               setFormOpen(true);
             }}
           >
-            Add Supplier Payment
+            {t('common.addNew')}
           </Button>
         </Box>
       </Box>
@@ -173,13 +176,13 @@ export default function SupplierPaymentList() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleConfirmDelete}
-        title="Delete Supplier Payment"
-        message={`Are you sure you want to delete this payment (ID: ${deleteTarget?.id})?`}
+        title={t('supplierPayments.title')}
+        message={`${t('common.deleteSelected')} (ID: ${deleteTarget?.id})?`}
       />
 
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={`${selectedIds.size} ${t('common.selectedItems')}`}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

@@ -6,8 +6,10 @@ import {
   Stack,
   Button,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 export function AttributeFilters({ filters, setFilters }) {
+  const { t } = useTranslation(["attributesFeature", "common"]);
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -26,10 +28,10 @@ export function AttributeFilters({ filters, setFilters }) {
   return (
     <Stack direction="row" spacing={2} alignItems="center">
       <FormControl size="small" sx={{ minWidth: 150 }}>
-        <InputLabel>Data Type</InputLabel>
+        <InputLabel>{t("attributesFeature:dataType")}</InputLabel>
         <Select
           value={filters.data_type}
-          label="Data Type"
+          label={t("attributesFeature:dataType")}
           name="data_type"
           onChange={handleFilterChange}
         >
@@ -41,10 +43,10 @@ export function AttributeFilters({ filters, setFilters }) {
       </FormControl>
 
       <FormControl size="small" sx={{ minWidth: 150 }}>
-        <InputLabel>Has Options</InputLabel>
+        <InputLabel>{t("attributesFeature:hasOptions")}</InputLabel>
         <Select
           value={filters.has_options}
-          label="Has Options"
+          label={t("attributesFeature:hasOptions")}
           name="has_options"
           onChange={handleFilterChange}
         >
@@ -55,16 +57,16 @@ export function AttributeFilters({ filters, setFilters }) {
       </FormControl>
 
       <FormControl size="small" sx={{ minWidth: 150 }}>
-        <InputLabel>Status</InputLabel>
+        <InputLabel>{t("common:active")}</InputLabel>
         <Select
           value={filters.is_active}
-          label="Status"
+          label={t("common:active")}
           name="is_active"
           onChange={handleFilterChange}
         >
           <MenuItem value="">All</MenuItem>
-          <MenuItem value={true}>Active</MenuItem>
-          <MenuItem value={false}>Inactive</MenuItem>
+          <MenuItem value={true}>{t("common:active")}</MenuItem>
+          <MenuItem value={false}>{t("common:inactive")}</MenuItem>
         </Select>
       </FormControl>
 

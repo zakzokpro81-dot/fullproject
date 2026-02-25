@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -26,6 +27,7 @@ export default function SalaryComponentForm({
   onSubmit,
   isPending = false,
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -54,11 +56,11 @@ export default function SalaryComponentForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {mode === "edit" ? "Edit Salary Component" : "Add Salary Component"}
+        {mode === "edit" ? t("common.editItem") : t("common.addNew")} {t("salaryComponents.entity")}
       </DialogTitle>
       <DialogContent dividers>
         <TextField
-          label="Component Name"
+          label={t("salaryComponents.componentName")}
           fullWidth
           margin="normal"
           {...register("name")}
@@ -71,15 +73,15 @@ export default function SalaryComponentForm({
           render={({ field }) => (
             <TextField
               select
-              label="Type"
+              label={t("common.type")}
               {...field}
               error={!!errors.type}
               helperText={errors.type?.message}
               fullWidth
               margin="normal"
             >
-              <MenuItem value="allowance">Allowance</MenuItem>
-              <MenuItem value="deduction">Deduction</MenuItem>
+              <MenuItem value="allowance">{t("salaryComponents.allowance")}</MenuItem>
+              <MenuItem value="deduction">{t("salaryComponents.deduction")}</MenuItem>
             </TextField>
           )}
         />
@@ -90,12 +92,12 @@ export default function SalaryComponentForm({
               onChange={(e) => setValue("is_active", e.target.checked)}
             />
           }
-          label="Active"
+          label={t("common.active")}
         />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -105,7 +107,7 @@ export default function SalaryComponentForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

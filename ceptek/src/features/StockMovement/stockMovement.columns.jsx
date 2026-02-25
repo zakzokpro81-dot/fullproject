@@ -1,21 +1,21 @@
 import { Chip, Typography, Box } from "@mui/material";
 
-export const stockMovementColumns = [
+export const getStockMovementColumns = (t) => [
   {
     field: "product_name",
-    headerName: "Product",
+    headerName: t("stockMovements.product"),
     flex: 1.5,
     valueGetter: (value, row) => row?.products?.name || "N/A",
   },
   {
     field: "sku",
-    headerName: "SKU",
+    headerName: t("stockMovements.sku"),
     width: 120,
     valueGetter: (value, row) => row?.products?.sku || "N/A",
   },
   {
     field: "quantity",
-    headerName: "Qty",
+    headerName: t("stockMovements.qty"),
     width: 100,
     renderCell: (params) => {
       // Outgoing movement types (red): 2=out, 7=Sales, 9=Purchase Return, 12=Damaged
@@ -37,7 +37,7 @@ export const stockMovementColumns = [
   },
   {
     field: "unit_cost",
-    headerName: "Unit Cost",
+    headerName: t("stockMovements.unitCost"),
     width: 120,
     renderCell: (params) => (
       <Typography>
@@ -49,13 +49,13 @@ export const stockMovementColumns = [
   },
   {
     field: "warehouse",
-    headerName: "Warehouse",
+    headerName: t("stockMovements.warehouse"),
     width: 150,
     valueGetter: (value, row) => row?.warehouses?.name || "N/A",
   },
   {
     field: "movement_type",
-    headerName: "Type",
+    headerName: t("stockMovements.movementType"),
     width: 150,
     valueGetter: (value, row) =>
       row?.stock_movement_types?.movement_name || "N/A",
@@ -75,7 +75,7 @@ export const stockMovementColumns = [
   },
   {
     field: "created_at",
-    headerName: "Date",
+    headerName: t("common.date"),
     width: 180,
     valueGetter: (value, row) => {
       if (!row.created_at) return "N/A";
@@ -85,7 +85,7 @@ export const stockMovementColumns = [
   },
   {
     field: "description",
-    headerName: "Description",
+    headerName: t("stockMovements.referenceNote"),
     width: 180,
   },
 ];

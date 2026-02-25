@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
@@ -25,6 +26,7 @@ import MessageDialog from "../../components/MessageDialog";
 import ScrollToTopButton from "../../components/ScrollToTopButton";
 
 export function InvoiceList() {
+  const { t } = useTranslation();
   const [openForm, setOpenForm] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
 
@@ -43,7 +45,7 @@ export function InvoiceList() {
   if (isError) {
     return (
       <Typography color="error">
-        Error loading invoices: {error.message}
+        {t("common.failedToLoad")}: {error.message}
       </Typography>
     );
   }
@@ -100,7 +102,7 @@ export function InvoiceList() {
         }}
       >
         <Typography variant="h5" fontWeight="bold">
-          Invoices & Sales Archive
+          {t("invoiceFeature.title")}
         </Typography>
 
         <Button
@@ -108,7 +110,7 @@ export function InvoiceList() {
           startIcon={<AddIcon />}
           onClick={() => setOpenForm(true)}
         >
-          New Sale
+          {t("common.addNew")}
         </Button>
       </Box>
 
@@ -116,7 +118,7 @@ export function InvoiceList() {
       <Paper sx={{ height: 600, width: "100%" }}>
         <DataGrid
           rows={rows}
-          columns={invoiceColumns}
+          columns={invoiceColumns(t)}
           loading={isLoading}
           onRowClick={(params) => setSelectedInvoice(params.row)}
           pageSizeOptions={[10, 25, 50]}

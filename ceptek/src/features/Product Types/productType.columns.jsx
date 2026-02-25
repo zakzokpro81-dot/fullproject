@@ -9,6 +9,7 @@ export const productTypeColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -38,41 +39,41 @@ export const productTypeColumns = (
   },
   {
     field: "name",
-    headerName: "Name",
+    headerName: t("common:name"),
     flex: 1,
   },
   {
     field: "slug",
-    headerName: "Slug",
+    headerName: t("productTypesFeature:slug"),
     flex: 1,
   },
   {
     field: "category",
-    headerName: "Category",
+    headerName: t("productTypesFeature:category"),
     flex: 1,
     valueGetter: (value, row) => row?.product_categories?.name || "",
   },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common:active"),
     width: 120,
-    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+    renderCell: (params) => (params.value ? t("common:active") : t("common:inactive")),
   },
   {
     field: "variant_strategy_id",
-    headerName: "Product Structure",
+    headerName: t("productTypesFeature:productStructure"),
     flex: 1,
     valueGetter: (value, row) => row?.variant_strategies?.name || "",
   },
   {
     field: "tracking_type_id",
-    headerName: "Tracking Type",
+    headerName: t("productTypesFeature:trackingType"),
     flex: 1,
     valueGetter: (value, row) => row?.tracking_types?.name || "",
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common:actions"),
     width: 160,
     sortable: false,
     filterable: false,

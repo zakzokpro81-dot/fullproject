@@ -1,4 +1,5 @@
 ﻿import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -39,6 +40,8 @@ export default function WarehouseStockForm({
   warehouses = [],
   products = [],
 }) {
+  const { t } = useTranslation();
+
   const {
     register,
     handleSubmit,
@@ -66,14 +69,14 @@ export default function WarehouseStockForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ fontWeight: "bold" }}>
-        {mode === "add" ? "Add Stock Entry" : "Edit Stock Entry"}
+        {mode === "add" ? t("common.addNew") : t("common.editItem")}
       </DialogTitle>
 
       <DialogContent dividers>
         {/* Product */}
         <TextField
           select
-          label="Product"
+          label={t("warehouseStock.product")}
           {...register("product_id")}
           fullWidth
           margin="normal"
@@ -91,7 +94,7 @@ export default function WarehouseStockForm({
         {/* Warehouse */}
         <TextField
           select
-          label="Warehouse"
+          label={t("warehouseStock.warehouse")}
           {...register("warehouse_id")}
           fullWidth
           margin="normal"
@@ -109,7 +112,7 @@ export default function WarehouseStockForm({
         {/* Quantity */}
         <TextField
           type="number"
-          label="Quantity"
+          label={t("warehouseStock.quantity")}
           {...register("quantity")}
           fullWidth
           margin="normal"
@@ -120,7 +123,7 @@ export default function WarehouseStockForm({
         {/* Unit Cost */}
         <TextField
           type="number"
-          label="Unit Cost"
+          label={t("warehouseStock.unitCost")}
           {...register("unit_cost")}
           fullWidth
           margin="normal"
@@ -132,7 +135,7 @@ export default function WarehouseStockForm({
 
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -142,7 +145,7 @@ export default function WarehouseStockForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

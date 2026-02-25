@@ -9,6 +9,7 @@ export const supplierColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -36,25 +37,25 @@ export const supplierColumns = (
       />
     ),
   },
-  { field: "name", headerName: "Name", flex: 1 },
-  { field: "company_name", headerName: "Company", flex: 1 },
-  { field: "email", headerName: "Email", flex: 1 },
-  { field: "phone", headerName: "Phone", width: 140 },
+  { field: "name", headerName: t("suppliers:entity"), flex: 1 },
+  { field: "company_name", headerName: t("suppliers:company"), flex: 1 },
+  { field: "email", headerName: t("common:email"), flex: 1 },
+  { field: "phone", headerName: t("common:phone"), width: 140 },
   {
     field: "supplier_type_name",
-    headerName: "Type",
+    headerName: t("suppliers:supplierType"),
     width: 140,
     valueGetter: (value, row) => row?.supplier_types?.type_name || "",
   },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common:active"),
     width: 100,
-    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+    renderCell: (params) => (params.value ? t("common:active") : t("common:inactive")),
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common:actions"),
     width: 160,
     sortable: false,
     filterable: false,

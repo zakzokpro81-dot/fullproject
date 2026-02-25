@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Paper,
@@ -23,6 +24,8 @@ import MessageDialog from "../../components/MessageDialog";
 import ScrollToTopButton from "../../components/ScrollToTopButton";
 
 export function PaymentList() {
+  const { t } = useTranslation(["customerPayments", "common"]);
+
   const {
     rows,
     rowCount,
@@ -119,6 +122,7 @@ export function PaymentList() {
     toggleSelect,
     rows,
     toggleSelectAll,
+    t,
   );
 
   return (
@@ -132,7 +136,7 @@ export function PaymentList() {
           sx={{ mb: 3 }}
         >
           <Typography variant="h5" fontWeight="bold">
-            Customer Payments
+            {t("customerPayments:title")}
           </Typography>
           <Stack direction="row" spacing={1}>
             <Button
@@ -141,20 +145,20 @@ export function PaymentList() {
               disabled={selectedIds.size === 0}
               onClick={() => setOpenDeleteSelectedDialog(true)}
             >
-              Delete ({selectedIds.size})
+              {t("common:deleteSelected")} ({selectedIds.size})
             </Button>
             <Button
               variant="contained"
               startIcon={<AddIcon />}
               onClick={handleOpenAdd}
             >
-              Add Payment
+              {t("common:addNew")}
             </Button>
           </Stack>
         </Stack>
 
         <TextField
-          label="Search by note or customer name"
+          label={t("customerPayments:searchByNote")}
           size="small"
           fullWidth
           value={searchText}
@@ -179,16 +183,16 @@ export function PaymentList() {
         open={openDeleteDialog}
         onClose={() => setOpenDeleteDialog(false)}
         onConfirm={handleDeleteConfirm}
-        title="Delete Payment"
-        message={`Are you sure you want to delete this payment?`}
+        title={t("common:deleteSelected")}
+        message={t("common:deleteSelected")}
       />
 
       <ConfirmDeleteDialog
         open={openDeleteSelectedDialog}
         onClose={() => setOpenDeleteSelectedDialog(false)}
         onConfirm={handleDeleteSelected}
-        title="Delete Selected"
-        message={`Are you sure you want to delete ${selectedIds.size} payment(s)?`}
+        title={t("common:deleteSelected")}
+        message={`${t("common:deleteSelected")} (${selectedIds.size})`}
       />
 
       <MessageDialog

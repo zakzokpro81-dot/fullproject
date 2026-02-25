@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -23,6 +24,8 @@ export default function PaymentForm({
   isPending,
   invoices = [],
 }) {
+  const { t } = useTranslation(["customerPayments", "common"]);
+
   const {
     register,
     handleSubmit,
@@ -44,14 +47,14 @@ export default function PaymentForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {mode === "edit" ? "Edit Payment" : "New Payment"}
+        {mode === "edit" ? t("common:editItem") : t("common:addNew")}
       </DialogTitle>
       <Box component="form" onSubmit={handleSubmit(onSubmit)}>
         <DialogContent dividers>
           <Stack spacing={2}>
             <TextField
               select
-              label="Invoice"
+              label={t("customerPayments:invoice")}
               fullWidth
               {...register("invoice_id")}
               defaultValue={initialData?.invoice_id ?? ""}
@@ -67,7 +70,7 @@ export default function PaymentForm({
             </TextField>
 
             <TextField
-              label="Amount"
+              label={t("common:amount")}
               type="number"
               fullWidth
               {...register("amount")}
@@ -75,7 +78,7 @@ export default function PaymentForm({
               helperText={errors.amount?.message}
             />
             <TextField
-              label="Date"
+              label={t("common:date")}
               type="date"
               fullWidth
               {...register("date")}
@@ -84,7 +87,7 @@ export default function PaymentForm({
               helperText={errors.date?.message}
             />
             <TextField
-              label="Notes"
+              label={t("common:notes")}
               multiline
               rows={3}
               fullWidth
@@ -93,9 +96,9 @@ export default function PaymentForm({
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{t("common:cancel")}</Button>
           <Button type="submit" variant="contained" disabled={isPending}>
-            Save
+            {isPending ? t("common:saving") : t("common:save")}
           </Button>
         </DialogActions>
       </Box>

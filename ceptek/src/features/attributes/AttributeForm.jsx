@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import { attributeSchema, attributeDefaults } from "./attributes.schema";
 
 export default function AttributeForm({
@@ -23,6 +24,7 @@ export default function AttributeForm({
   onSubmit,
   isPending,
 }) {
+  const { t } = useTranslation(["attributesFeature", "common"]);
   const {
     register,
     handleSubmit,
@@ -46,7 +48,7 @@ export default function AttributeForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {mode === "edit" ? "Edit Attribute" : "Add Attribute"}
+        {mode === "edit" ? t("common:editItem", { item: t("attributesFeature:entity") }) : t("common:addNew") + " " + t("attributesFeature:entity")}
       </DialogTitle>
       <DialogContent dividers>
         <TextField
@@ -55,7 +57,7 @@ export default function AttributeForm({
           helperText={errors.name?.message}
           fullWidth
           margin="normal"
-          label="Name"
+          label={t("common:name")}
         />
         <TextField
           {...register("slug")}
@@ -63,11 +65,11 @@ export default function AttributeForm({
           helperText={errors.slug?.message}
           fullWidth
           margin="normal"
-          label="Slug"
+          label={t("attributesFeature:slug")}
         />
         <TextField
           select
-          label="Data Type"
+          label={t("attributesFeature:dataType")}
           {...register("data_type")}
           fullWidth
           margin="normal"
@@ -83,7 +85,7 @@ export default function AttributeForm({
               onChange={(e) => setValue("has_options", e.target.checked)}
             />
           }
-          label="Has Options"
+          label={t("attributesFeature:hasOptions")}
         />
         <FormControlLabel
           control={
@@ -92,12 +94,12 @@ export default function AttributeForm({
               onChange={(e) => setValue("is_active", e.target.checked)}
             />
           }
-          label="Active"
+          label={t("common:active")}
         />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common:cancel")}
         </Button>
         <Button
           variant="contained"
@@ -107,7 +109,7 @@ export default function AttributeForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common:saving") : t("common:save")}
         </Button>
       </DialogActions>
     </Dialog>

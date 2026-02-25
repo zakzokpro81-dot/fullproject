@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -27,6 +28,7 @@ export default function EmployeeAdvanceForm({
   employees = [],
   accounts = [],
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -56,7 +58,7 @@ export default function EmployeeAdvanceForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {mode === "edit" ? "Edit Advance" : "Add Advance"}
+        {mode === "edit" ? t("common.editItem") : t("common.addNew")}
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mt: 0.5 }}>
@@ -67,13 +69,13 @@ export default function EmployeeAdvanceForm({
               render={({ field }) => (
                 <TextField
                   select
-                  label="Employee"
+                  label={t("employeeAdvances.employee")}
                   {...field}
                   error={!!errors.employee_id}
                   helperText={errors.employee_id?.message}
                   fullWidth
                 >
-                  <MenuItem value="">Select Employee...</MenuItem>
+                  <MenuItem value="">{t("employeeAdvances.selectEmployee")}</MenuItem>
                   {employees.map((e) => (
                     <MenuItem key={e.id} value={e.id}>
                       {e.first_name} {e.last_name}
@@ -85,7 +87,7 @@ export default function EmployeeAdvanceForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Amount"
+              label={t("common.amount")}
               type="number"
               fullWidth
               {...register("amount")}
@@ -95,7 +97,7 @@ export default function EmployeeAdvanceForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Remaining Amount"
+              label={t("employeeAdvances.remainingAmount")}
               type="number"
               fullWidth
               {...register("remaining_amount")}
@@ -105,7 +107,7 @@ export default function EmployeeAdvanceForm({
           </Grid>
           <Grid size={{ xs: 12 }}>
             <TextField
-              label="Reason"
+              label={t("employeeAdvances.reason")}
               fullWidth
               multiline
               rows={2}
@@ -117,10 +119,10 @@ export default function EmployeeAdvanceForm({
               name="status"
               control={control}
               render={({ field }) => (
-                <TextField select label="Status" {...field} fullWidth>
-                  <MenuItem value="pending">Pending</MenuItem>
-                  <MenuItem value="approved">Approved</MenuItem>
-                  <MenuItem value="repaid">Repaid</MenuItem>
+                <TextField select label={t("common.status")} {...field} fullWidth>
+                  <MenuItem value="pending">{t("employeeAdvances.pending")}</MenuItem>
+                  <MenuItem value="approved">{t("employeeAdvances.approved")}</MenuItem>
+                  <MenuItem value="repaid">{t("employeeAdvances.repaid")}</MenuItem>
                 </TextField>
               )}
             />
@@ -130,7 +132,7 @@ export default function EmployeeAdvanceForm({
               name="account_id"
               control={control}
               render={({ field }) => (
-                <TextField select label="Account" {...field} fullWidth>
+                <TextField select label={t("employeeAdvances.account")} {...field} fullWidth>
                   <MenuItem value="">None</MenuItem>
                   {accounts.map((a) => (
                     <MenuItem key={a.id} value={a.id}>
@@ -145,7 +147,7 @@ export default function EmployeeAdvanceForm({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -155,7 +157,7 @@ export default function EmployeeAdvanceForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Button, Typography, Stack } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
@@ -16,6 +17,7 @@ import MessageDialog from "../../components/MessageDialog";
 import ScrollToTopButton from "../../components/ScrollToTopButton";
 
 export function ProductTypeAttributesList() {
+  const { t } = useTranslation();
   const { rows, isLoading, isFetching } = usePTAQuery();
   const { productTypes, attributes } = usePTAFormOptions();
 
@@ -97,6 +99,7 @@ export function ProductTypeAttributesList() {
     toggleSelect,
     rows,
     toggleSelectAll,
+    t,
   );
 
   return (
@@ -108,7 +111,7 @@ export function ProductTypeAttributesList() {
         sx={{ mb: 2 }}
       >
         <Typography variant="h5" fontWeight="bold">
-          Product Type Attributes
+          {t("productTypeAttributes.title")}
         </Typography>
         <Stack direction="row" spacing={1}>
           <Button
@@ -117,14 +120,14 @@ export function ProductTypeAttributesList() {
             disabled={selectedIds.size === 0}
             onClick={() => setOpenDeleteSelectedDialog(true)}
           >
-            Delete ({selectedIds.size})
+            {t("common.deleteSelected")} ({selectedIds.size})
           </Button>
           <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleOpenAdd}
           >
-            Add
+            {t("common.addNew")}
           </Button>
         </Stack>
       </Stack>

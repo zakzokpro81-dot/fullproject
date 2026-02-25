@@ -9,6 +9,7 @@ export const brandColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -38,23 +39,23 @@ export const brandColumns = (
   },
   {
     field: "name",
-    headerName: "Brand Name",
+    headerName: t("brands.brandName"),
     flex: 1,
   },
   {
     field: "slug",
-    headerName: "Slug",
+    headerName: t("brands.slug"),
     flex: 1,
   },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common.active"),
     width: 120,
-    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+    renderCell: (params) => (params.value ? t("common.active") : t("common.inactive")),
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

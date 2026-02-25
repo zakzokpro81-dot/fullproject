@@ -9,6 +9,7 @@ export const purchaseOrderColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -36,40 +37,40 @@ export const purchaseOrderColumns = (
       />
     ),
   },
-  { field: "id", headerName: "PO #", width: 80 },
+  { field: "id", headerName: t("purchaseOrders:poNumber"), width: 80 },
   {
     field: "supplier_name",
-    headerName: "Supplier",
+    headerName: t("purchaseOrders:supplier"),
     flex: 1,
     valueGetter: (value, row) => row?.suppliers?.name || "",
   },
   {
     field: "warehouse_name",
-    headerName: "Warehouse",
+    headerName: t("purchaseOrders:warehouse"),
     flex: 1,
     valueGetter: (value, row) => row?.warehouses?.name || "",
   },
   {
     field: "order_date",
-    headerName: "Order Date",
+    headerName: t("purchaseOrders:orderDate"),
     width: 130,
     valueGetter: (value) => (value ? new Date(value).toLocaleDateString() : ""),
   },
   {
     field: "total_amount",
-    headerName: "Total Amount",
+    headerName: t("purchaseOrders:totalAmount"),
     width: 140,
     type: "number",
   },
   {
     field: "status_name",
-    headerName: "Status",
+    headerName: t("common:status"),
     width: 130,
     valueGetter: (value, row) => row?.order_statuses?.status_name || "",
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common:actions"),
     width: 160,
     sortable: false,
     filterable: false,

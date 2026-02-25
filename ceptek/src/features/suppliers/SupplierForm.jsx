@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -25,6 +26,7 @@ export default function SupplierForm({
   isPending = false,
   supplierTypes = [],
 }) {
+  const { t } = useTranslation(["suppliers", "common"]);
   const {
     register,
     handleSubmit,
@@ -61,13 +63,13 @@ export default function SupplierForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>
-        {mode === "edit" ? "Edit Supplier" : "Add Supplier"}
+        {mode === "edit" ? t("common:editItem") : t("common:addNew")}
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mt: 0.5 }}>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Name"
+              label={t("suppliers:entity")}
               fullWidth
               {...register("name")}
               error={!!errors.name}
@@ -76,14 +78,14 @@ export default function SupplierForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Company Name"
+              label={t("suppliers:companyName")}
               fullWidth
               {...register("company_name")}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Email"
+              label={t("common:email")}
               fullWidth
               {...register("email")}
               error={!!errors.email}
@@ -91,20 +93,20 @@ export default function SupplierForm({
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField label="Phone" fullWidth {...register("phone")} />
+            <TextField label={t("common:phone")} fullWidth {...register("phone")} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
-            <TextField label="Phone 2" fullWidth {...register("phone2")} />
+            <TextField label={t("suppliers:phone2")} fullWidth {...register("phone2")} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Tax Number"
+              label={t("suppliers:taxNumber")}
               fullWidth
               {...register("tax_number")}
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
-            <TextField label="Address" fullWidth {...register("address")} />
+            <TextField label={t("common:address")} fullWidth {...register("address")} />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <Controller
@@ -113,13 +115,13 @@ export default function SupplierForm({
               render={({ field }) => (
                 <TextField
                   select
-                  label="Supplier Type"
+                  label={t("suppliers:supplierType")}
                   {...field}
                   error={!!errors.supplier_type_id}
                   helperText={errors.supplier_type_id?.message}
                   fullWidth
                 >
-                  <MenuItem value="">Select Type...</MenuItem>
+                  <MenuItem value="">{t("suppliers:selectType")}</MenuItem>
                   {supplierTypes.map((t) => (
                     <MenuItem key={t.id} value={t.id}>
                       {t.type_name}
@@ -137,12 +139,12 @@ export default function SupplierForm({
                   onChange={(e) => setValue("is_active", e.target.checked)}
                 />
               }
-              label="Active"
+              label={t("common:active")}
             />
           </Grid>
           <Grid size={{ xs: 12 }}>
             <TextField
-              label="Notes"
+              label={t("common:notes")}
               fullWidth
               multiline
               rows={2}
@@ -153,7 +155,7 @@ export default function SupplierForm({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common:cancel")}
         </Button>
         <Button
           variant="contained"
@@ -163,7 +165,7 @@ export default function SupplierForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common:saving") : t("common:save")}
         </Button>
       </DialogActions>
     </Dialog>

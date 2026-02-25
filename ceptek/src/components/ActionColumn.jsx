@@ -1,6 +1,7 @@
 import { IconButton, Stack } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useTranslation } from "react-i18next";
 
 /**
  * Shared action-column renderer for DataGrid rows.
@@ -10,6 +11,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
  * @param {Function} onDelete - Called with the row data
  */
 export default function ActionColumn({ params, onEdit, onDelete }) {
+  const { t } = useTranslation();
   return (
     <Stack direction="row" spacing={1}>
       <IconButton
@@ -19,7 +21,7 @@ export default function ActionColumn({ params, onEdit, onDelete }) {
         }}
         color="primary"
         size="small"
-        aria-label="edit"
+        aria-label={t("common.edit")}
       >
         <EditNoteIcon />
       </IconButton>
@@ -31,7 +33,7 @@ export default function ActionColumn({ params, onEdit, onDelete }) {
         }}
         color="error"
         size="small"
-        aria-label="delete"
+        aria-label={t("common.delete")}
       >
         <DeleteIcon />
       </IconButton>

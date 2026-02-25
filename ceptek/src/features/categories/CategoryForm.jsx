@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import { categorySchema, categoryDefaults } from "./category.schema";
 
 export default function CategoryForm({
@@ -23,6 +24,7 @@ export default function CategoryForm({
   onSubmit,
   isPending = false,
 }) {
+  const { t } = useTranslation(["categoriesFeature", "common"]);
   const {
     register,
     handleSubmit,
@@ -46,13 +48,13 @@ export default function CategoryForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ fontWeight: "bold" }}>
-        {mode === "edit" ? "Edit Category" : "Add Category"}
+        {mode === "edit" ? t("common:editItem") : `${t("common:addNew")} ${t("categoriesFeature:entity")}`}
       </DialogTitle>
 
       <DialogContent dividers>
         <Stack spacing={2} mt={1}>
           <TextField
-            label="Name"
+            label={t("common:name")}
             {...register("name")}
             error={!!errors.name}
             helperText={errors.name?.message}
@@ -61,7 +63,7 @@ export default function CategoryForm({
           />
 
           <TextField
-            label="Slug"
+            label={t("categoriesFeature:slug")}
             {...register("slug")}
             error={!!errors.slug}
             helperText={errors.slug?.message}
@@ -76,7 +78,7 @@ export default function CategoryForm({
                 onChange={(e) => setValue("is_active", e.target.checked)}
               />
             }
-            label="Active"
+            label={t("common:active")}
           />
 
           <FormControlLabel
@@ -86,14 +88,14 @@ export default function CategoryForm({
                 onChange={(e) => setValue("show_all_models", e.target.checked)}
               />
             }
-            label="Show All Models"
+            label={t("categoriesFeature:showAllModels")}
           />
         </Stack>
       </DialogContent>
 
       <DialogActions sx={{ p: 2 }}>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common:cancel")}
         </Button>
         <Button
           variant="contained"
@@ -103,7 +105,7 @@ export default function CategoryForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common:saving") : t("common:save")}
         </Button>
       </DialogActions>
     </Dialog>

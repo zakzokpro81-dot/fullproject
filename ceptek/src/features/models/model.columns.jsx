@@ -12,6 +12,7 @@ export const modelColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   // ── Checkbox selection column ──
   {
@@ -43,32 +44,32 @@ export const modelColumns = (
   // ── Data columns ──
   {
     field: "brand",
-    headerName: "Brand",
+    headerName: t("modelsFeature.brand"),
     flex: 1,
     renderCell: (params) => params.row?.families?.brands?.name || "",
   },
   {
     field: "family",
-    headerName: "Family",
+    headerName: t("modelsFeature.family"),
     flex: 1,
     renderCell: (params) => params.row?.families?.name || "",
   },
   {
     field: "name",
-    headerName: "Model Name",
+    headerName: t("modelsFeature.modelName"),
     flex: 1,
   },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common.active"),
     width: 120,
-    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+    renderCell: (params) => (params.value ? t("common.active") : t("common.inactive")),
   },
 
   // ── Actions column ──
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

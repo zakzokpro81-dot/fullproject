@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -20,6 +21,7 @@ export default function RoleForm({
   onSubmit,
   isPending = false,
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -43,10 +45,10 @@ export default function RoleForm({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{mode === "edit" ? "Edit Role" : "Add Role"}</DialogTitle>
+      <DialogTitle>{mode === "edit" ? t("common.editItem", { item: t("roles.entity") }) : t("common.addNew", { item: t("roles.entity") })}</DialogTitle>
       <DialogContent dividers>
         <TextField
-          label="Role Name"
+          label={t("roles.roleName")}
           fullWidth
           margin="normal"
           {...register("name")}
@@ -54,7 +56,7 @@ export default function RoleForm({
           helperText={errors.name?.message}
         />
         <TextField
-          label="Description"
+          label={t("common.description")}
           fullWidth
           margin="normal"
           multiline
@@ -64,7 +66,7 @@ export default function RoleForm({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -74,7 +76,7 @@ export default function RoleForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -8,6 +8,7 @@ export const getPurchaseReturnColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -38,37 +39,37 @@ export const getPurchaseReturnColumns = (
   { field: "id", headerName: "ID", width: 70 },
   {
     field: "purchase_invoice_item_id",
-    headerName: "Invoice Item #",
+    headerName: t("purchaseReturns.invoiceItemNumber"),
     width: 130,
   },
   {
     field: "return_date",
-    headerName: "Return Date",
+    headerName: t("purchaseReturns.returnDate"),
     width: 130,
     valueGetter: (value) => (value ? new Date(value).toLocaleDateString() : ""),
   },
   {
     field: "quantity",
-    headerName: "Quantity",
+    headerName: t("purchaseReturns.quantity"),
     width: 100,
     type: "number",
   },
   {
     field: "credit_amount",
-    headerName: "Credit Amount",
+    headerName: t("purchaseReturns.creditAmount"),
     width: 130,
     type: "number",
   },
   {
     field: "status_name",
-    headerName: "Status",
+    headerName: t("common.status"),
     width: 130,
     valueGetter: (value, row) => row?.return_statuses?.status_name || "",
   },
-  { field: "reason", headerName: "Reason", flex: 1, minWidth: 180 },
+  { field: "reason", headerName: t("purchaseReturns.reason"), flex: 1, minWidth: 180 },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 120,
     sortable: false,
     filterable: false,

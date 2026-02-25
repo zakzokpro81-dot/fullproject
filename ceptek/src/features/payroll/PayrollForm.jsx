@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -23,6 +24,7 @@ export default function PayrollForm({
   isPending = false,
   employees = [],
 }) {
+  const { t } = useTranslation(["payroll", "common"]);
   const {
     register,
     handleSubmit,
@@ -53,7 +55,7 @@ export default function PayrollForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>
-        {mode === "edit" ? "Edit Payroll" : "Add Payroll"}
+        {mode === "edit" ? t("common:editItem") : t("common:addNew")}
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mt: 0.5 }}>
@@ -64,13 +66,13 @@ export default function PayrollForm({
               render={({ field }) => (
                 <TextField
                   select
-                  label="Employee"
+                  label={t("payroll:employee")}
                   {...field}
                   error={!!errors.employee_id}
                   helperText={errors.employee_id?.message}
                   fullWidth
                 >
-                  <MenuItem value="">Select Employee...</MenuItem>
+                  <MenuItem value="">{t("payroll:selectEmployee")}</MenuItem>
                   {employees.map((e) => (
                     <MenuItem key={e.id} value={e.id}>
                       {e.first_name} {e.last_name}
@@ -82,7 +84,7 @@ export default function PayrollForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Period (e.g. 2026-02)"
+              label={`${t("payroll:period")} (${t("payroll:periodHint")})`}
               fullWidth
               {...register("period")}
               error={!!errors.period}
@@ -91,7 +93,7 @@ export default function PayrollForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Base Salary"
+              label={t("payroll:baseSalary")}
               type="number"
               fullWidth
               {...register("base_salary")}
@@ -101,7 +103,7 @@ export default function PayrollForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Total Allowances"
+              label={t("payroll:totalAllowances")}
               type="number"
               fullWidth
               {...register("total_allowances")}
@@ -109,7 +111,7 @@ export default function PayrollForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Total Deductions"
+              label={t("payroll:totalDeductions")}
               type="number"
               fullWidth
               {...register("total_deductions")}
@@ -117,7 +119,7 @@ export default function PayrollForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Net Salary"
+              label={t("payroll:netSalary")}
               type="number"
               fullWidth
               {...register("net_salary")}
@@ -128,10 +130,10 @@ export default function PayrollForm({
               name="status"
               control={control}
               render={({ field }) => (
-                <TextField select label="Status" {...field} fullWidth>
-                  <MenuItem value="draft">Draft</MenuItem>
-                  <MenuItem value="approved">Approved</MenuItem>
-                  <MenuItem value="paid">Paid</MenuItem>
+                <TextField select label={t("common:status")} {...field} fullWidth>
+                  <MenuItem value="draft">{t("payroll:draft")}</MenuItem>
+                  <MenuItem value="approved">{t("payroll:approved")}</MenuItem>
+                  <MenuItem value="paid">{t("payroll:paid")}</MenuItem>
                 </TextField>
               )}
             />
@@ -140,7 +142,7 @@ export default function PayrollForm({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common:cancel")}
         </Button>
         <Button
           variant="contained"
@@ -150,7 +152,7 @@ export default function PayrollForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common:saving") : t("common:save")}
         </Button>
       </DialogActions>
     </Dialog>

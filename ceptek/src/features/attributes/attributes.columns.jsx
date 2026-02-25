@@ -9,6 +9,7 @@ export const attributeColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -38,34 +39,35 @@ export const attributeColumns = (
   },
   {
     field: "name",
-    headerName: "Name",
+    headerName: t("common:name"),
     flex: 1,
   },
   {
     field: "slug",
-    headerName: "Slug",
+    headerName: t("attributesFeature:slug"),
     flex: 1,
   },
   {
     field: "data_type",
-    headerName: "Data Type",
+    headerName: t("attributesFeature:dataType"),
     flex: 1,
   },
   {
     field: "has_options",
-    headerName: "Has Options",
+    headerName: t("attributesFeature:hasOptions"),
     width: 150,
-    renderCell: (params) => (params.value ? "Yes" : "No"),
+    renderCell: (params) => (params.value ? t("common:active") : t("common:inactive")),
+    // Note: Yes/No mapped to active/inactive keys
   },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common:active"),
     width: 120,
-    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+    renderCell: (params) => (params.value ? t("common:active") : t("common:inactive")),
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common:actions"),
     width: 160,
     sortable: false,
     filterable: false,

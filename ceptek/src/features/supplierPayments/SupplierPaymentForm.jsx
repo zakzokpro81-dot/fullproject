@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -22,6 +23,7 @@ export default function SupplierPaymentForm({
   onSubmit,
   initialData,
 }) {
+  const { t } = useTranslation();
   const isEdit = Boolean(initialData);
   const { purchaseInvoices, accounts } = useSupplierPaymentFormOptions();
 
@@ -48,7 +50,7 @@ export default function SupplierPaymentForm({
   return (
     <>
       <DialogTitle>
-        {isEdit ? "Edit Supplier Payment" : "Add Supplier Payment"}
+        {isEdit ? t('common.editItem') : t('common.addNew')}
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mt: 1 }} maxWidth="md">
@@ -61,7 +63,7 @@ export default function SupplierPaymentForm({
                 <TextField
                   {...field}
                   select
-                  label="Purchase Invoice"
+                  label={t('supplierPayments.invoice')}
                   fullWidth
                   error={!!errors.purchase_invoice_id}
                   helperText={errors.purchase_invoice_id?.message}
@@ -85,7 +87,7 @@ export default function SupplierPaymentForm({
                 <TextField
                   {...field}
                   select
-                  label="Account"
+                  label={t('supplierPayments.account')}
                   fullWidth
                   error={!!errors.account_id}
                   helperText={errors.account_id?.message}
@@ -109,7 +111,7 @@ export default function SupplierPaymentForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Payment Date"
+                  label={t('supplierPayments.paymentDate')}
                   type="date"
                   fullWidth
                   InputLabelProps={{ shrink: true }}
@@ -128,7 +130,7 @@ export default function SupplierPaymentForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Amount"
+                  label={t('common.amount')}
                   type="number"
                   fullWidth
                   error={!!errors.amount}
@@ -147,14 +149,14 @@ export default function SupplierPaymentForm({
                 <TextField
                   {...field}
                   select
-                  label="Payment Method"
+                  label={t('supplierPayments.paymentMethod')}
                   fullWidth
                   error={!!errors.method}
                   helperText={errors.method?.message}
                 >
-                  <MenuItem value="cash">Cash</MenuItem>
-                  <MenuItem value="bank">Bank</MenuItem>
-                  <MenuItem value="check">Check</MenuItem>
+                  <MenuItem value="cash">{t('supplierPayments.cash')}</MenuItem>
+                  <MenuItem value="bank">{t('supplierPayments.bank')}</MenuItem>
+                  <MenuItem value="check">{t('supplierPayments.check')}</MenuItem>
                 </TextField>
               )}
             />
@@ -168,7 +170,7 @@ export default function SupplierPaymentForm({
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Notes"
+                  label={t('common.notes')}
                   fullWidth
                   multiline
                   rows={3}
@@ -181,13 +183,13 @@ export default function SupplierPaymentForm({
         </Grid>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
         <Button
           variant="contained"
           onClick={handleSubmit(submitHandler)}
           disabled={isSubmitting}
         >
-          {isEdit ? "Update" : "Create"}
+          {isSubmitting ? t('common.saving') : t('common.save')}
         </Button>
       </DialogActions>
     </>

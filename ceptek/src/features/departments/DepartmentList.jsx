@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
@@ -17,6 +18,7 @@ import ScrollToTopButton from "../../components/ScrollToTopButton";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function DepartmentList() {
+  const { t } = useTranslation();
   const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
@@ -109,7 +111,7 @@ export function DepartmentList() {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">Departments</Typography>
+        <Typography variant="h5">{t("departments.title")}</Typography>
         <Box display="flex" gap={1}>
           {selectedIds.size > 0 && (
             <Button
@@ -117,17 +119,17 @@ export function DepartmentList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t("common.deleteSelected", { count: selectedIds.size })}
             </Button>
           )}
           <Button variant="contained" onClick={handleOpenAdd}>
-            Add Department
+            {t("common.addNew", { item: t("departments.entity") })}
           </Button>
         </Box>
       </Box>
       <Box mb={2}>
         <TextField
-          label="Search"
+          label={t("common.search")}
           variant="outlined"
           size="small"
           value={searchText}
@@ -138,7 +140,7 @@ export function DepartmentList() {
       </Box>
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          Failed to load data: {error?.message || "Unknown error"}
+          {t("common.failedToLoad", { error: error?.message || t("common.unknownError") })}
         </Alert>
       )}
       <Paper sx={{ height: 650, width: "100%" }}>
@@ -152,6 +154,7 @@ export function DepartmentList() {
             toggleSelect,
             rows,
             toggleSelectAll,
+            t,
           )}
           loading={isLoading || isFetching}
           paginationMode="server"
@@ -182,7 +185,7 @@ export function DepartmentList() {
       />
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={t("common.selectedItems", { count: selectedIds.size })}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

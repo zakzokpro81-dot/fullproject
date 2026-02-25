@@ -14,6 +14,7 @@ export const getSupplierPaymentColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -41,10 +42,10 @@ export const getSupplierPaymentColumns = (
       />
     ),
   },
-  { field: "id", headerName: "ID", width: 70 },
+  { field: "id", headerName: t("common.id", "ID"), width: 70 },
   {
     field: "invoice_number",
-    headerName: "Invoice",
+    headerName: t("supplierPayments.invoice"),
     flex: 1,
     minWidth: 140,
     valueGetter: (value, row) =>
@@ -52,39 +53,39 @@ export const getSupplierPaymentColumns = (
   },
   {
     field: "account_name",
-    headerName: "Account",
+    headerName: t("supplierPayments.account"),
     flex: 1,
     minWidth: 140,
     valueGetter: (value, row) => row?.accounts?.name || "—",
   },
   {
     field: "payment_date",
-    headerName: "Payment Date",
+    headerName: t("supplierPayments.paymentDate"),
     width: 130,
     valueGetter: (value) => (value ? new Date(value).toLocaleDateString() : ""),
   },
   {
     field: "amount",
-    headerName: "Amount",
+    headerName: t("common.amount"),
     width: 120,
     type: "number",
   },
   {
     field: "method",
-    headerName: "Method",
+    headerName: t("supplierPayments.paymentMethod"),
     width: 120,
     renderCell: (params) => (
       <Chip
-        label={params.value}
+        label={t(`supplierPayments.${params.value}`)}
         color={methodColors[params.value] || "default"}
         size="small"
       />
     ),
   },
-  { field: "notes", headerName: "Notes", flex: 1, minWidth: 150 },
+  { field: "notes", headerName: t("common.notes"), flex: 1, minWidth: 150 },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 120,
     sortable: false,
     filterable: false,

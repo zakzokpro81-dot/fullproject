@@ -9,6 +9,7 @@ export const attributeOptionColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -41,24 +42,24 @@ export const attributeOptionColumns = (
   },
   {
     field: "attribute_name",
-    headerName: "Attribute",
+    headerName: t("attributeOptions.attribute"),
     flex: 1,
     valueGetter: (value, row) => row?.attributes?.name || "",
   },
   {
     field: "data_type",
-    headerName: "Data Type",
+    headerName: t("attributeOptions.dataType"),
     flex: 1,
     valueGetter: (value, row) => row?.attributes?.data_type || "",
   },
   {
     field: "value",
-    headerName: "Value",
+    headerName: t("attributeOptions.value"),
     flex: 1,
   },
   {
     field: "slug",
-    headerName: "Slug",
+    headerName: t("attributeOptions.slug"),
     flex: 1,
   },
   {
@@ -69,7 +70,7 @@ export const attributeOptionColumns = (
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

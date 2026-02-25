@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 import { Box, Button, Dialog } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import AddIcon from "@mui/icons-material/Add";
@@ -14,6 +15,7 @@ import { useMessageDialog } from "../../hooks/useMessageDialog";
 import MessageDialog from "../../components/MessageDialog";
 
 export default function PurchaseReturnList() {
+  const { t } = useTranslation();
   const [formOpen, setFormOpen] = useState(false);
   const [editData, setEditData] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -112,6 +114,7 @@ export default function PurchaseReturnList() {
     toggleSelect,
     rows,
     toggleSelectAll,
+    t,
   );
 
   return (
@@ -125,7 +128,7 @@ export default function PurchaseReturnList() {
               color="error"
               onClick={() => setOpenDeleteSelected(true)}
             >
-              Delete Selected ({selectedIds.size})
+              {t("common.deleteSelected")} ({selectedIds.size})
             </Button>
           )}
           <Button
@@ -136,7 +139,7 @@ export default function PurchaseReturnList() {
               setFormOpen(true);
             }}
           >
-            Add Purchase Return
+            {t("common.addNew")} {t("purchaseReturns.entity")}
           </Button>
         </Box>
       </Box>
@@ -172,13 +175,13 @@ export default function PurchaseReturnList() {
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleConfirmDelete}
-        title="Delete Purchase Return"
+        title={`${t("common.deleteSelected")} ${t("purchaseReturns.entity")}`}
         message={`Are you sure you want to delete this return (ID: ${deleteTarget?.id})?`}
       />
 
       <ConfirmDeleteDialog
         open={openDeleteSelected}
-        itemName={`${selectedIds.size} selected items`}
+        itemName={`${selectedIds.size} ${t("common.selectedItems")}`}
         onClose={() => setOpenDeleteSelected(false)}
         onConfirm={handleDeleteSelectedConfirm}
         isPending={deleteMultipleMutation.isPending}

@@ -9,6 +9,7 @@ export const roleColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -36,11 +37,11 @@ export const roleColumns = (
       />
     ),
   },
-  { field: "name", headerName: "Role Name", flex: 1 },
-  { field: "description", headerName: "Description", flex: 2 },
+  { field: "name", headerName: t("roles.roleName"), flex: 1 },
+  { field: "description", headerName: t("common.description"), flex: 2 },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

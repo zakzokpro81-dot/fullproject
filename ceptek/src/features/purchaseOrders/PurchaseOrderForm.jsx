@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -28,6 +29,7 @@ export default function PurchaseOrderForm({
   warehouses = [],
   orderStatuses = [],
 }) {
+  const { t } = useTranslation(["purchaseOrders", "common"]);
   const {
     register,
     handleSubmit,
@@ -60,7 +62,7 @@ export default function PurchaseOrderForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>
-        {mode === "edit" ? "Edit Purchase Order" : "Add Purchase Order"}
+        {mode === "edit" ? t("common:editItem") : t("common:addNew")}
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mt: 0.5 }}>
@@ -71,13 +73,13 @@ export default function PurchaseOrderForm({
               render={({ field }) => (
                 <TextField
                   select
-                  label="Supplier"
+                  label={t("purchaseOrders:supplier")}
                   {...field}
                   error={!!errors.supplier_id}
                   helperText={errors.supplier_id?.message}
                   fullWidth
                 >
-                  <MenuItem value="">Select Supplier...</MenuItem>
+                  <MenuItem value="">{t("purchaseOrders:selectSupplier")}</MenuItem>
                   {suppliers.map((s) => (
                     <MenuItem key={s.id} value={s.id}>
                       {s.name}
@@ -92,8 +94,8 @@ export default function PurchaseOrderForm({
               name="warehouse_id"
               control={control}
               render={({ field }) => (
-                <TextField select label="Warehouse" {...field} fullWidth>
-                  <MenuItem value="">None</MenuItem>
+                <TextField select label={t("purchaseOrders:warehouse")} {...field} fullWidth>
+                  <MenuItem value="">{t("purchaseOrders:selectWarehouse")}</MenuItem>
                   {warehouses.map((w) => (
                     <MenuItem key={w.id} value={w.id}>
                       {w.name}
@@ -105,7 +107,7 @@ export default function PurchaseOrderForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Order Date"
+              label={t("purchaseOrders:orderDate")}
               type="date"
               fullWidth
               InputLabelProps={{ shrink: true }}
@@ -116,7 +118,7 @@ export default function PurchaseOrderForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Total Amount"
+              label={t("purchaseOrders:totalAmount")}
               type="number"
               fullWidth
               {...register("total_amount")}
@@ -129,7 +131,7 @@ export default function PurchaseOrderForm({
               render={({ field }) => (
                 <TextField
                   select
-                  label="Status"
+                  label={t("common:status")}
                   {...field}
                   error={!!errors.status_id}
                   helperText={errors.status_id?.message}
@@ -146,7 +148,7 @@ export default function PurchaseOrderForm({
           </Grid>
           <Grid size={{ xs: 12 }}>
             <TextField
-              label="Notes"
+              label={t("common:notes")}
               fullWidth
               multiline
               rows={2}
@@ -157,7 +159,7 @@ export default function PurchaseOrderForm({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common:cancel")}
         </Button>
         <Button
           variant="contained"
@@ -167,7 +169,7 @@ export default function PurchaseOrderForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common:saving") : t("common:save")}
         </Button>
       </DialogActions>
     </Dialog>

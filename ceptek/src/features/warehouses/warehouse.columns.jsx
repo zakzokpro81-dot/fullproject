@@ -9,6 +9,7 @@ export const warehouseColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -41,23 +42,23 @@ export const warehouseColumns = (
   },
   {
     field: "name",
-    headerName: "Name",
+    headerName: t("common:name"),
     flex: 1,
   },
   {
     field: "location",
-    headerName: "Location",
+    headerName: t("warehousesFeature:location"),
     flex: 1,
   },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common:active"),
     width: 120,
-    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+    renderCell: (params) => (params.value ? t("common:active") : t("common:inactive")),
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common:actions"),
     width: 160,
     sortable: false,
     filterable: false,

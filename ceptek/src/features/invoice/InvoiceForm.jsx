@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -57,6 +58,7 @@ export default function InvoiceForm({
     },
   });
 
+  const { t } = useTranslation();
   const { fields, append, remove } = useFieldArray({ control, name: "items" });
 
   const watchWarehouse = watch("warehouse_id");
@@ -128,14 +130,14 @@ export default function InvoiceForm({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle sx={{ fontWeight: "bold" }}>New Multi-Item Sale</DialogTitle>
+      <DialogTitle sx={{ fontWeight: "bold" }}>{t("common.addNew")} {t("invoiceFeature.entity")}</DialogTitle>
       <Box component="form" onSubmit={handleSubmit(handleFormSubmit)}>
         <DialogContent dividers>
           <Stack spacing={3}>
             <TextField
               select
               fullWidth
-              label="Customer"
+              label={t("invoiceFeature.customer")}
               {...register("customer_id")}
               defaultValue=""
               error={!!errors.customer_id}
@@ -151,7 +153,7 @@ export default function InvoiceForm({
             <TextField
               select
               fullWidth
-              label="Warehouse"
+              label={t("invoiceFeature.warehouse")}
               value={watchWarehouse || ""}
               {...register("warehouse_id")}
               error={!!errors.warehouse_id}
@@ -165,7 +167,7 @@ export default function InvoiceForm({
               ))}
             </TextField>
 
-            <Divider>Search & Scan Products</Divider>
+            <Divider>{t("invoiceFeature.searchProductBarcode")}</Divider>
 
             <Autocomplete
               options={products || []}
@@ -178,7 +180,7 @@ export default function InvoiceForm({
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  label="Search Product or Scan Barcode"
+                  label={t("invoiceFeature.searchProductBarcode")}
                   autoFocus
                   InputProps={{
                     ...params.InputProps,
@@ -194,15 +196,15 @@ export default function InvoiceForm({
               <Table size="small">
                 <TableHead sx={{ bgcolor: "#f5f5f5" }}>
                   <TableRow>
-                    <TableCell>Product</TableCell>
+                    <TableCell>{t("invoiceItems.product")}</TableCell>
                     <TableCell align="center" width={100}>
-                      Qty
+                      {t("invoiceItems.qty")}
                     </TableCell>
                     <TableCell align="center" width={120}>
-                      Price
+                      {t("invoiceItems.price")}
                     </TableCell>
                     <TableCell align="center" width={100}>
-                      Total
+                      {t("invoiceItems.total")}
                     </TableCell>
                     <TableCell align="center" width={50} />
                   </TableRow>
@@ -246,12 +248,12 @@ export default function InvoiceForm({
               </Table>
             </TableContainer>
 
-            <Divider>Payment Details</Divider>
+            <Divider>{t("invoiceFeature.paidAmount")}</Divider>
 
             <TextField
               select
               fullWidth
-              label="Payment Account"
+              label={t("invoiceFeature.paymentAccount")}
               value={watchAccount || ""}
               {...register("account_id")}
               error={!!errors.account_id}
@@ -265,7 +267,7 @@ export default function InvoiceForm({
             </TextField>
 
             <TextField
-              label="Paid Amount"
+              label={t("invoiceFeature.paidAmount")}
               type="number"
               {...register("paid_amount")}
               fullWidth
@@ -289,7 +291,7 @@ export default function InvoiceForm({
         </DialogContent>
         <DialogActions sx={{ p: 2 }}>
           <Button onClick={onClose} color="inherit">
-            Cancel
+            {t("common.cancel")}
           </Button>
           <Button
             type="submit"
@@ -297,7 +299,7 @@ export default function InvoiceForm({
             disabled={isPending}
             sx={{ px: 6 }}
           >
-            {isPending ? "Saving..." : "Confirm & Save"}
+            {isPending ? t("common.saving") : t("common.save")}
           </Button>
         </DialogActions>
       </Box>

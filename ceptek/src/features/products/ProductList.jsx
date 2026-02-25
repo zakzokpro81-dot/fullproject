@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Box, Paper } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import { useTranslation } from "react-i18next";
 
 import { ProductDetailsDrawer } from "./ProductDetailsDrawer";
 import { productColumns } from "./product.columns";
@@ -18,6 +19,7 @@ import {
 } from "./product.hooks";
 
 export function ProductsList() {
+  const { t } = useTranslation();
   const [openAddDialog, setOpenAddDialog] = useState(false);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -107,6 +109,7 @@ export function ProductsList() {
     toggleSelect,
     rows,
     toggleSelectAll,
+    t,
   );
 
   const handlePaginationChange = (model) => {

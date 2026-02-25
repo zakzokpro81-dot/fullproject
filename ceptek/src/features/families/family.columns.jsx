@@ -12,6 +12,7 @@ export const familyColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   // ── Checkbox selection column ──
   {
@@ -49,37 +50,37 @@ export const familyColumns = (
   },
   {
     field: "name",
-    headerName: "Family Name",
+    headerName: t("families:familyName"),
     flex: 1,
   },
   {
     field: "brand_name",
-    headerName: "Brand",
+    headerName: t("families:brand"),
     width: 150,
     valueGetter: (value, row) => row?.brands?.name || "",
   },
   {
     field: "product_type_id",
-    headerName: "Product Type",
+    headerName: t("families:productType"),
     width: 150,
     valueGetter: (value, row) => row?.product_types?.name || "",
   },
   {
     field: "slug",
-    headerName: "Slug",
+    headerName: t("families:slug"),
     width: 150,
   },
   {
     field: "is_active",
-    headerName: "Active",
+    headerName: t("common:active"),
     width: 120,
-    renderCell: (params) => (params.value ? "Active" : "Inactive"),
+    renderCell: (params) => (params.value ? t("common:active") : t("common:inactive")),
   },
 
   // ── Actions column ──
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common:actions"),
     width: 160,
     sortable: false,
     filterable: false,

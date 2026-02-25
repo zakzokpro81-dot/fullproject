@@ -1,20 +1,20 @@
 import { Chip } from "@mui/material";
 
-export const orderColumns = [
-  { field: "id", headerName: "ID", width: 70 },
+export const orderColumns = (t) => [
+  { field: "id", headerName: t("common.id"), width: 70 },
   {
     field: "display_date",
-    headerName: "Order Date",
+    headerName: t("ordersFeature.orderDate"),
     width: 130,
   },
   {
     field: "customer_name",
-    headerName: "Customer",
+    headerName: t("ordersFeature.customer"),
     width: 200,
   },
   {
     field: "status_display",
-    headerName: "Status",
+    headerName: t("common.status"),
     width: 130,
     renderCell: (params) => {
       const status = params.value;
@@ -37,7 +37,7 @@ export const orderColumns = [
   },
   {
     field: "notes",
-    headerName: "Notes",
+    headerName: t("common.notes"),
     flex: 1,
   },
 ];

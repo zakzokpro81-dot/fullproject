@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -22,6 +23,7 @@ export default function DepartmentForm({
   onSubmit,
   isPending = false,
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -48,11 +50,11 @@ export default function DepartmentForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {mode === "edit" ? "Edit Department" : "Add Department"}
+        {mode === "edit" ? t("common.editItem", { item: t("departments.entity") }) : t("common.addNew", { item: t("departments.entity") })}
       </DialogTitle>
       <DialogContent dividers>
         <TextField
-          label="Department Name"
+          label={t("departments.departmentName")}
           fullWidth
           margin="normal"
           {...register("name")}
@@ -66,12 +68,12 @@ export default function DepartmentForm({
               onChange={(e) => setValue("is_active", e.target.checked)}
             />
           }
-          label="Active"
+          label={t("common.active")}
         />
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -81,7 +83,7 @@ export default function DepartmentForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

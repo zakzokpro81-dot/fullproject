@@ -9,6 +9,7 @@ import {
   Stack,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+import { useTranslation } from "react-i18next";
 
 import {
   useProductTypeQuery,
@@ -24,6 +25,8 @@ import ScrollToTopButton from "../../components/ScrollToTopButton";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 
 export function ProductTypeList() {
+  const { t } = useTranslation(["productTypesFeature", "common"]);
+
   // UI state
   const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
@@ -150,6 +153,7 @@ export function ProductTypeList() {
     toggleSelect,
     rows,
     toggleSelectAll,
+    t,
   );
 
   return (
@@ -163,7 +167,7 @@ export function ProductTypeList() {
         }}
       >
         <Typography variant="h5" component="h2">
-          Product Types
+          {t("productTypesFeature:title")}
         </Typography>
         <Stack direction="row" spacing={2}>
           {selectedIds.size > 0 && (
@@ -172,11 +176,11 @@ export function ProductTypeList() {
               color="error"
               onClick={handleDeleteSelectedClick}
             >
-              Delete ({selectedIds.size}) Selected
+              {t("common:deleteSelected")} ({selectedIds.size}) {t("common:selectedItems")}
             </Button>
           )}
           <Button variant="contained" onClick={handleOpenAdd}>
-            Add Product Type
+            {t("common:addNew")} {t("productTypesFeature:entity")}
           </Button>
         </Stack>
       </Box>
@@ -185,7 +189,7 @@ export function ProductTypeList() {
         <TextField
           variant="outlined"
           size="small"
-          placeholder="Search..."
+          placeholder={t("common:search")}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           sx={{ flexGrow: 1 }}
@@ -193,7 +197,7 @@ export function ProductTypeList() {
         <ProductTypeFilters filters={filters} setFilters={setFilters} />
       </Stack>
 
-      {isError && <Alert severity="error">Error: {error.message}</Alert>}
+      {isError && <Alert severity="error">{t("common:failedToLoad")}: {error.message}</Alert>}
 
       <Box sx={{ height: 600, width: "100%" }}>
         <DataGrid

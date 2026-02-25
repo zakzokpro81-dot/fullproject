@@ -9,6 +9,7 @@ export const customerColumns = (
   toggleSelect,
   rows = [],
   toggleSelectAll,
+  t,
 ) => [
   {
     field: "select",
@@ -37,21 +38,21 @@ export const customerColumns = (
     ),
   },
   { field: "id", headerName: "ID", width: 80 },
-  { field: "name", headerName: "Full Name", flex: 1.5 },
+  { field: "name", headerName: t("customersFeature.fullName"), flex: 1.5 },
   {
     field: "customer_type",
-    headerName: "Type",
+    headerName: t("customersFeature.customerType"),
     flex: 1,
     valueGetter: (value, row) => row?.customer_types?.type_name || "N/A",
   },
-  { field: "phone", headerName: "Phone", width: 130 },
+  { field: "phone", headerName: t("customersFeature.phoneNumber"), width: 130 },
   {
     field: "is_active",
-    headerName: "Status",
+    headerName: t("common.status"),
     width: 100,
     renderCell: (params) => (
       <Chip
-        label={params.row?.is_active ? "Active" : "Inactive"}
+        label={params.row?.is_active ? t("common.active") : t("common.inactive")}
         color={params.row?.is_active ? "success" : "default"}
         size="small"
       />
@@ -59,7 +60,7 @@ export const customerColumns = (
   },
   {
     field: "actions",
-    headerName: "Actions",
+    headerName: t("common.actions"),
     width: 160,
     sortable: false,
     filterable: false,

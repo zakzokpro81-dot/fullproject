@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -30,6 +31,7 @@ export default function BrandForm({
   onSubmit,
   isPending = false,
 }) {
+  const { t } = useTranslation();
   const {
     register,
     handleSubmit,
@@ -64,11 +66,11 @@ export default function BrandForm({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{mode === "add" ? "Add Brand" : "Edit Brand"}</DialogTitle>
+      <DialogTitle>{mode === "add" ? t("common.addNew", { item: t("brands.entity") }) : t("common.editItem", { item: t("brands.entity") })}</DialogTitle>
 
       <DialogContent dividers>
         <TextField
-          label="Brand Name"
+          label={t("brands.brandName")}
           fullWidth
           margin="normal"
           {...register("name")}
@@ -77,7 +79,7 @@ export default function BrandForm({
         />
 
         <TextField
-          label="Slug"
+          label={t("brands.slug")}
           fullWidth
           margin="normal"
           {...register("slug")}
@@ -93,13 +95,13 @@ export default function BrandForm({
               onChange={(e) => setValue("is_active", e.target.checked)}
             />
           }
-          label="Active"
+          label={t("common.active")}
         />
       </DialogContent>
 
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common.cancel")}
         </Button>
         <Button
           variant="contained"
@@ -109,7 +111,7 @@ export default function BrandForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common.saving") : t("common.save")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -23,6 +24,7 @@ export default function AttendanceForm({
   isPending = false,
   employees = [],
 }) {
+  const { t } = useTranslation(["attendance", "common"]);
   const {
     register,
     handleSubmit,
@@ -53,7 +55,7 @@ export default function AttendanceForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {mode === "edit" ? "Edit Attendance" : "Record Attendance"}
+        {mode === "edit" ? t("common:editItem") : t("attendance:record") + " " + t("attendance:entity")}
       </DialogTitle>
       <DialogContent dividers>
         <Grid container spacing={2} sx={{ mt: 0.5 }}>
@@ -64,13 +66,13 @@ export default function AttendanceForm({
               render={({ field }) => (
                 <TextField
                   select
-                  label="Employee"
+                  label={t("attendance:employee")}
                   {...field}
                   error={!!errors.employee_id}
                   helperText={errors.employee_id?.message}
                   fullWidth
                 >
-                  <MenuItem value="">Select Employee...</MenuItem>
+                  <MenuItem value="">{t("attendance:selectEmployee")}...</MenuItem>
                   {employees.map((e) => (
                     <MenuItem key={e.id} value={e.id}>
                       {e.first_name} {e.last_name}
@@ -82,7 +84,7 @@ export default function AttendanceForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Work Date"
+              label={t("attendance:workDate")}
               type="date"
               fullWidth
               InputLabelProps={{ shrink: true }}
@@ -96,19 +98,19 @@ export default function AttendanceForm({
               name="status"
               control={control}
               render={({ field }) => (
-                <TextField select label="Status" {...field} fullWidth>
-                  <MenuItem value="present">Present</MenuItem>
-                  <MenuItem value="absent">Absent</MenuItem>
-                  <MenuItem value="late">Late</MenuItem>
-                  <MenuItem value="leave">Leave</MenuItem>
-                  <MenuItem value="half_day">Half Day</MenuItem>
+                <TextField select label={t("common:status")} {...field} fullWidth>
+                  <MenuItem value="present">{t("attendance:present")}</MenuItem>
+                  <MenuItem value="absent">{t("attendance:absent")}</MenuItem>
+                  <MenuItem value="late">{t("attendance:late")}</MenuItem>
+                  <MenuItem value="leave">{t("attendance:leave")}</MenuItem>
+                  <MenuItem value="half_day">{t("attendance:halfDay")}</MenuItem>
                 </TextField>
               )}
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Check In"
+              label={t("attendance:checkIn")}
               type="time"
               fullWidth
               InputLabelProps={{ shrink: true }}
@@ -117,7 +119,7 @@ export default function AttendanceForm({
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>
             <TextField
-              label="Check Out"
+              label={t("attendance:checkOut")}
               type="time"
               fullWidth
               InputLabelProps={{ shrink: true }}
@@ -137,7 +139,7 @@ export default function AttendanceForm({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isPending}>
-          Cancel
+          {t("common:cancel")}
         </Button>
         <Button
           variant="contained"
@@ -147,7 +149,7 @@ export default function AttendanceForm({
             isPending ? <CircularProgress size={20} color="inherit" /> : null
           }
         >
-          {isPending ? "Saving..." : "Save"}
+          {isPending ? t("common:saving") : t("common:save")}
         </Button>
       </DialogActions>
     </Dialog>

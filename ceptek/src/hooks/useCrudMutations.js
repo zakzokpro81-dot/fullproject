@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 
 /**
  * Factory hook that generates standard create / update / delete / deleteMultiple
@@ -12,6 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
  * @param {Function} opts.deleteMultipleFn - API bulk-delete function (ids[])
  * @param {Function} [opts.onSuccess]      - Called after any successful mutation
  * @param {Function} [opts.showMessageDialog] - Notification callback (msg, level)
+ * @param {string}   [opts.entityName]     - Translated entity name for messages
  */
 export default function useCrudMutations({
   queryKey,
@@ -21,8 +23,11 @@ export default function useCrudMutations({
   deleteMultipleFn,
   onSuccess,
   showMessageDialog,
+  entityName,
 }) {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
+  const name = entityName || "Item";
 
   const invalidate = () =>
     queryClient.invalidateQueries({ queryKey: [queryKey] });
@@ -32,10 +37,10 @@ export default function useCrudMutations({
     onSuccess: () => {
       invalidate();
       onSuccess?.();
-      showMessageDialog?.("Created successfully", "success");
+      showMessageDialog?.(t("common.createdSuccess", { item: name }), "success");
     },
     onError: (err) => {
-      showMessageDialog?.(err?.message || "Failed to create", "error");
+      showMessageDialog?.(err?.message || t("common.createFailed", { item: name }), "error");
     },
   });
 
@@ -44,10 +49,10 @@ export default function useCrudMutations({
     onSuccess: () => {
       invalidate();
       onSuccess?.();
-      showMessageDialog?.("Updated successfully", "success");
+      showMessageDialog?.(t("common.updatedSuccess", { item: name }), "success");
     },
     onError: (err) => {
-      showMessageDialog?.(err?.message || "Failed to update", "error");
+      showMessageDialog?.(err?.message || t("common.updateFailed", { item: name }), "error");
     },
   });
 
@@ -55,10 +60,10 @@ export default function useCrudMutations({
     mutationFn: deleteFn,
     onSuccess: () => {
       invalidate();
-      showMessageDialog?.("Deleted successfully", "success");
+      showMessageDialog?.(t("common.deletedSuccess", { item: name }), "success");
     },
     onError: (err) => {
-      showMessageDialog?.(err?.message || "Failed to delete", "error");
+      showMessageDialog?.(err?.message || t("common.deleteFailed", { item: name }), "error");
     },
   });
 
@@ -66,10 +71,10 @@ export default function useCrudMutations({
     mutationFn: deleteMultipleFn,
     onSuccess: () => {
       invalidate();
-      showMessageDialog?.("Deleted successfully", "success");
+      showMessageDialog?.(t("common.deletedMultipleSuccess", { item: name }), "success");
     },
     onError: (err) => {
-      showMessageDialog?.(err?.message || "Failed to delete", "error");
+      showMessageDialog?.(err?.message || t("common.deleteMultipleFailed", { item: name }), "error");
     },
   });
 
