@@ -140,7 +140,9 @@ export function DepartmentList() {
       </Box>
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {t("common.failedToLoad", { error: error?.message || t("common.unknownError") })}
+          {t("common.failedToLoad", {
+            error: error?.message || t("common.unknownError"),
+          })}
         </Alert>
       )}
       <Paper sx={{ height: 650, width: "100%" }}>

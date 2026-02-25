@@ -66,7 +66,11 @@ export default function BrandForm({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{mode === "add" ? t("common.addNew", { item: t("brands.entity") }) : t("common.editItem", { item: t("brands.entity") })}</DialogTitle>
+      <DialogTitle>
+        {mode === "add"
+          ? t("common.addNew", { item: t("brands.entity") })
+          : t("common.editItem", { item: t("brands.entity") })}
+      </DialogTitle>
 
       <DialogContent dividers>
         <TextField

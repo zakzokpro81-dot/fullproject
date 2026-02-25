@@ -42,7 +42,8 @@ export const departmentColumns = (
     field: "is_active",
     headerName: t("common.active"),
     width: 120,
-    renderCell: (params) => (params.value ? t("common.active") : t("common.inactive")),
+    renderCell: (params) =>
+      params.value ? t("common.active") : t("common.inactive"),
   },
   {
     field: "actions",

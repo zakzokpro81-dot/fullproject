@@ -50,7 +50,9 @@ export default function DepartmentForm({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        {mode === "edit" ? t("common.editItem", { item: t("departments.entity") }) : t("common.addNew", { item: t("departments.entity") })}
+        {mode === "edit"
+          ? t("common.editItem", { item: t("departments.entity") })
+          : t("common.addNew", { item: t("departments.entity") })}
       </DialogTitle>
       <DialogContent dividers>
         <TextField

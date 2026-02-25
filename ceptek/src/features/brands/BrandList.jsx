@@ -160,7 +160,9 @@ export function BrandList() {
 
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {t("common.failedToLoad", { error: error?.message || t("common.unknownError") })}
+          {t("common.failedToLoad", {
+            error: error?.message || t("common.unknownError"),
+          })}
         </Alert>
       )}
 
