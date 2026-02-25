@@ -37,6 +37,17 @@ import {
   DescriptionOutlined,
   ReceiptLongOutlined,
   LocalShippingOutlined,
+  BadgeOutlined,
+  BusinessOutlined,
+  WorkOutlineOutlined,
+  SecurityOutlined,
+  MonetizationOnOutlined,
+  AccountBalanceWalletOutlined,
+  SavingsOutlined,
+  EventAvailableOutlined,
+  StorefrontOutlined,
+  LocalAtmOutlined,
+  AssignmentReturnOutlined,
 } from "@mui/icons-material";
 
 import { Avatar, Tooltip, Typography } from "@mui/material";
@@ -170,6 +181,76 @@ const menuGroups = [
         icon: <CategoryOutlined />,
       },
       { text: "Categories", path: "/categories", icon: <ClassOutlined /> },
+    ],
+  },
+  {
+    id: "employees",
+    title: "Employees & HR",
+    color: "#0288d1",
+    icon: <BadgeOutlined />,
+    children: [
+      { text: "Departments", path: "/departments", icon: <BusinessOutlined /> },
+      {
+        text: "Job Titles",
+        path: "/job-titles",
+        icon: <WorkOutlineOutlined />,
+      },
+      { text: "Employees", path: "/employees", icon: <PeopleOutline /> },
+      { text: "Roles", path: "/roles", icon: <SecurityOutlined /> },
+      {
+        text: "Salary Components",
+        path: "/salary-components",
+        icon: <MonetizationOnOutlined />,
+      },
+      {
+        text: "Payroll",
+        path: "/payroll",
+        icon: <AccountBalanceWalletOutlined />,
+      },
+      {
+        text: "Advances",
+        path: "/employee-advances",
+        icon: <SavingsOutlined />,
+      },
+      {
+        text: "Attendance",
+        path: "/attendance",
+        icon: <EventAvailableOutlined />,
+      },
+    ],
+  },
+  {
+    id: "suppliers",
+    title: "Suppliers & Purchases",
+    color: "#d32f2f",
+    icon: <StorefrontOutlined />,
+    children: [
+      {
+        text: "Supplier Types",
+        path: "/supplier-types",
+        icon: <GroupOutlined />,
+      },
+      { text: "Suppliers", path: "/suppliers", icon: <StorefrontOutlined /> },
+      {
+        text: "Purchase Orders",
+        path: "/purchase-orders",
+        icon: <ShoppingCartOutlined />,
+      },
+      {
+        text: "Purchase Invoices",
+        path: "/purchase-invoices",
+        icon: <DescriptionOutlined />,
+      },
+      {
+        text: "Supplier Payments",
+        path: "/supplier-payments",
+        icon: <LocalAtmOutlined />,
+      },
+      {
+        text: "Purchase Returns",
+        path: "/purchase-returns",
+        icon: <AssignmentReturnOutlined />,
+      },
     ],
   },
 ];

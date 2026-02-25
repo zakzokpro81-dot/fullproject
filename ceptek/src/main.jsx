@@ -33,6 +33,24 @@ import { AccountList } from "./features/accounts/AccountList";
 import { InvoiceList } from "./features/invoice/InvoiceList";
 import { OrderList } from "./features/orders/OrderList";
 
+// Employees & HR
+import { DepartmentList } from "./features/departments/DepartmentList";
+import { JobTitleList } from "./features/jobTitles/JobTitleList";
+import { EmployeeList } from "./features/employees/EmployeeList";
+import { RoleList } from "./features/roles/RoleList";
+import { SalaryComponentList } from "./features/salaryComponents/SalaryComponentList";
+import { PayrollList } from "./features/payroll/PayrollList";
+import { EmployeeAdvanceList } from "./features/employeeAdvances/EmployeeAdvanceList";
+import { AttendanceList } from "./features/attendance/AttendanceList";
+
+// Suppliers & Purchases
+import { SupplierTypeList } from "./features/supplierTypes/SupplierTypeList";
+import { SupplierList } from "./features/suppliers/SupplierList";
+import { PurchaseOrderList } from "./features/purchaseOrders/PurchaseOrderList";
+import PurchaseInvoiceList from "./features/purchaseInvoices/PurchaseInvoiceList";
+import SupplierPaymentList from "./features/supplierPayments/SupplierPaymentList";
+import PurchaseReturnList from "./features/purchaseReturns/PurchaseReturnList";
+
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter(
@@ -64,6 +82,24 @@ const router = createBrowserRouter(
       <Route path="/accounts" element={<AccountList />} />
       <Route path="/invoices" element={<InvoiceList />} />
       <Route path="/orders" element={<OrderList />} />
+
+      {/* Employees & HR */}
+      <Route path="/departments" element={<DepartmentList />} />
+      <Route path="/job-titles" element={<JobTitleList />} />
+      <Route path="/employees" element={<EmployeeList />} />
+      <Route path="/roles" element={<RoleList />} />
+      <Route path="/salary-components" element={<SalaryComponentList />} />
+      <Route path="/payroll" element={<PayrollList />} />
+      <Route path="/employee-advances" element={<EmployeeAdvanceList />} />
+      <Route path="/attendance" element={<AttendanceList />} />
+
+      {/* Suppliers & Purchases */}
+      <Route path="/supplier-types" element={<SupplierTypeList />} />
+      <Route path="/suppliers" element={<SupplierList />} />
+      <Route path="/purchase-orders" element={<PurchaseOrderList />} />
+      <Route path="/purchase-invoices" element={<PurchaseInvoiceList />} />
+      <Route path="/supplier-payments" element={<SupplierPaymentList />} />
+      <Route path="/purchase-returns" element={<PurchaseReturnList />} />
     </Route>,
   ),
 );
