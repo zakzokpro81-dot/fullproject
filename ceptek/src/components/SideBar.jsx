@@ -48,6 +48,7 @@ import {
   StorefrontOutlined,
   LocalAtmOutlined,
   AssignmentReturnOutlined,
+  MenuBookOutlined,
 } from "@mui/icons-material";
 
 import { Avatar, Tooltip, Typography } from "@mui/material";
@@ -131,6 +132,11 @@ const getMenuGroups = (t) => [
         path: "/stock-movements",
         icon: <HistoryOutlined />,
       },
+      {
+        text: t("sidebar.stockTransactionLog"),
+        path: "/stock-transaction-log",
+        icon: <ReceiptLongOutlined />,
+      },
     ],
   },
   {
@@ -164,6 +170,11 @@ const getMenuGroups = (t) => [
         path: "/sales-returns",
         icon: <AssignmentReturnOutlined />,
       },
+      {
+        text: t("sidebar.finishedOrders"),
+        path: "/finished-orders",
+        icon: <ReceiptOutlined />,
+      },
     ],
   },
   {
@@ -186,6 +197,11 @@ const getMenuGroups = (t) => [
         text: t("sidebar.supplierPayments"),
         path: "/supplier-payments",
         icon: <LocalAtmOutlined />,
+      },
+      {
+        text: t("sidebar.journal"),
+        path: "/journal",
+        icon: <MenuBookOutlined />,
       },
     ],
   },
@@ -307,6 +323,11 @@ const getMenuGroups = (t) => [
         text: t("sidebar.purchaseReturns"),
         path: "/purchase-returns",
         icon: <AssignmentReturnOutlined />,
+      },
+      {
+        text: t("sidebar.supplierFinishedOrders"),
+        path: "/supplier-finished-orders",
+        icon: <ReceiptOutlined />,
       },
     ],
   },

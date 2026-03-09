@@ -2,6 +2,14 @@ import { IconButton, Stack, Checkbox, Chip, Typography } from "@mui/material";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import DeleteIcon from "@mui/icons-material/Delete";
 
+const TYPE_COLORS = {
+  asset: "info",
+  liability: "warning",
+  equity: "secondary",
+  revenue: "success",
+  expense: "error",
+};
+
 export const accountColumns = (
   onEdit,
   onDelete,
@@ -38,9 +46,14 @@ export const accountColumns = (
     ),
   },
   {
-    field: "id",
-    headerName: "ID",
-    width: 80,
+    field: "account_code",
+    headerName: t("accountsFeature.accountCode"),
+    width: 120,
+    renderCell: (params) => (
+      <Typography sx={{ fontFamily: "monospace", fontWeight: "bold" }}>
+        {params.value}
+      </Typography>
+    ),
   },
   {
     field: "name",
@@ -49,21 +62,30 @@ export const accountColumns = (
   },
   {
     field: "account_type",
-    headerName: t("common.type"),
-    width: 120,
+    headerName: t("accountsFeature.accountType"),
+    width: 130,
     renderCell: (params) => (
       <Chip
-        label={params.value}
+        label={t(`accountsFeature.type_${params.value}`)}
         size="small"
         variant="outlined"
-        color={params.value === "bank" ? "primary" : "info"}
+        color={TYPE_COLORS[params.value] || "default"}
       />
     ),
   },
   {
+    field: "account_subtype",
+    headerName: t("accountsFeature.accountSubtype"),
+    width: 150,
+    renderCell: (params) =>
+      params.value ? t(`accountsFeature.subtype_${params.value}`) : "—",
+  },
+  {
     field: "balance",
     headerName: t("accountsFeature.balance"),
-    width: 130,
+    width: 140,
+    headerAlign: "right",
+    align: "right",
     renderCell: (params) => (
       <Typography
         sx={{
@@ -80,16 +102,6 @@ export const accountColumns = (
     headerName: t("common.active"),
     width: 100,
     renderCell: (params) => (params.value ? t("common.yes") : t("common.no")),
-  },
-  {
-    field: "created_at",
-    headerName: t("common.date"),
-    width: 180,
-    valueGetter: (value, row) => {
-      if (!row.created_at) return "N/A";
-      const date = new Date(row.created_at);
-      return isNaN(date.getTime()) ? "N/A" : date.toLocaleString();
-    },
   },
   {
     field: "actions",

@@ -1,0 +1,81 @@
+import { Chip, IconButton, Stack } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+
+export const supplierFinishedOrderColumns = (t, onView) => [
+  { field: "id", headerName: t("common.id"), width: 70 },
+  {
+    field: "display_date",
+    headerName: t("supplierFinishedOrdersFeature.orderDate"),
+    width: 120,
+  },
+  {
+    field: "supplier_name",
+    headerName: t("supplierFinishedOrdersFeature.supplier"),
+    flex: 1,
+    minWidth: 160,
+  },
+  {
+    field: "warehouse_name",
+    headerName: t("supplierFinishedOrdersFeature.warehouse"),
+    flex: 1,
+    minWidth: 120,
+  },
+  {
+    field: "total_items",
+    headerName: t("supplierFinishedOrdersFeature.totalItems"),
+    width: 100,
+    align: "center",
+    headerAlign: "center",
+  },
+  {
+    field: "total_amount",
+    headerName: t("supplierFinishedOrdersFeature.totalAmount"),
+    width: 130,
+    align: "right",
+    headerAlign: "right",
+    renderCell: (params) =>
+      params.value != null ? params.value.toLocaleString() : "—",
+  },
+  {
+    field: "status_display",
+    headerName: t("common.status"),
+    width: 120,
+    renderCell: (params) => (
+      <Chip
+        label={params.value}
+        color="success"
+        size="small"
+        variant="outlined"
+        sx={{ fontWeight: "bold" }}
+      />
+    ),
+  },
+  {
+    field: "notes",
+    headerName: t("common.notes"),
+    flex: 1,
+    minWidth: 120,
+  },
+  {
+    field: "actions",
+    headerName: t("common.actions"),
+    width: 80,
+    sortable: false,
+    filterable: false,
+    disableExport: true,
+    renderCell: (params) => (
+      <Stack direction="row" spacing={1}>
+        <IconButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onView(params.row);
+          }}
+          color="primary"
+          size="small"
+        >
+          <VisibilityIcon />
+        </IconButton>
+      </Stack>
+    ),
+  },
+];

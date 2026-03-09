@@ -9,7 +9,7 @@ import {
   ACCOUNT_QUERY_KEY,
 } from "./account.api";
 
-export function useAccountQuery() {
+export function useAccountQuery({ accountType = "" } = {}) {
   const [paginationModel, setPaginationModel] = useState({ page: 0, pageSize: 10 });
   const [searchText, setSearchText] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -23,12 +23,13 @@ export function useAccountQuery() {
   }, [searchText]);
 
   const { data, isLoading, isFetching, isError, error } = useQuery({
-    queryKey: [ACCOUNT_QUERY_KEY, paginationModel, debouncedSearch],
+    queryKey: [ACCOUNT_QUERY_KEY, paginationModel, debouncedSearch, accountType],
     queryFn: () =>
       getAccounts({
         page: paginationModel.page,
         pageSize: paginationModel.pageSize,
         searchText: debouncedSearch,
+        accountType,
       }),
     staleTime: 1000 * 60 * 5,
     placeholderData: (prev) => prev,

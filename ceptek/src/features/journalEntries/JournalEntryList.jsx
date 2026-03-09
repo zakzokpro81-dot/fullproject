@@ -11,28 +11,34 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import FilterAltOffIcon from "@mui/icons-material/FilterAltOff";
-import { useQuery } from "@tanstack/react-query";
 
 import { useTranslation } from "react-i18next";
-import { useAccountQuery, useAccountMutations } from "./account.hooks";
-import { accountColumns } from "./account.columns";
-import { ACCOUNT_TYPES } from "./account.schema";
-import { getAccountsTree } from "./account.api";
-import AccountForm from "./AccountForm";
+import {
+  useJournalEntryQuery,
+  useJournalEntryMutations,
+  useJournalAccounts,
+} from "./journalEntry.hooks";
+import { journalEntryColumns } from "./journalEntry.columns";
+import { TRANSACTION_TYPES } from "./journalEntry.schema";
+import JournalEntryForm from "./JournalEntryForm";
+import JournalEntryDetailsDrawer from "./JournalEntryDetailsDrawer";
 import ConfirmDeleteDialog from "../../components/ConfirmDeleteDialog";
 import MessageDialog from "../../components/MessageDialog";
 import ScrollToTopButton from "../../components/ScrollToTopButton";
 import { useMessageDialog } from "../../hooks/useMessageDialog";
 
-export function AccountList() {
+export function JournalEntryList() {
   const { t } = useTranslation();
   const [selectedItem, setSelectedItem] = useState(null);
   const [openForm, setOpenForm] = useState(false);
   const [openDelete, setOpenDelete] = useState(false);
-  const [openDeleteSelected, setOpenDeleteSelected] = useState(false);
-  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [drawerEntry, setDrawerEntry] = useState(null);
   const [mode, setMode] = useState("add");
-  const [accountTypeFilter, setAccountTypeFilter] = useState("");
+
+  // Filters
+  const [typeFilter, setTypeFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   function handleCloseForm() {
     setOpenForm(false);
@@ -42,10 +48,7 @@ export function AccountList() {
   const { messageDialog, showMessageDialog, closeMessageDialog } =
     useMessageDialog();
 
-  const { data: parentAccounts = [] } = useQuery({
-    queryKey: ["accountsTree"],
-    queryFn: getAccountsTree,
-  });
+  const { data: accounts = [] } = useJournalAccounts();
 
   const {
     rows,
@@ -58,17 +61,17 @@ export function AccountList() {
     setPaginationModel,
     searchText,
     setSearchText,
-  } = useAccountQuery({ accountType: accountTypeFilter });
-
-  const {
-    createMutation,
-    updateMutation,
-    deleteMutation,
-    deleteMultipleMutation,
-  } = useAccountMutations({
-    onSuccess: handleCloseForm,
-    showMessageDialog,
+  } = useJournalEntryQuery({
+    transactionType: typeFilter,
+    dateFrom,
+    dateTo,
   });
+
+  const { createMutation, updateMutation, deleteMutation, postMutation } =
+    useJournalEntryMutations({
+      onSuccess: handleCloseForm,
+      showMessageDialog,
+    });
 
   const handleOpenAdd = () => {
     setMode("add");
@@ -105,36 +108,30 @@ export function AccountList() {
     });
   };
 
+  const handlePostEntry = (row) => {
+    postMutation.mutate(row.id);
+  };
+
+  const handleViewEntry = (row) => {
+    setDrawerEntry(row);
+  };
+
   const handlePaginationChange = (newModel) => {
-    setSelectedIds(new Set());
     setPaginationModel(newModel);
   };
 
-  const toggleSelectAll = () => {
-    const allSelected =
-      rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
-    if (allSelected) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(rows.map((r) => r.id)));
-    }
+  const clearFilters = () => {
+    setTypeFilter("");
+    setDateFrom("");
+    setDateTo("");
   };
 
-  const toggleSelect = (id) => {
-    const newSet = new Set(selectedIds);
-    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
-    setSelectedIds(newSet);
-  };
-
-  const handleDeleteSelectedConfirm = () => {
-    if (selectedIds.size === 0) return;
-    deleteMultipleMutation.mutate(Array.from(selectedIds), {
-      onSettled: () => {
-        setOpenDeleteSelected(false);
-        setSelectedIds(new Set());
-      },
-    });
-  };
+  const hasFilters = typeFilter || dateFrom || dateTo;
+  const isMutating =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    deleteMutation.isPending ||
+    postMutation.isPending;
 
   return (
     <Box>
@@ -144,54 +141,68 @@ export function AccountList() {
         alignItems="center"
         mb={2}
       >
-        <Typography variant="h5">{t("accountsFeature.title")}</Typography>
-        <Box display="flex" gap={1}>
-          {selectedIds.size > 0 && (
-            <Button
-              variant="contained"
-              color="error"
-              onClick={() => setOpenDeleteSelected(true)}
-            >
-              {t("common.deleteSelected", { count: selectedIds.size })}
-            </Button>
-          )}
-          <Button variant="contained" onClick={handleOpenAdd}>
-            {t("common.addNew", { item: t("accountsFeature.entity") })}
-          </Button>
-        </Box>
+        <Typography variant="h5">{t("journalFeature.title")}</Typography>
+        <Button variant="contained" onClick={handleOpenAdd}>
+          {t("journalFeature.addEntry")}
+        </Button>
       </Box>
 
-      <Stack direction="row" spacing={2} mb={2} alignItems="center">
+      {/* Filters */}
+      <Stack
+        direction="row"
+        spacing={2}
+        mb={2}
+        alignItems="center"
+        flexWrap="wrap"
+      >
         <TextField
           label={t("common.search")}
           variant="outlined"
           size="small"
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          sx={{ maxWidth: 400, flex: 1 }}
+          sx={{ maxWidth: 300, flex: 1 }}
         />
         <TextField
           select
-          label={t("accountsFeature.accountType")}
+          label={t("journalFeature.transactionType")}
           size="small"
-          value={accountTypeFilter}
-          onChange={(e) => setAccountTypeFilter(e.target.value)}
-          sx={{ minWidth: 160 }}
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          sx={{ minWidth: 150 }}
         >
-          <MenuItem value="">{t("common.all")}</MenuItem>
-          {ACCOUNT_TYPES.map((type) => (
+          <MenuItem value="">{t("journalFeature.allTypes")}</MenuItem>
+          {TRANSACTION_TYPES.map((type) => (
             <MenuItem key={type} value={type}>
-              {t(`accountsFeature.type_${type}`)}
+              {t(`journalFeature.type_${type}`)}
             </MenuItem>
           ))}
         </TextField>
-        {accountTypeFilter && (
+        <TextField
+          label={t("journalFeature.dateFrom")}
+          type="date"
+          size="small"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          slotProps={{ inputLabel: { shrink: true } }}
+          sx={{ width: 160 }}
+        />
+        <TextField
+          label={t("journalFeature.dateTo")}
+          type="date"
+          size="small"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          slotProps={{ inputLabel: { shrink: true } }}
+          sx={{ width: 160 }}
+        />
+        {hasFilters && (
           <Button
             size="small"
             startIcon={<FilterAltOffIcon />}
-            onClick={() => setAccountTypeFilter("")}
+            onClick={clearFilters}
           >
-            {t("common.clear")}
+            {t("journalFeature.clearFilters")}
           </Button>
         )}
       </Stack>
@@ -208,16 +219,14 @@ export function AccountList() {
         <DataGrid
           rows={rows}
           rowCount={rowCount}
-          columns={accountColumns(
+          columns={journalEntryColumns(
             handleOpenEdit,
             handleDeleteClick,
-            selectedIds,
-            toggleSelect,
-            rows,
-            toggleSelectAll,
+            handlePostEntry,
+            handleViewEntry,
             t,
           )}
-          loading={isLoading || isFetching}
+          loading={isLoading || isFetching || isMutating}
           paginationMode="server"
           paginationModel={paginationModel}
           onPaginationModelChange={handlePaginationChange}
@@ -227,19 +236,19 @@ export function AccountList() {
         />
       </Paper>
 
-      <AccountForm
+      <JournalEntryForm
         open={openForm}
         mode={mode}
         initialData={selectedItem}
         onClose={handleCloseForm}
         onSubmit={handleFormSubmit}
         isPending={createMutation.isPending || updateMutation.isPending}
-        parentAccounts={parentAccounts}
+        accounts={accounts}
       />
 
       <ConfirmDeleteDialog
         open={openDelete}
-        itemName={selectedItem?.name || ""}
+        itemName={selectedItem?.entry_number || ""}
         onClose={() => {
           setOpenDelete(false);
           setSelectedItem(null);
@@ -248,12 +257,10 @@ export function AccountList() {
         isPending={deleteMutation.isPending}
       />
 
-      <ConfirmDeleteDialog
-        open={openDeleteSelected}
-        itemName={t("common.selectedItems", { count: selectedIds.size })}
-        onClose={() => setOpenDeleteSelected(false)}
-        onConfirm={handleDeleteSelectedConfirm}
-        isPending={deleteMultipleMutation.isPending}
+      {/* Details Drawer */}
+      <JournalEntryDetailsDrawer
+        entry={drawerEntry}
+        onClose={() => setDrawerEntry(null)}
       />
 
       <MessageDialog

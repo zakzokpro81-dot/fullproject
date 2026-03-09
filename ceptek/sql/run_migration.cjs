@@ -38,9 +38,12 @@ async function main() {
     await client.connect();
     console.log('Connected successfully!');
     
+    // All migrations already applied — update this list for future runs
     const files = [
-      path.join(__dirname, '001_employees_module.sql'),
-      path.join(__dirname, '002_suppliers_module.sql')
+      // path.join(__dirname, '001_employees_module.sql'),   // applied
+      // path.join(__dirname, '002_suppliers_module.sql'),    // applied
+      // path.join(__dirname, '004_upgrade_accounts.sql'),    // applied
+      // path.join(__dirname, '003_journal_entries.sql'),     // applied
     ];
     
     let allOk = true;

@@ -32,6 +32,8 @@ import { StockMovementList } from "./features/StockMovement/StockMovementList";
 import { AccountList } from "./features/accounts/AccountList";
 import { InvoiceList } from "./features/invoice/InvoiceList";
 import { OrderList } from "./features/orders/OrderList";
+import { CustomerFinishedOrderList } from "./features/customerFinishedOrders/CustomerFinishedOrderList";
+import { SupplierFinishedOrderList } from "./features/supplierFinishedOrders/SupplierFinishedOrderList";
 
 // Employees & HR
 import { DepartmentList } from "./features/departments/DepartmentList";
@@ -51,6 +53,8 @@ import PurchaseInvoiceList from "./features/purchaseInvoices/PurchaseInvoiceList
 import SupplierPaymentList from "./features/supplierPayments/SupplierPaymentList";
 import PurchaseReturnList from "./features/purchaseReturns/PurchaseReturnList";
 import SalesReturnList from "./features/salesReturns/SalesReturnList";
+import { JournalEntryList } from "./features/journalEntries/JournalEntryList";
+import { StockTransactionLogList } from "./features/stockTransactionLog/StockTransactionLogList";
 
 const queryClient = new QueryClient();
 
@@ -82,6 +86,7 @@ const router = createBrowserRouter(
       <Route path="/accounts" element={<AccountList />} />
       <Route path="/invoices" element={<InvoiceList />} />
       <Route path="/orders" element={<OrderList />} />
+      <Route path="/finished-orders" element={<CustomerFinishedOrderList />} />
 
       {/* Employees & HR */}
       <Route path="/departments" element={<DepartmentList />} />
@@ -101,6 +106,9 @@ const router = createBrowserRouter(
       <Route path="/supplier-payments" element={<SupplierPaymentList />} />
       <Route path="/purchase-returns" element={<PurchaseReturnList />} />
       <Route path="/sales-returns" element={<SalesReturnList />} />
+      <Route path="/supplier-finished-orders" element={<SupplierFinishedOrderList />} />
+      <Route path="/journal" element={<JournalEntryList />} />
+      <Route path="/stock-transaction-log" element={<StockTransactionLogList />} />
     </Route>,
   ),
 );
