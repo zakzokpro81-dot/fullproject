@@ -61,7 +61,11 @@ export default function StockTransactionLogDetailsDrawer({ entry, onClose }) {
             <Stack direction="row" spacing={2} alignItems="center">
               <CalendarTodayIcon color="primary" />
               <Box>
-                <Typography variant="caption" color="text.secondary" display="block">
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                >
                   {t("stockTransactionLogFeature.entryDate")}
                 </Typography>
                 <Typography variant="body1" fontWeight="medium">
@@ -76,7 +80,11 @@ export default function StockTransactionLogDetailsDrawer({ entry, onClose }) {
             <Stack direction="row" spacing={2} alignItems="center">
               <Inventory2OutlinedIcon color="primary" />
               <Box>
-                <Typography variant="caption" color="text.secondary" display="block">
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                >
                   {t("stockTransactionLogFeature.product")}
                 </Typography>
                 <Typography variant="body1" fontWeight="medium">
@@ -94,7 +102,11 @@ export default function StockTransactionLogDetailsDrawer({ entry, onClose }) {
             <Stack direction="row" spacing={2} alignItems="center">
               <WarehouseOutlinedIcon color="primary" />
               <Box>
-                <Typography variant="caption" color="text.secondary" display="block">
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  display="block"
+                >
                   {t("stockTransactionLogFeature.warehouse")}
                 </Typography>
                 <Typography variant="body1" fontWeight="medium">
@@ -129,7 +141,11 @@ export default function StockTransactionLogDetailsDrawer({ entry, onClose }) {
               <Stack direction="row" spacing={2} alignItems="center">
                 <LabelOutlinedIcon color="primary" />
                 <Box>
-                  <Typography variant="caption" color="text.secondary" display="block">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
                     {t("stockTransactionLogFeature.referenceType")}
                   </Typography>
                   <Typography variant="body1" fontWeight="medium">
@@ -144,7 +160,11 @@ export default function StockTransactionLogDetailsDrawer({ entry, onClose }) {
               <Stack direction="row" spacing={2} alignItems="flex-start">
                 <DescriptionOutlinedIcon color="primary" sx={{ mt: 0.5 }} />
                 <Box>
-                  <Typography variant="caption" color="text.secondary" display="block">
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    display="block"
+                  >
                     {t("stockTransactionLogFeature.description")}
                   </Typography>
                   <Typography variant="body1">{entry.description}</Typography>

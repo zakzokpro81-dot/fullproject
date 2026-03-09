@@ -74,7 +74,12 @@ export function StockTransactionLogList() {
   return (
     <Box sx={{ p: 3 }}>
       {/* Header — read-only, no Add button */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Box
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={2}
+      >
         <Typography variant="h5" fontWeight="bold">
           {t("stockTransactionLogFeature.title")}
         </Typography>
@@ -100,7 +105,9 @@ export function StockTransactionLogList() {
 
           {/* Movement Type Filter */}
           <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>{t("stockTransactionLogFeature.movementType")}</InputLabel>
+            <InputLabel>
+              {t("stockTransactionLogFeature.movementType")}
+            </InputLabel>
             <Select
               value={movementTypeId}
               label={t("stockTransactionLogFeature.movementType")}
@@ -176,7 +183,9 @@ export function StockTransactionLogList() {
 
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {t("common.failedToLoad", { error: error?.message || t("common.unknownError") })}
+          {t("common.failedToLoad", {
+            error: error?.message || t("common.unknownError"),
+          })}
         </Alert>
       )}
 
@@ -184,7 +193,9 @@ export function StockTransactionLogList() {
         <DataGrid
           rows={rows}
           rowCount={rowCount}
-          columns={stockTransactionLogColumns(t, (row) => setSelectedEntry(row))}
+          columns={stockTransactionLogColumns(t, (row) =>
+            setSelectedEntry(row),
+          )}
           loading={isLoading || isFetching}
           paginationMode="server"
           paginationModel={paginationModel}

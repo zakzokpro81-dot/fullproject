@@ -106,9 +106,15 @@ const router = createBrowserRouter(
       <Route path="/supplier-payments" element={<SupplierPaymentList />} />
       <Route path="/purchase-returns" element={<PurchaseReturnList />} />
       <Route path="/sales-returns" element={<SalesReturnList />} />
-      <Route path="/supplier-finished-orders" element={<SupplierFinishedOrderList />} />
+      <Route
+        path="/supplier-finished-orders"
+        element={<SupplierFinishedOrderList />}
+      />
       <Route path="/journal" element={<JournalEntryList />} />
-      <Route path="/stock-transaction-log" element={<StockTransactionLogList />} />
+      <Route
+        path="/stock-transaction-log"
+        element={<StockTransactionLogList />}
+      />
     </Route>,
   ),
 );

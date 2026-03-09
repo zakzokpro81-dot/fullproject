@@ -188,7 +188,8 @@ export function SupplierFinishedOrderList() {
 
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
-          {t("common.failedToLoad")}: {error?.message || t("common.unknownError")}
+          {t("common.failedToLoad")}:{" "}
+          {error?.message || t("common.unknownError")}
         </Alert>
       )}
 

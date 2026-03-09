@@ -68,7 +68,8 @@ export function CustomerFinishedOrderList() {
     setSearchText("");
   };
 
-  const hasActiveFilters = customerId || warehouseId || dateFrom || dateTo || searchText;
+  const hasActiveFilters =
+    customerId || warehouseId || dateFrom || dateTo || searchText;
 
   return (
     <Box sx={{ p: 3 }}>

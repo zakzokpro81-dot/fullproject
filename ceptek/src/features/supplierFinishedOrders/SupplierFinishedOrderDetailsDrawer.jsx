@@ -194,7 +194,8 @@ export default function SupplierFinishedOrderDetailsDrawer({ order, onClose }) {
               <TableBody>
                 {items.map((item, index) => {
                   const cost = item.unit_cost || 0;
-                  const lineTotal = item.total_cost || cost * (item.quantity || 0);
+                  const lineTotal =
+                    item.total_cost || cost * (item.quantity || 0);
                   return (
                     <TableRow key={item.id || index} hover>
                       <TableCell>

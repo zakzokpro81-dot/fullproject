@@ -145,11 +145,16 @@ export default function FinishedOrderDetailsDrawer({ order, onClose }) {
               {t("finishedOrdersFeature.orderedItems")} ({items.length})
             </Typography>
           </Stack>
-          <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+          <Paper
+            variant="outlined"
+            sx={{ borderRadius: 2, overflow: "hidden" }}
+          >
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ bgcolor: "primary.main" }}>
-                  <TableCell sx={{ fontWeight: "bold", color: "primary.contrastText" }}>
+                  <TableCell
+                    sx={{ fontWeight: "bold", color: "primary.contrastText" }}
+                  >
                     {t("finishedOrdersFeature.product")}
                   </TableCell>
                   <TableCell
